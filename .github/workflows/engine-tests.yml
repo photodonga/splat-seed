@@ -1,0 +1,15 @@
+name: Shell-Out engine tests
+on:
+  pull_request:
+  push:
+    branches: [engine/shellout-xorshift128]
+jobs:
+  node-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Engine unit, parity and round-trip tests (real-game fixtures run if present)
+        run: node --test tests/*.test.mjs
