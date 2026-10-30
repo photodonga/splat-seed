@@ -78,3 +78,96 @@ footer{border-top:1px solid #474352;padding-top:15px}
  .hero h1{font-size:32px}
 }
 @media(prefers-reduced-motion:reduce){.capsule-btn,.action{transition:none}}
+
+
+/* GAME-TYPE TYPOGRAPHY
+   Original Nintendo/Splatoon font files are NOT used.
+   Lilita One, Jua, Black Han Sans and Nunito are loaded from Google Fonts
+   under SIL Open Font License 1.1; see docs/FONT-CREDITS.md. */
+:root {
+  --font-arcade: 'Lilita One', 'Nunito', system-ui, sans-serif;
+  --font-korean-display: 'Black Han Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-korean-game: 'Jua', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-readable: 'Nunito', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+}
+body {
+  font-family: var(--font-readable);
+  font-weight: 800;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.brand {
+  font-family: var(--font-arcade);
+  font-weight: 400;
+  font-size: clamp(32px, 4.7vw, 48px);
+  line-height: 1.02;
+  letter-spacing: .018em;
+  text-shadow: 3px 4px 0 #3b1c6e, 6px 7px 0 #07050b;
+  transform: rotate(-2.4deg);
+}
+.brand small {
+  font-family: var(--font-readable);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.35;
+  letter-spacing: .16em;
+  text-shadow: none;
+}
+.hero h1 {
+  font-family: var(--font-korean-display);
+  font-weight: 400;
+  letter-spacing: -.055em;
+  line-height: 1.14;
+  -webkit-text-stroke: .15px #15131c;
+}
+.hero .eyebrow, .section-tag, .metric small {
+  font-family: var(--font-arcade), var(--font-readable);
+  font-weight: 400;
+  letter-spacing: .065em;
+}
+.card h2 {
+  font-family: var(--font-korean-game);
+  font-weight: 400;
+  font-size: clamp(24px, 2.6vw, 29px);
+  line-height: 1.18;
+  letter-spacing: -.025em;
+}
+.card h2 #count {font-family: var(--font-arcade);color:var(--lime);margin-left:5px}
+.switcher button, .capsule-btn span:last-child, .action {
+  font-family: var(--font-korean-game);
+  font-weight: 400;
+  letter-spacing: -.01em;
+}
+.switcher button {font-size: 16px}
+.capsule-btn span:last-child {font-size: 17px; padding: 5px 15px}
+.action {font-size: 16px; line-height: 1.2}
+.metric .number {
+  font-family: var(--font-arcade);
+  font-weight: 400;
+  font-size: clamp(50px, 7vw, 67px);
+  line-height: 1.05;
+  letter-spacing: -.025em;
+}
+.money b {font-family:var(--font-arcade);font-weight:400;font-size:21px;letter-spacing:-.01em}
+.entry b {font-family:var(--font-arcade);font-weight:400;font-size:12px}
+.card .help, .tiny, .status, .notice, footer {
+  font-family: var(--font-readable);
+  letter-spacing: -.01em;
+  line-height: 1.65;
+}
+button, input, select, textarea {font-synthesis: none}
+input, textarea, select {font-family: var(--font-readable);font-weight:700}
+button {line-height: 1.25}
+@media(max-width:790px) {
+  .brand {font-size:clamp(30px,7vw,40px)}
+  .card h2 {font-size:26px}
+  .capsule-btn span:last-child{font-size:16px}
+  .switcher button {font-size:14px}
+  .action {font-size:15px}
+}
+@media(max-width:390px) {
+  .brand {font-size:30px}
+  .card h2 {font-size:24px}
+  .capsule-btn span:last-child {font-size:15px;padding:5px 9px}
+  .hero h1 {font-size:32px}
+}
