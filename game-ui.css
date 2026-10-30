@@ -1,0 +1,217 @@
+
+/* SPLAT SEED game-inspired interface.
+   Capsule PNGs are linked from Inkipedia only, not copied into this repository.
+   When unavailable, original CSS capsule art remains visible. */
+:root{--ink:#14141d;--lime:#ccff39;--purple:#9567fc;--paper:#f7f5ed;--shadow:7px 8px 0 #050509}
+body{
+  background:radial-gradient(ellipse 50% 35% at 5% 6%,rgba(164,77,255,.16),transparent 80%),
+             radial-gradient(ellipse 60% 45% at 96% 12%,rgba(190,247,54,.08),transparent 75%),
+             #12121c;
+  background-attachment:fixed;
+}
+.app{max-width:1160px}
+header{padding-top:24px}
+.brand{position:relative;isolation:isolate;font-size:clamp(29px,4vw,42px);text-shadow:4px 5px 0 #7541d3}
+.brand:before{content:"";position:absolute;width:82px;height:63px;left:-25px;top:-12px;z-index:-1;transform:rotate(-17deg);background:#7146cd;clip-path:polygon(48% 0,60% 24%,91% 12%,78% 40%,100% 52%,72% 63%,78% 96%,49% 77%,20% 99%,22% 67%,0 53%,27% 43%,12% 11%,41% 25%)}
+header .pill{background:#26232e;border:2px solid #696477;color:#e2ddee;letter-spacing:.04em}
+.hero{border:3px solid #0d0d13;border-radius:35px 38px 24px 29px;box-shadow:9px 10px 0 #05050a;background:linear-gradient(120deg,#d6ff47 0%,#c5fa31 61%,#b5ed31 100%);min-height:275px}
+.hero:before{width:385px;height:350px;right:-70px;top:-65px;border-radius:0;transform:rotate(-12deg);background:repeating-radial-gradient(circle at center,rgba(33,47,9,.08) 0,rgba(33,47,9,.08) 2px,transparent 3px,transparent 16px);clip-path:polygon(50% 0,63% 19%,94% 12%,82% 40%,100% 54%,77% 63%,84% 98%,49% 82%,17% 100%,22% 65%,0 52%,23% 39%,9% 11%,38% 22%)}
+.hero h1{text-shadow:3px 3px 0 rgba(255,255,255,.32);letter-spacing:-.04em}
+.hero .eyebrow{display:inline-block;background:#191821;color:#caff35;padding:8px 12px;border-radius:9px;transform:rotate(-2deg);box-shadow:3px 3px 0 #8851e5}
+.hero .spark{font-size:inherit;top:35px;right:35px;transform:rotate(12deg);filter:drop-shadow(8px 11px 0 rgba(15,10,20,.28));z-index:1}
+.hero .spark img{display:block;width:clamp(125px,17vw,200px);height:auto;max-height:213px;object-fit:contain}
+.hero .spark .hero-fallback{display:block;font-size:110px;color:#ecaa1d}
+.hero .spark img:not([hidden])+.hero-fallback{display:none}
+.switcher{margin:32px 0 20px;background:#201e2a;width:max-content;max-width:100%;padding:6px;border:2px solid #4a435d;border-radius:18px;transform:rotate(-1deg)}
+.switcher button{border:0;background:transparent;border-radius:12px;padding:12px 21px;transition:background .16s,color .16s}
+.switcher button.active{background:var(--lime);border-color:var(--lime);color:#11131b;box-shadow:3px 3px 0 #675a30}
+.card{border:2px solid #555065;box-shadow:4px 5px 0 rgba(0,0,0,.65);background:linear-gradient(155deg,#302d3a 0%,#22212c 78%);border-radius:23px}
+.card h2{letter-spacing:-.04em}
+.section-tag{display:inline-flex;align-items:center;background:#15141d;color:#cafd3c;padding:6px 11px;border-radius:7px;transform:rotate(-1deg);letter-spacing:.12em}
+.capsules{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.capsule-btn{position:relative;min-height:145px;border:2px solid #5d566d;border-radius:19px;background:radial-gradient(circle at 50% 19%,#393345,#1a1924 74%);box-shadow:inset 0 2px 0 rgba(255,255,255,.09),3px 4px 0 rgba(0,0,0,.65);padding:10px 6px}
+.capsule-btn:hover{background:#373046;transform:translateY(-4px) rotate(-1deg)}
+.capsule-btn:active{transform:translateY(2px)}
+.capsule-btn:nth-child(1){border-color:#e9af2a}
+.capsule-btn:nth-child(2){border-color:#aabacc}
+.capsule-btn:nth-child(3){border-color:#b5794a}
+.capsule-btn span:last-child{font-size:13px;font-weight:900;background:#100f17;border-radius:40px;padding:5px 12px;line-height:1.2}
+.cap{display:inline-block;flex-shrink:0;overflow:visible}
+.cap.asset-ready{border:0;background:none;box-shadow:none;border-radius:0;transform:none}
+.cap.asset-ready:before,.cap.asset-ready:after{display:none}
+.cap .cap-art{display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:drop-shadow(2px 3px 0 rgba(0,0,0,.18))}
+.cap.asset-ready .cap-art{display:block}
+.capsule-btn .cap{width:78px;height:84px}
+.entry .cap{width:43px;height:46px}
+.forecast .entry .cap{width:43px;height:46px}
+.entry{width:55px;min-height:73px}
+.entry b{font-size:11px}
+.stream{gap:8px;max-height:325px;overflow-y:auto;align-items:flex-start}
+.forecast{gap:6px}
+.action{border:2px solid #655e75;box-shadow:3px 3px 0 rgba(0,0,0,.48);transition:transform .12s}
+.action.primary{border-color:#b1db30;background:#ccff39;color:#13121b}
+.action:hover:not(:disabled){transform:translateY(-2px)}
+.metric{border:3px solid #171220;background:linear-gradient(120deg,#b899ff,#855df2);box-shadow:5px 5px 0 #050509;border-radius:22px;position:relative;overflow:hidden}
+.metric:after{content:"✦";position:absolute;font-size:72px;right:16px;top:-5px;color:rgba(17,6,31,.12);transform:rotate(15deg)}
+.metric.unknown{background:#3a3949;border-color:#545064}
+.status{border-left-color:#caff34;background:#181721}
+.money>div{border:1px solid #424052}
+.field{background:#171620}
+footer{border-top:1px solid #474352;padding-top:15px}
+@media(max-width:790px){
+ .app{padding:0 14px 54px}
+ .hero{padding:23px 22px;min-height:237px}
+ .hero h1{font-size:clamp(30px,9vw,46px);max-width:290px;position:relative;z-index:2}
+ .hero p{max-width:260px;position:relative;z-index:2}
+ .hero .spark{right:4px;top:52px;opacity:.72}
+ .hero .spark img{width:134px}
+ .capsule-btn{min-height:128px}
+ .capsule-btn .cap{width:65px;height:71px}
+ .switcher button{padding:11px 13px;font-size:12px}
+}
+@media(max-width:390px){
+ .brand{font-size:28px}
+ header .pill{font-size:9px;padding:6px 8px}
+ .capsule-btn .cap{width:56px;height:61px}
+ .capsule-btn{min-height:116px}
+ .hero .spark img{width:106px}
+ .hero h1{font-size:32px}
+}
+@media(prefers-reduced-motion:reduce){.capsule-btn,.action{transition:none}}
+
+
+/* GAME-TYPE TYPOGRAPHY — local, legitimately installed in-game font first.
+   Does NOT fetch, embed or redistribute extracted Nintendo/AsiaFont font files.
+   Nintendo-original lettering requires an independently valid license on the
+   visitor's device; all other visitors get openly licensed substitutes.
+   See docs/FONT-CREDITS.md. */
+@font-face {
+  font-family: 'SplatInstalledEnglishBold';
+  src: local('BlitzBold'), local('Blitz Bold'), local('Splatfont2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'SplatInstalledEnglishMain';
+  src: local('BlitzMain'), local('Blitz Main'), local('Splatfont');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'SplatInstalledKTitle';
+  src: local('AsiaKCUBE'), local('a큐브'), local('a큐브G');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'SplatInstalledKBody';
+  src: local('AsiaKERIN'), local('a어린이날'), local('a어린이날M');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  --font-arcade: var(--font-loaded-english-display, 'SplatInstalledEnglishBold'), 'Luckiest Guy', 'Lilita One', 'Nunito', system-ui, sans-serif;
+  --font-korean-display: var(--font-loaded-korean-display, 'SplatInstalledKTitle'), 'Black Han Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-korean-game: var(--font-loaded-korean-display, 'SplatInstalledKTitle'), 'Jua', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-readable: var(--font-loaded-english-main, 'SplatInstalledEnglishMain'), var(--font-loaded-korean-body, 'SplatInstalledKBody'), 'Nunito', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+}
+body {
+  font-family: var(--font-readable);
+  font-weight: 800;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.brand {
+  font-family: var(--font-arcade);
+  font-weight: 400;
+  font-size: clamp(32px, 4.7vw, 48px);
+  line-height: 1.02;
+  letter-spacing: .018em;
+  text-shadow: 3px 4px 0 #3b1c6e, 6px 7px 0 #07050b;
+  transform: rotate(-2.4deg);
+}
+.brand small {
+  font-family: var(--font-readable);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.35;
+  letter-spacing: .16em;
+  text-shadow: none;
+}
+.hero h1 {
+  font-family: var(--font-korean-display);
+  font-weight: 400;
+  letter-spacing: -.055em;
+  line-height: 1.14;
+  -webkit-text-stroke: .15px #15131c;
+}
+.hero .eyebrow, .section-tag, .metric small {
+  font-family: var(--font-arcade), var(--font-readable);
+  font-weight: 400;
+  letter-spacing: .065em;
+}
+.card h2 {
+  font-family: var(--font-korean-game);
+  font-weight: 400;
+  font-size: clamp(24px, 2.6vw, 29px);
+  line-height: 1.18;
+  letter-spacing: -.025em;
+}
+.card h2 #count {font-family: var(--font-arcade);color:var(--lime);margin-left:5px}
+.switcher button, .capsule-btn span:last-child, .action {
+  font-family: var(--font-korean-game);
+  font-weight: 400;
+  letter-spacing: -.01em;
+}
+.switcher button {font-size: 16px}
+.capsule-btn span:last-child {font-size: 17px; padding: 5px 15px}
+.action {font-size: 16px; line-height: 1.2}
+.metric .number {
+  font-family: var(--font-arcade);
+  font-weight: 400;
+  font-size: clamp(50px, 7vw, 67px);
+  line-height: 1.05;
+  letter-spacing: -.025em;
+}
+.money b {font-family:var(--font-arcade);font-weight:400;font-size:21px;letter-spacing:-.01em}
+.entry b {font-family:var(--font-arcade);font-weight:400;font-size:12px}
+.card .help, .tiny, .status, .notice, footer {
+  font-family: var(--font-readable);
+  letter-spacing: -.01em;
+  line-height: 1.65;
+}
+button, input, select, textarea {font-synthesis: none}
+input, textarea, select {font-family: var(--font-readable);font-weight:700}
+button {line-height: 1.25}
+@media(max-width:790px) {
+  .brand {font-size:clamp(30px,7vw,40px)}
+  .card h2 {font-size:26px}
+  .capsule-btn span:last-child{font-size:16px}
+  .switcher button {font-size:14px}
+  .action {font-size:15px}
+}
+@media(max-width:390px) {
+  .brand {font-size:30px}
+  .card h2 {font-size:24px}
+  .capsule-btn span:last-child {font-size:15px;padding:5px 9px}
+  .hero h1 {font-size:32px}
+}
+
+/* Personal font picker. All files are stored only inside this browser. */
+.font-settings{margin-top:24px;max-width:100%;background:#24212e;border:2px solid #4c455d;border-radius:22px;padding:18px 21px;box-shadow:4px 5px 0 #07050b}
+.font-settings summary{cursor:pointer;color:var(--lime);font:400 20px/1.3 var(--font-korean-game);list-style-position:inside}
+.font-settings summary:focus-visible{outline:3px solid var(--lime);outline-offset:4px}
+.font-settings .help{margin:12px 0;color:#cdc6d9}
+.font-settings .font-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}
+.personal-font-row{display:flex;flex-direction:column;gap:8px;padding:14px;background:#15141e;border:1px solid #4b435c;border-radius:14px;min-width:0}
+.personal-font-row label{color:#fff;font:400 16px/1.3 var(--font-korean-game)}
+.personal-font-row input{display:block;width:100%;max-width:100%;color:#e4ddeb;font-size:12px}
+.personal-font-row input::file-selector-button{padding:7px 10px;background:var(--lime);color:#16131b;border:0;border-radius:7px;font-weight:900;cursor:pointer;margin-right:9px}
+.personal-font-row span{color:#aaa4b7;font-size:11px;overflow-wrap:anywhere}
+.font-settings .font-note{font:700 12px/1.65 var(--font-readable);color:#bfb8cb}
+#personalFontStatus{color:#d8ffc0;font-size:12px}
+@media(max-width:680px){.font-settings .font-grid{grid-template-columns:1fr}.font-settings{padding:15px}}
