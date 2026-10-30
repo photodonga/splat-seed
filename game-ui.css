@@ -80,15 +80,44 @@ footer{border-top:1px solid #474352;padding-top:15px}
 @media(prefers-reduced-motion:reduce){.capsule-btn,.action{transition:none}}
 
 
-/* GAME-TYPE TYPOGRAPHY
-   Original Nintendo/Splatoon font files are NOT used.
-   Lilita One, Jua, Black Han Sans and Nunito are loaded from Google Fonts
-   under SIL Open Font License 1.1; see docs/FONT-CREDITS.md. */
+/* GAME-TYPE TYPOGRAPHY — local, legitimately installed in-game font first.
+   Does NOT fetch, embed or redistribute extracted Nintendo/AsiaFont font files.
+   Nintendo-original lettering requires an independently valid license on the
+   visitor's device; all other visitors get openly licensed substitutes.
+   See docs/FONT-CREDITS.md. */
+@font-face {
+  font-family: 'SplatInstalledEnglishBold';
+  src: local('BlitzBold'), local('Blitz Bold'), local('Splatfont2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'SplatInstalledEnglishMain';
+  src: local('BlitzMain'), local('Blitz Main'), local('Splatfont');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'SplatInstalledKTitle';
+  src: local('AsiaKCUBE'), local('a큐브'), local('a큐브G');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'SplatInstalledKBody';
+  src: local('AsiaKERIN'), local('a어린이날'), local('a어린이날M');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 :root {
-  --font-arcade: 'Lilita One', 'Nunito', system-ui, sans-serif;
-  --font-korean-display: 'Black Han Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-  --font-korean-game: 'Jua', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-  --font-readable: 'Nunito', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-arcade: 'SplatInstalledEnglishBold', 'Luckiest Guy', 'Lilita One', 'Nunito', system-ui, sans-serif;
+  --font-korean-display: 'SplatInstalledKTitle', 'Black Han Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-korean-game: 'SplatInstalledKTitle', 'Jua', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-readable: 'SplatInstalledKBody', 'Nunito', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
 }
 body {
   font-family: var(--font-readable);
