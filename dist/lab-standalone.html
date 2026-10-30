@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="robots" content="noindex"><title>SPLAT SEED · 엔진 실험실</title>
+<style>
+:root{--ink:#131420;--lime:#c9fc36;--purple:#8c63ff;--card:#262531;--line:#41404c}
+*{box-sizing:border-box}body{margin:0;background:var(--ink);color:#fff;font:600 15px/1.5 -apple-system,'Apple SD Gothic Neo',system-ui,sans-serif}
+.app{max-width:760px;margin:auto;padding:16px 16px 60px}h1{font-size:22px;color:var(--lime);margin:8px 0 4px}
+.warn{background:#3b1d24;border:2px solid #f15c79;border-radius:14px;padding:12px 14px;font-size:13px;margin:12px 0}
+.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:16px;margin:14px 0}.card h2{font-size:16px;margin:0 0 10px}
+label{display:block;font-size:13px;color:#cfcddb;margin:8px 0 4px}input,select{width:100%;padding:11px;border-radius:10px;border:2px solid #545263;background:#161620;color:#fff;font:inherit}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.hex{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.caps{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.cb{border:2px solid #444253;background:#1b1b27;border-radius:12px;color:#fff;padding:8px 0;font-size:11px}
+.dot{display:inline-block;width:22px;height:26px;border-radius:48%;border:2px solid rgba(0,0,0,.3);background:var(--c);vertical-align:middle}
+.g0{--c:#ffc22e}.g1{--c:#dce9f8}.g2{--c:#d98846}.g3{--c:#f15c79}.g4{--c:#9775f5}.g5{--c:#76ddf6}
+.seq{display:flex;flex-wrap:wrap;gap:4px;min-height:30px;margin-top:10px}.seq .dot{width:18px;height:21px}
+button.a{border:0;border-radius:11px;padding:10px 14px;background:#454351;color:#fff;font:inherit;font-weight:800}button.p{background:var(--lime);color:#171821}button:disabled{opacity:.4}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}progress{width:100%;height:12px;margin-top:10px}
+.big{font-size:40px;font-weight:900;color:var(--lime)}.muted{color:#aaa7b7;font-size:12px}.tag{display:inline-block;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:800}
+.ok{background:#2d4a12;color:var(--lime)}.no{background:#3a3949;color:#ddd}
+</style></head><body><div class="app">
+<h1>SPLAT SEED 엔진 실험실</h1>
+<div class="muted">독립 계산 엔진 테스트 페이지 · 서버 없이 이 브라우저에서만 계산</div>
+<div class="warn"><b>실험용 · 실제 게임 대조 검증 전.</b> 공개 시드 도구와의 계산 일치만 확인된 상태입니다. 결과를 실제 예측으로 신뢰하지 마세요. 상세는 README의 "검증 상태"를 참고하세요.</div>
+
+<section class="card"><h2>0. 내 NPLN ID 가져오기 (한 번만)</h2>
+<p class="muted">ID는 평생 바뀌지 않습니다. 아래 둘 중 하나로 한 번 가져오면 1번 칸에 채워집니다.</p>
+<label for="replay">A. 리플레이 코드로 조회</label>
+<div class="row"><input id="replay" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX"><button class="a" id="lookup" type="button">조회</button></div>
+<p class="muted">게임에서 내 대전 리플레이를 업로드해 받은 코드. 기존 공개 조회 API(Leanny용)를 개인 용도로 한 번 호출합니다. 서버가 멈췄거나 다른 사이트 요청을 막으면 실패할 수 있습니다.</p>
+<label for="backup">B. Leanny 백업 파일에서 가져오기</label>
+<input id="backup" type="file" accept=".json,application/json,text/plain">
+<p class="muted">Leanny Seed Checker 설정에서 내보낸 백업(또는 nxapi <code>util splatoon3-seed --json</code> 출력). 파일은 이 브라우저 안에서만 읽고 어디에도 보내지 않습니다.</p>
+<label style="display:flex;gap:8px;align-items:center"><input id="remember" type="checkbox" style="width:auto"> 이 기기에 ID 기억하기</label>
+<div class="muted" id="idStatus" aria-live="polite"></div></section>
+
+<section class="card"><h2>1. 스트림</h2>
+<div class="row"><div><label for="mode">뽑기 종류</label><select id="mode"><option value="normal">일반 뽑기</option><option value="fest">페스티벌 뽑기</option></select></div>
+<div><label for="src">기준 상태</label><select id="src"><option value="id">NPLN 유저 ID → 위치 탐색</option><option value="before">첫 뽑기 직전 상태 → 직접 재현</option></select></div></div>
+<div id="idBox"><label for="npln">NPLN 유저 ID (0번에서 가져오거나 직접 입력)</label><input id="npln" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="u-로 시작하는 22자 (예: u-abc…)"></div>
+<div id="stateBox" hidden><label>첫 뽑기 직전 상태 4워드 (아래 2번에 입력할 <b>첫 결과를 뽑기 직전</b> 값)</label><div class="hex"><input id="s0" placeholder="0x…"><input id="s1" placeholder="0x…"><input id="s2" placeholder="0x…"><input id="s3" placeholder="0x…"></div><p class="muted">이 상태를 알면 위치 탐색 없이 바로 재현합니다. ID에서 만든 초기 상태나 이미 뽑은 뒤의 상태를 넣으면 불일치로 표시됩니다.</p></div>
+<label>마지막 뽑기 직후 상태 4워드 (선택 · 계산 결과와 비교)</label><div class="hex"><input id="a0" placeholder="0x…"><input id="a1" placeholder="0x…"><input id="a2" placeholder="0x…"><input id="a3" placeholder="0x…"></div>
+<div class="row"><div><label for="season">시즌 번호</label><input id="season" inputmode="numeric"></div><div id="rangeBox"><label for="range">탐색 범위(난수 위치 수)</label><select id="range"><option value="65536">65,536</option><option value="262144">262,144</option><option value="1048576" selected>1,048,576</option><option value="4194304">4,194,304</option></select></div></div>
+<div class="row"><div><label for="mb">이번 시즌 잭팟 배너 중 미보유 수</label><select id="mb"></select></div><div><label for="mt">이번 시즌 잭팟 칭호 중 미보유 수</label><select id="mt"></select></div></div>
+<p class="muted">미보유 수는 <b>입력한 첫 뽑기 직전</b> 기준입니다. 이미 가진 잭팟은 금·은 대신 동색이 나오고 난수 소비도 달라집니다.</p></section>
+
+<section class="card"><h2>2. 실제 뽑기 결과 (순서대로)</h2><div class="caps" id="caps"></div>
+<div class="seq" id="seq"></div><div class="muted" id="seqInfo"></div>
+<div class="actions"><button class="a" id="undo">↶ 취소</button><button class="a" id="clr">초기화</button></div></section>
+
+<section class="card"><h2>3. 시드 탐색</h2>
+<div class="actions"><button class="a p" id="go">탐색 시작</button><button class="a" id="stop" disabled>탐색 취소</button></div>
+<progress id="prog" max="1" value="0" hidden></progress><div class="muted" id="status" aria-live="polite"></div></section>
+
+<section class="card" id="out" hidden><h2>4. 결과</h2><div id="verdict"></div>
+<div class="muted" style="margin-top:8px">다음 황금 캡슐까지 (미검증)</div><div class="big" id="gold">—</div>
+<div class="muted">이후 30회 예측 (미검증)</div><div class="seq" id="pred"></div>
+<div class="muted" id="cands"></div>
+<div class="actions"><label class="muted" style="margin:0">추가 결과를 2번에 입력한 뒤 다시 탐색하면 후보가 줄어듭니다.</label></div></section>
+</div>
+<script type="module">
+// ---- engine/murmur3.mjs
+/**
+ * MurmurHash3 x86_32 (Austin Appleby, public domain algorithm), seed 0 by default.
+ * Independent implementation operating on bytes.
+ *
+ * The Shell-Out key strings are ASCII, so UTF-8 bytes == char codes here.
+ * Non-ASCII input is rejected to avoid silently diverging from other
+ * implementations that hash `charCodeAt(i) & 0xff`.
+ */
+const C1 = 0xcc9e2d51;
+const C2 = 0x1b873593;
+
+function rotl32(x, r) {
+  return ((x << r) | (x >>> (32 - r))) >>> 0;
+}
+
+function fmix32(h) {
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x85ebca6b);
+  h ^= h >>> 13;
+  h = Math.imul(h, 0xc2b2ae35);
+  h ^= h >>> 16;
+  return h >>> 0;
+}
+
+function asciiBytes(str) {
+  if (typeof str !== 'string') throw new TypeError('Expected a string');
+  const out = new Uint8Array(str.length);
+  for (let i = 0; i < str.length; i++) {
+    const c = str.charCodeAt(i);
+    if (c > 0x7f) throw new RangeError('Only ASCII keys are supported');
+    out[i] = c;
+  }
+  return out;
+}
+
+function murmur3x86_32(input, seed = 0) {
+  const data = typeof input === 'string' ? asciiBytes(input) : input;
+  if (!(data instanceof Uint8Array)) throw new TypeError('Expected string or Uint8Array');
+  const len = data.length;
+  const nblocks = len >>> 2;
+  let h = seed >>> 0;
+
+  for (let i = 0; i < nblocks; i++) {
+    const o = i * 4;
+    let k = (data[o] | (data[o + 1] << 8) | (data[o + 2] << 16) | (data[o + 3] << 24)) >>> 0;
+    k = Math.imul(k, C1);
+    k = rotl32(k, 15);
+    k = Math.imul(k, C2);
+    h ^= k;
+    h = rotl32(h, 13);
+    h = (Math.imul(h, 5) + 0xe6546b64) >>> 0;
+  }
+
+  const tail = nblocks * 4;
+  let k1 = 0;
+  switch (len & 3) {
+    case 3: k1 ^= data[tail + 2] << 16; // falls through
+    case 2: k1 ^= data[tail + 1] << 8; // falls through
+    case 1:
+      k1 ^= data[tail];
+      k1 = Math.imul(k1, C1);
+      k1 = rotl32(k1, 15);
+      k1 = Math.imul(k1, C2);
+      h ^= k1;
+  }
+
+  h ^= len;
+  return fmix32(h >>> 0);
+}
+
+// ---- engine/xorshift128.mjs
+/**
+ * Marsaglia xorshift128 (a=11, b=8, c=19), 4 x uint32 state.
+ * Independent implementation. Mutable, allocation-free stepping for speed.
+ */
+class XorShift128 {
+  constructor(x, y, z, w) {
+    this.x = x >>> 0;
+    this.y = y >>> 0;
+    this.z = z >>> 0;
+    this.w = w >>> 0;
+  }
+
+  static fromState(state) {
+    if (!Array.isArray(state) || state.length !== 4) throw new RangeError('State must be 4 uint32 words');
+    for (const v of state) {
+      if (!Number.isInteger(v) || v < 0 || v > 0xffffffff) throw new RangeError('State word out of range');
+    }
+    if (state.every(v => v === 0)) throw new RangeError('All-zero state is invalid for xorshift');
+    return new XorShift128(state[0], state[1], state[2], state[3]);
+  }
+
+  nextU32() {
+    const t = (this.x ^ (this.x << 11)) >>> 0;
+    this.x = this.y;
+    this.y = this.z;
+    this.z = this.w;
+    this.w = (this.w ^ (this.w >>> 19) ^ t ^ (t >>> 8)) >>> 0;
+    return this.w;
+  }
+
+  /**
+   * Float in [0, 100): top 23 bits of the next u32 as a float32 mantissa,
+   * i.e. exactly (u >>> 9) / 2^23, scaled by 100 in double precision.
+   * NOTE: the game presumably scales in float32; see README "float32 boundary".
+   */
+  nextPercent() {
+    return ((this.nextU32() >>> 9) / 8388608) * 100;
+  }
+
+  clone() {
+    return new XorShift128(this.x, this.y, this.z, this.w);
+  }
+
+  copyFrom(o) {
+    this.x = o.x; this.y = o.y; this.z = o.z; this.w = o.w;
+    return this;
+  }
+
+  state() {
+    return [this.x, this.y, this.z, this.w];
+  }
+
+  stateHex() {
+    return this.state().map(v => '0x' + v.toString(16).padStart(8, '0'));
+  }
+}
+
+function parseStateHex(words) {
+  if (!Array.isArray(words) || words.length !== 4) throw new RangeError('Need 4 hex words');
+  return words.map(w => {
+    const s = String(w).trim().replace(/^0x/i, '');
+    if (!/^[0-9a-f]{1,8}$/i.test(s)) throw new RangeError(`Invalid hex word: ${w}`);
+    return parseInt(s, 16) >>> 0;
+  });
+}
+
+// ---- engine/shellout.mjs
+/**
+ * SPLAT SEED — independent Shell-Out Machine (lobby capsule) engine.
+ *
+ * Model (see README "근거" for evidence and verification status):
+ *  - Stream RNG: xorshift128, one independent stream per machine
+ *    ("Lot" = regular, "LotFest" = Splatfest).
+ *  - Initial state word i = MurmurHash3_x86_32(`${nplnUserId}_${streamKey}_${i}`), i = 0..3.
+ *  - Each pull draws one percent value r in [0,100) and picks the first table row whose
+ *    running cumulative percentage exceeds r.
+ *  - Extra u32 draws per pull depend on the reward row (see EXTRA_DRAWS / pullOnce()).
+ *  - Seasonal jackpot rows ("Limited", gold/silver): if every current-season jackpot item of
+ *    that kind is already owned, the pull is replaced by row 2 (bronze, 10 ability chips) and
+ *    makes no extra draws; otherwise one discarded draw plus one pick draw, and the picked
+ *    item becomes owned.
+ *
+ * This file contains no third-party code.
+ */
+
+
+const GRADES = Object.freeze(['gold', 'silver', 'bronze', 'red', 'purple', 'blue']);
+const STREAM_KEYS = Object.freeze({ normal: 'Lot', fest: 'LotFest' });
+
+// Reward rows in in-game table order. [grade, percent, type, subType]
+// Source: lottery parameter table as shipped in public seed tools and matching the
+// published odds on Inkipedia. Order matters (cumulative selection).
+const TABLE_V110 = [
+  [0, 0.1, 'NamePlateBg', 'Limited'],
+  [1, 0.3, 'Byname', 'Limited'],
+  [2, 0.6, 'AllGearSkillChip', 'None'],
+  [3, 4, 'MiniGameCardPack', 'None'],
+  [3, 3, 'FoodTicket', 'FoodParty'],
+  [3, 6, 'NamePlateBg', 'None'],
+  [4, 10, 'GearSkillChip', 'None'],
+  [4, 7, 'FoodTicket', 'Food100'],
+  [4, 22, 'Byname', 'None'],
+  [5, 10, 'LockerSticker', 'None'],
+  [5, 10, 'LockerFigure', 'None'],
+  [5, 13, 'FoodTicket', 'Food50'],
+  [5, 14, 'DrinkTicket', 'None'],
+];
+const TABLE_V300 = [
+  [0, 0.1, 'NamePlateBg', 'Limited'],
+  [1, 0.3, 'Byname', 'Limited'],
+  [2, 0.6, 'AllGearSkillChip', 'None'],
+  [3, 4, 'MiniGameCardPack', 'None'],
+  [3, 3, 'FoodTicket', 'FoodParty'],
+  [3, 2, 'Emote', 'None'],
+  [3, 6, 'NamePlateBg', 'None'],
+  [4, 10, 'GearSkillChip', 'None'],
+  [4, 7, 'FoodTicket', 'Food100'],
+  [4, 22, 'Byname', 'None'],
+  [5, 9, 'LockerSticker', 'None'],
+  [5, 9, 'LockerFigure', 'None'],
+  [5, 13, 'FoodTicket', 'Food50'],
+  [5, 14, 'DrinkTicket', 'None'],
+];
+const SUBSTITUTE_ROW = 2;
+
+function buildTable(rows) {
+  let cum = 0;
+  return Object.freeze(rows.map(([grade, percent, type, subType], index) => {
+    cum += percent; // double accumulation, in table order
+    return Object.freeze({ index, grade, percent, type, subType, cumulative: cum });
+  }));
+}
+const TABLES = Object.freeze({ v110: buildTable(TABLE_V110), v300: buildTable(TABLE_V300) });
+
+/**
+ * Season numbering: 1 = first season (2022-09-01 UTC). Seasons start every 3 months (Mar/Jun/Sep/Dec 1st, 00:00 UTC).
+ * A season includes its own start instant (start <= t). The public tool counts start < t, so the two differ only at
+ * the exact start millisecond. The in-game reward-table switch time itself is unverified.
+ */
+function seasonAt(date = new Date()) {
+  const t = (date instanceof Date ? date : new Date(date)).getTime();
+  if (!Number.isFinite(t)) throw new RangeError('Invalid date');
+  // Number of season starts at or before t, counting from 2022-09-01.
+  let count = 0;
+  let year = 2022, month = 8; // Sep 2022 (0-based month)
+  while (Date.UTC(year, month, 1) <= t && count < 1000) {
+    count++;
+    month += 3;
+    if (month > 11) { month -= 12; year++; }
+  }
+  return count;
+}
+
+function tableForSeason(season) {
+  if (!Number.isInteger(season) || season < 0) throw new RangeError('Invalid season');
+  return season >= 3 ? TABLES.v300 : TABLES.v110;
+}
+
+/** Number of distinct jackpot items of one kind per season (1 for seasons 1-8, 2 from season 9). */
+function jackpotItemsPerKind(season) {
+  return season < 9 ? 1 : 2;
+}
+
+const NPLN_USER_ID_RE = /^u-[0-9a-z]{20}$/;
+
+function initialState(nplnUserId, mode = 'normal') {
+  const key = STREAM_KEYS[mode];
+  if (!key) throw new RangeError('mode must be "normal" or "fest"');
+  // Real NPLN user IDs look like "u-" + 20 lowercase letters/digits. The "u-" prefix is part of the
+  // hashed string (same as the public seed tool and nxapi's seed export), so it must not be stripped.
+  if (typeof nplnUserId !== 'string' || !NPLN_USER_ID_RE.test(nplnUserId)) {
+    throw new RangeError('NPLN user ID must look like "u-" followed by 20 lowercase letters/digits');
+  }
+  return [0, 1, 2, 3].map(i => murmur3x86_32(`${nplnUserId}_${key}_${i}`));
+}
+
+/**
+ * Pull context. `ownershipAware`:
+ *   true  — model the jackpot ownership substitution (needs missing counts).
+ *   false — "simple" mode: jackpot rows always draw 2 extra u32 and never substitute
+ *           (equivalent to the public tool's non-accuracy mode).
+ */
+function makeContext({ season, ownershipAware = true, missingBanners = null, missingTitles = null } = {}) {
+  if (!Number.isInteger(season) || season < 1) throw new RangeError('season required (>=1)');
+  const per = jackpotItemsPerKind(season);
+  const mb = missingBanners ?? per;
+  const mt = missingTitles ?? per;
+  for (const v of [mb, mt]) if (!Number.isInteger(v) || v < 0 || v > per) throw new RangeError(`missing count must be 0..${per}`);
+  return { season, table: tableForSeason(season), ownershipAware: !!ownershipAware, missingBanners: mb, missingTitles: mt };
+}
+
+function cloneContext(c) {
+  return { season: c.season, table: c.table, ownershipAware: c.ownershipAware, missingBanners: c.missingBanners, missingTitles: c.missingTitles };
+}
+
+function selectRow(table, r) {
+  for (let i = 0; i < table.length; i++) if (r < table[i].cumulative) return table[i];
+  // r is < 100 by construction and table sums to >= 100; unreachable unless table is malformed.
+  throw new Error('Reward table does not cover draw');
+}
+
+/**
+ * Performs one pull, mutating rng and ctx.
+ * Returns { grade, row, substituted, extraDraws, ability?, pick? }.
+ */
+function pullOnce(rng, ctx) {
+  const row = selectRow(ctx.table, rng.nextPercent());
+  if (row.subType === 'Limited') {
+    if (!ctx.ownershipAware) {
+      rng.nextU32();
+      rng.nextU32();
+      return { grade: row.grade, row, substituted: false, extraDraws: 2 };
+    }
+    const isBanner = row.type === 'NamePlateBg';
+    const missing = isBanner ? ctx.missingBanners : ctx.missingTitles;
+    if (missing === 0) {
+      const sub = ctx.table[SUBSTITUTE_ROW];
+      return { grade: sub.grade, row: sub, original: row, substituted: true, extraDraws: 0 };
+    }
+    rng.nextU32();
+    const pick = rng.nextU32() % missing;
+    if (isBanner) ctx.missingBanners--; else ctx.missingTitles--;
+    return { grade: row.grade, row, substituted: false, extraDraws: 2, pick };
+  }
+  if (row.type === 'FoodTicket') {
+    rng.nextU32();
+    return { grade: row.grade, row, substituted: false, extraDraws: 1 };
+  }
+  if (row.type === 'GearSkillChip' || row.type === 'DrinkTicket') {
+    const ability = rng.nextU32() % 14;
+    return { grade: row.grade, row, substituted: false, extraDraws: 1, ability };
+  }
+  return { grade: row.grade, row, substituted: false, extraDraws: 0 };
+}
+
+/** Simulate n pulls from a state. Does not mutate inputs. */
+function simulate(state, ctx, n) {
+  const rng = XorShift128.fromState(state);
+  const c = cloneContext(ctx);
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(pullOnce(rng, c));
+  return { pulls: out, state: rng.state(), ctx: c };
+}
+
+/**
+ * Direct reproduction from a KNOWN state immediately before the first observed pull.
+ * No position search is performed: pull i is predicted from that exact state.
+ * Returns per-pull predictions, the first mismatch index (or -1) and the state after the last pull.
+ */
+function reproduce(startStateBeforeFirstPull, ctx, observations) {
+  const obs = observations.map(normalizeObservation);
+  const rng = XorShift128.fromState(startStateBeforeFirstPull);
+  const c = cloneContext(ctx);
+  const pulls = [];
+  let firstMismatch = -1;
+  for (let i = 0; i < obs.length; i++) {
+    const r = pullOnce(rng, c);
+    pulls.push(r);
+    if (firstMismatch < 0 && !matches(r, obs[i])) firstMismatch = i;
+  }
+  return { pulls, firstMismatch, stateAfterLastPull: rng.state(), contextAfter: c };
+}
+
+/**
+ * Observation: { grade: 0..5 } (capsule color only) or additionally
+ * { type, subType } for the exact reward row (as shown after substitution).
+ */
+function normalizeObservation(o) {
+  if (typeof o === 'string') o = { grade: GRADES.indexOf(o) };
+  if (!o || !Number.isInteger(o.grade) || o.grade < 0 || o.grade > 5) throw new RangeError('Invalid observation grade');
+  const r = { grade: o.grade };
+  if (o.type != null) { r.type = String(o.type); r.subType = String(o.subType ?? 'None'); }
+  return r;
+}
+
+function matches(res, obs) {
+  if (res.grade !== obs.grade) return false;
+  if (obs.type !== undefined && (res.row.type !== obs.type || res.row.subType !== obs.subType)) return false;
+  return true;
+}
+
+/**
+ * Incremental exhaustive search over u32 offsets [0, maxOffset) of a stream.
+ * Each offset is tested by simulating all observations from that position.
+ * Call step(budget) repeatedly (e.g. from a Worker) until done.
+ */
+class OffsetSearch {
+  constructor({ startState, observations, context, maxOffset = 1 << 20, maxCandidates = 64 }) {
+    if (!Array.isArray(observations) || observations.length < 1) throw new RangeError('Need at least one observation');
+    if (!Number.isSafeInteger(maxOffset) || maxOffset < 1 || maxOffset > 2 ** 32) throw new RangeError('Invalid maxOffset');
+    this.obs = observations.map(normalizeObservation);
+    this.ctx = cloneContext(context);
+    this.base = XorShift128.fromState(startState);
+    this.scratch = this.base.clone();
+    this.offset = 0;
+    this.maxOffset = maxOffset;
+    this.maxCandidates = maxCandidates;
+    this.candidates = [];
+    this.truncated = false;
+    this._c = cloneContext(context);
+  }
+
+  get done() {
+    return this.offset >= this.maxOffset || this.truncated;
+  }
+
+  get progress() {
+    return Math.min(1, this.offset / this.maxOffset);
+  }
+
+  step(budget = 50000) {
+    const obs = this.obs, n = obs.length, c = this._c, ctx = this.ctx, s = this.scratch;
+    const end = Math.min(this.maxOffset, this.offset + budget);
+    for (; this.offset < end; this.offset++) {
+      s.copyFrom(this.base);
+      c.missingBanners = ctx.missingBanners;
+      c.missingTitles = ctx.missingTitles;
+      let ok = true;
+      for (let i = 0; i < n; i++) {
+        if (!matches(pullOnce(s, c), obs[i])) { ok = false; break; }
+      }
+      if (ok) {
+        this.candidates.push({
+          offset: this.offset,
+          stateBefore: this.base.state(),
+          stateAfter: s.state(),
+          contextAfter: cloneContext(c),
+        });
+        if (this.candidates.length >= this.maxCandidates) { this.truncated = true; this.offset++; break; }
+      }
+      this.base.nextU32();
+    }
+    return this.done;
+  }
+
+  runToEnd() {
+    while (!this.step(1 << 20));
+    return this.result();
+  }
+
+  result() {
+    return {
+      candidates: this.candidates,
+      searched: this.offset,
+      maxOffset: this.maxOffset,
+      exhaustive: this.offset >= this.maxOffset && !this.truncated,
+      truncated: this.truncated,
+      unique: this.offset >= this.maxOffset && !this.truncated && this.candidates.length === 1,
+    };
+  }
+}
+
+/** Filter existing candidates with additional observations (pulled after the previous ones). */
+function refineCandidates(candidates, newObservations) {
+  const obs = newObservations.map(normalizeObservation);
+  const out = [];
+  for (const cand of candidates) {
+    const rng = XorShift128.fromState(cand.stateAfter);
+    const c = cloneContext(cand.contextAfter);
+    let ok = true;
+    for (const o of obs) if (!matches(pullOnce(rng, c), o)) { ok = false; break; }
+    if (ok) out.push({ ...cand, stateAfter: rng.state(), contextAfter: cloneContext(c) });
+  }
+  return out;
+}
+
+/** 1-based number of pulls until the next gold capsule (after substitution), or null if > limit. */
+function pullsUntilGold(state, ctx, limit = 200000) {
+  const rng = XorShift128.fromState(state);
+  const c = cloneContext(ctx);
+  for (let i = 1; i <= limit; i++) if (pullOnce(rng, c).grade === 0) return i;
+  return null;
+}
+
+/** Expected false-match probability per offset for a sequence of colors (informational). */
+function gradeProbabilities(table) {
+  const p = [0, 0, 0, 0, 0, 0];
+  for (const r of table) p[r.grade] += r.percent / 100;
+  return p;
+}
+
+// ---- engine/npln-id.mjs
+/**
+ * Getting the player's NPLN user ID once, for personal use.
+ *
+ *  A. From a Leanny Seed Checker backup (or nxapi `util splatoon3-seed --json` output):
+ *     the ID is stored as base64(bytes(id) XOR (h & 0xff)) together with h = MurmurHash3(id).
+ *     Decoding is local; no network.
+ *  B. From a replay code, via the existing public replay-lookup API (used by Leanny).
+ *     That API is intended for Leanny's site; here it is used only for the owner's personal lookup.
+ *     The ID is also re-derived from the returned replay.id and must agree.
+ */
+
+
+const REPLAY_LOOKUP_URL = 'https://splatoon3-replay-lookup.fancy.org.uk/api/splatnet3/replay/';
+
+class NplnIdError extends Error {
+  constructor(kind, message) { super(message); this.kind = kind; }
+}
+
+function base64ToBytes(b64) {
+  if (typeof b64 !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(b64.trim())) throw new NplnIdError('bad_key', 'key is not base64');
+  const bin = atob(b64.trim());
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+/** key (base64) + h -> NPLN user ID. Throws unless the hash and the ID format both check out. */
+function decodeSeedKey(key, h) {
+  const hash = Number(h);
+  if (!Number.isInteger(hash) || hash < 0 || hash > 0xffffffff) throw new NplnIdError('bad_key', 'h must be a uint32');
+  const bytes = base64ToBytes(key);
+  let id = '';
+  for (const b of bytes) id += String.fromCharCode(b ^ (hash & 0xff));
+  if (!/^[\x20-\x7e]*$/.test(id) || murmur3x86_32(id) !== hash >>> 0) throw new NplnIdError('bad_key', 'key and h do not match');
+  if (!NPLN_USER_ID_RE.test(id)) throw new NplnIdError('bad_id', 'decoded value is not an NPLN user ID');
+  return id;
+}
+
+/**
+ * Accepts the text of: a Leanny backup ({ UserData: { UserKey, H } } or top-level { UserKey, H }),
+ * or nxapi `util splatoon3-seed --json` output ({ key, h }).
+ */
+function idFromSeedExport(text) {
+  let data;
+  try { data = JSON.parse(text); } catch { throw new NplnIdError('bad_file', 'not valid JSON'); }
+  if (!data || typeof data !== 'object') throw new NplnIdError('bad_file', 'not a JSON object');
+  const candidates = [
+    data.UserData && [data.UserData.UserKey, data.UserData.H],
+    [data.UserKey, data.H],
+    [data.key, data.h],
+  ].filter(c => c && typeof c[0] === 'string' && c[0] !== '' && c[1] != null);
+  if (!candidates.length) throw new NplnIdError('no_key', 'no seed key in this file (UserData.UserKey/H or key/h)');
+  return decodeSeedKey(candidates[0][0], candidates[0][1]);
+}
+
+function normalizeReplayCode(code) {
+  const c = String(code ?? '').toUpperCase().replace(/[\s-]/g, '');
+  if (!/^[A-Z0-9]{16}$/.test(c)) throw new NplnIdError('invalid_code', 'replay code must be 16 letters/digits');
+  return c;
+}
+
+/** Re-derive the ID from replay.id (base64 of "Replay-u-…:<CODE>"). */
+function idFromReplayId(replayId, code) {
+  let s;
+  try { s = atob(String(replayId)); } catch { return null; }
+  const m = s.match(/^Replay-(u-[0-9a-z]{20}):([0-9A-Z]{16})$/);
+  if (!m || (code && m[2] !== code)) return null;
+  return m[1];
+}
+
+/**
+ * Replay code -> NPLN user ID via the existing lookup API.
+ * Errors: invalid_code | network (offline, blocked, or cross-origin refused) | timeout |
+ *         not_found | server | bad_response
+ */
+async function lookupReplayCode(code, { fetchImpl = globalThis.fetch, timeoutMs = 20000, baseUrl = REPLAY_LOOKUP_URL } = {}) {
+  const c = normalizeReplayCode(code);
+  let res;
+  try {
+    res = await fetchImpl(baseUrl + c, { signal: AbortSignal.timeout(timeoutMs), headers: { Accept: 'application/json' } });
+  } catch (e) {
+    if (e && (e.name === 'TimeoutError' || e.name === 'AbortError')) throw new NplnIdError('timeout', 'lookup timed out');
+    throw new NplnIdError('network', 'request failed (offline, blocked, or cross-origin refused)');
+  }
+  let body = null;
+  try { body = await res.json(); } catch { /* handled below */ }
+  if (!res.ok) {
+    if (res.status === 404 || body?.error === 'not_found') throw new NplnIdError('not_found', 'replay not found');
+    if (res.status === 400 || body?.error === 'invalid_code') throw new NplnIdError('invalid_code', 'server rejected the code');
+    throw new NplnIdError('server', `lookup server error ${res.status}${body?.error_message ? `: ${body.error_message}` : ''}`);
+  }
+  if (!body || typeof body !== 'object') throw new NplnIdError('bad_response', 'response is not JSON');
+  const fromField = body.npln_user_id;
+  const fromReplay = body.replay ? idFromReplayId(body.replay.id, c) : null;
+  if (!NPLN_USER_ID_RE.test(String(fromField ?? ''))) throw new NplnIdError('bad_response', 'response has no valid npln_user_id');
+  if (fromReplay !== fromField) throw new NplnIdError('bad_response', 'npln_user_id does not match replay.id');
+  const player = body.replay?.historyDetail?.player;
+  return { id: fromField, playerName: player ? `${player.name}#${player.nameId}` : null };
+}
+
+// ---- lab.html
+
+
+
+
+const LABEL=['황금','은색','동색','빨강','보라','하늘'];
+const $=id=>document.getElementById(id); const obs=[];
+const dot=g=>{const i=document.createElement('i');i.className='dot g'+g;i.title=LABEL[g];return i};
+$('season').value=seasonAt(new Date());
+function fillMissing(){const per=jackpotItemsPerKind(parseInt($('season').value)||1);for(const id of ['mb','mt']){const s=$(id),v=s.value;s.replaceChildren(...Array.from({length:per+1},(_,i)=>{const o=document.createElement('option');o.value=i;o.textContent=i===0?'0 (모두 보유)':`${i}`;return o}));s.value=v&&v<=per?v:per}}
+fillMissing();$('season').oninput=fillMissing;
+const ID_KEY='splat-seed-lab-npln';
+const ERR={invalid_code:'리플레이 코드 형식이 아닙니다(16자).',network:'조회 서버에 연결하지 못했습니다. 서버가 멈췄거나, 이 사이트에서의 요청을 막고 있을 수 있습니다.',timeout:'조회 시간이 초과됐습니다.',not_found:'리플레이를 찾지 못했습니다. 코드와 업로드 상태를 확인하세요.',server:'조회 서버 오류입니다.',bad_response:'조회 결과가 올바르지 않아 사용하지 않았습니다.',bad_file:'JSON 파일이 아닙니다.',no_key:'이 파일에는 시드 키가 없습니다. Leanny에 ID가 등록된 상태에서 백업하세요.',bad_key:'파일의 키가 손상됐거나 맞지 않습니다.',bad_id:'파일의 값이 NPLN ID 형식이 아닙니다.'};
+function setId(id,how){$('npln').value=id;$('src').value='id';$('src').onchange();$('idStatus').textContent=`${how}: ${id.slice(0,4)}…${id.slice(-4)} (1번 칸에 채움)`;if($('remember').checked){try{localStorage.setItem(ID_KEY,id)}catch{}}}
+function idError(e){$('idStatus').textContent='실패: '+(ERR[e.kind]??e.message)+(e.kind==='server'?` (${e.message})`:'')}
+try{const saved=localStorage.getItem(ID_KEY);if(saved){$('npln').value=saved;$('remember').checked=true;$('idStatus').textContent='이 기기에 기억된 ID를 불러왔습니다.'}}catch{}
+$('remember').onchange=()=>{try{if($('remember').checked){const v=$('npln').value.trim();if(v)localStorage.setItem(ID_KEY,v)}else localStorage.removeItem(ID_KEY)}catch{}};
+$('lookup').onclick=async()=>{$('lookup').disabled=true;$('idStatus').textContent='조회 중…';try{const r=await lookupReplayCode($('replay').value);setId(r.id,'리플레이 조회 성공'+(r.playerName?` · ${r.playerName}`:''))}catch(e){idError(e)}finally{$('lookup').disabled=false}};
+$('backup').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{if(f.size>20_000_000)throw Object.assign(Error('파일이 너무 큽니다.'),{kind:'too_big'});setId(idFromSeedExport(await f.text()),'백업에서 가져옴')}catch(err){idError(err)}e.target.value=''};
+$('src').onchange=()=>{const id=$('src').value==='id';$('idBox').hidden=!id;$('stateBox').hidden=id;$('rangeBox').style.visibility=id?'visible':'hidden';$('go').textContent=id?'탐색 시작':'직접 재현'};
+$('caps').replaceChildren(...GRADES.map((_,g)=>{const b=document.createElement('button');b.className='cb';b.append(dot(g),document.createElement('br'),LABEL[g]);b.onclick=()=>{obs.push(g);draw()};return b}));
+$('undo').onclick=()=>{obs.pop();draw()};$('clr').onclick=()=>{obs.length=0;draw()};
+function draw(){$('seq').replaceChildren(...obs.map(dot));$('seqInfo').textContent=`${obs.length}회 입력 · 색만으로는 약 20회 이상이면 100만 범위에서 대부분 하나로 좁혀집니다.`}
+draw();
+let worker=null,runner=null,jobId=0;
+function params(){
+  const season=parseInt($('season').value,10);const context={season,missingBanners:+$('mb').value,missingTitles:+$('mt').value};
+  const p={mode:$('mode').value,observations:obs.map(g=>({grade:g})),context,maxOffset:+$('range').value,maxCandidates:64};
+  p.nplnUserId=$('npln').value.trim();
+  makeContext(context); if(p.nplnUserId!==undefined) initialState(p.nplnUserId,p.mode); return p}
+function busy(b){$('go').disabled=b;$('stop').disabled=!b;$('prog').hidden=!b}
+function onMsg(m){if(m.id!==jobId)return;
+  if(m.type==='progress'){$('prog').value=m.progress;$('status').textContent=`탐색 중 ${(m.progress*100).toFixed(1)}% · 후보 ${m.found}`}
+  else if(m.type==='done'){busy(false);show(m.result);$('status').textContent=`완료 · ${m.result.searched.toLocaleString()}개 위치 · ${Math.round(m.ms)}ms`}
+  else if(m.type==='cancelled'){busy(false);$('status').textContent=`취소됨 (${m.searched.toLocaleString()}개 위치까지 확인)`}
+  else if(m.type==='error'){busy(false);$('status').textContent='오류: '+m.message}}
+function mainThreadRun(id,p){ // fallback when module workers are unavailable (e.g. file://)
+  const startState=initialState(p.nplnUserId,p.mode);const s=new OffsetSearch({startState,observations:p.observations,context:makeContext(p.context),maxOffset:p.maxOffset,maxCandidates:p.maxCandidates});const t=performance.now();
+  runner={cancel(){runner=null;onMsg({type:'cancelled',id,searched:s.offset})}};
+  (function loop(){if(!runner)return;const t0=performance.now();while(!s.done&&performance.now()-t0<25)s.step(4096);
+    if(s.done){runner=null;onMsg({type:'done',id,result:s.result(),ms:performance.now()-t})}else{onMsg({type:'progress',id,progress:s.progress,found:s.candidates.length});setTimeout(loop,0)}})()}
+function afterState(){const v=['a0','a1','a2','a3'].map(i=>$(i).value.trim());if(v.every(x=>!x))return null;try{return parseStateHex(v)}catch(e){throw Error('마지막 뽑기 직후 상태: 4칸 모두 올바른 16진수로 입력하거나 모두 비우세요 ('+e.message+')')}}
+let searchAfter=null;
+function directRun(){ // startStateBeforeFirstPull: reproduce only, no position search
+  const season=parseInt($('season').value,10);const ctx=makeContext({season,missingBanners:+$('mb').value,missingTitles:+$('mt').value});
+  const before=parseStateHex(['s0','s1','s2','s3'].map(i=>$(i).value));const after=afterState();
+  const r=reproduce(before,ctx,obs.map(g=>({grade:g})));$('out').hidden=false;$('pred').replaceChildren();$('cands').textContent='';
+  const tag=(t,ok)=>`<span class="tag ${ok?'ok':'no'}">${t}</span>`;
+  if(r.firstMismatch>=0){$('verdict').innerHTML=tag(`${r.firstMismatch+1}번째 결과에서 불일치 — 첫 뽑기 직전 상태가 아니거나 보유 수가 다릅니다`,false);$('gold').textContent='—';$('status').textContent='직접 재현 · 탐색 0회';return}
+  let msg=`입력한 ${obs.length}회 모두 재현 일치`;let ok=true;if(after){ok=after.join()===r.stateAfterLastPull.join();msg+=ok?' · 마지막 뽑기 직후 상태 일치':' · 마지막 뽑기 직후 상태 불일치 — 예측을 표시하지 않습니다'}
+  $('verdict').innerHTML=tag(msg,ok);$('status').textContent='직접 재현 · 탐색 0회';if(!ok){$('gold').textContent='—';return}
+  $('pred').replaceChildren(...simulate(r.stateAfterLastPull,r.contextAfter,30).pulls.map(x=>dot(x.grade)));const g=pullsUntilGold(r.stateAfterLastPull,r.contextAfter);$('gold').textContent=g?`${g.toLocaleString()}번째`:'20만 회 내 없음'}
+$('go').onclick=()=>{let p;if($('src').value==='before'){try{if(!obs.length)throw Error('뽑기 결과를 먼저 입력하세요.');directRun()}catch(e){$('status').textContent='입력 오류: '+e.message}return}
+  try{if(!obs.length)throw Error('뽑기 결과를 먼저 입력하세요.');p=params();searchAfter=afterState()}catch(e){$('status').textContent='입력 오류: '+e.message;return}
+  jobId++;busy(true);$('out').hidden=true;
+  try{worker??=new Worker(new URL('./engine/search-worker.mjs',import.meta.url),{type:'module'});worker.onmessage=e=>onMsg(e.data);worker.onerror=()=>{worker=null;mainThreadRun(jobId,p)};worker.postMessage({type:'start',id:jobId,params:p})}
+  catch{worker=null;mainThreadRun(jobId,p)}};
+$('stop').onclick=()=>{if(runner)runner.cancel();else if(worker)worker.postMessage({type:'cancel'})};
+function show(r){$('out').hidden=false;const n=r.candidates.length;
+  const tag=(t,ok)=>`<span class="tag ${ok?'ok':'no'}">${t}</span>`;
+  $('verdict').innerHTML=r.unique?tag('후보 1개 · 탐색 범위 내 확정',true):n===0?tag('후보 없음 — 입력·보유 상태·범위를 확인하세요',false):r.truncated?tag(`후보 ${n}개 이상 · 결과를 더 입력하세요`,false):tag(`후보 ${n}개 · 아직 확정 아님`,false);
+  $('pred').replaceChildren();$('gold').textContent='—';$('cands').textContent='';
+  if(n>=1){const c=r.candidates[0];
+    if(r.unique){if(searchAfter){const same=searchAfter.join()===c.stateAfter.join();$('verdict').innerHTML+=' '+tag(same?'마지막 뽑기 직후 상태 일치':'마지막 뽑기 직후 상태 불일치 — 예측을 표시하지 않습니다',same);if(!same)return}$('pred').replaceChildren(...simulate(c.stateAfter,c.contextAfter,30).pulls.map(x=>dot(x.grade)));const g=pullsUntilGold(c.stateAfter,c.contextAfter);$('gold').textContent=g?`${g.toLocaleString()}번째`:'20만 회 내 없음'}
+    else{const gs=r.candidates.map(c=>pullsUntilGold(c.stateAfter,c.contextAfter));$('gold').textContent='확정 전';$('cands').textContent='후보별 황금까지: '+gs.slice(0,12).map(g=>g??'∞').join(', ')+(n>12?' …':'')}}}
+
+</script></body></html>

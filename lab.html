@@ -21,10 +21,21 @@ button.a{border:0;border-radius:11px;padding:10px 14px;background:#454351;color:
 <div class="muted">독립 계산 엔진 테스트 페이지 · 서버 없이 이 브라우저에서만 계산</div>
 <div class="warn"><b>실험용 · 실제 게임 대조 검증 전.</b> 공개 시드 도구와의 계산 일치만 확인된 상태입니다. 결과를 실제 예측으로 신뢰하지 마세요. 상세는 README의 "검증 상태"를 참고하세요.</div>
 
+<section class="card"><h2>0. 내 NPLN ID 가져오기 (한 번만)</h2>
+<p class="muted">ID는 평생 바뀌지 않습니다. 아래 둘 중 하나로 한 번 가져오면 1번 칸에 채워집니다.</p>
+<label for="replay">A. 리플레이 코드로 조회</label>
+<div class="row"><input id="replay" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX"><button class="a" id="lookup" type="button">조회</button></div>
+<p class="muted">게임에서 내 대전 리플레이를 업로드해 받은 코드. 기존 공개 조회 API(Leanny용)를 개인 용도로 한 번 호출합니다. 서버가 멈췄거나 다른 사이트 요청을 막으면 실패할 수 있습니다.</p>
+<label for="backup">B. Leanny 백업 파일에서 가져오기</label>
+<input id="backup" type="file" accept=".json,application/json,text/plain">
+<p class="muted">Leanny Seed Checker 설정에서 내보낸 백업(또는 nxapi <code>util splatoon3-seed --json</code> 출력). 파일은 이 브라우저 안에서만 읽고 어디에도 보내지 않습니다.</p>
+<label style="display:flex;gap:8px;align-items:center"><input id="remember" type="checkbox" style="width:auto"> 이 기기에 ID 기억하기</label>
+<div class="muted" id="idStatus" aria-live="polite"></div></section>
+
 <section class="card"><h2>1. 스트림</h2>
 <div class="row"><div><label for="mode">뽑기 종류</label><select id="mode"><option value="normal">일반 뽑기</option><option value="fest">페스티벌 뽑기</option></select></div>
 <div><label for="src">기준 상태</label><select id="src"><option value="id">NPLN 유저 ID → 위치 탐색</option><option value="before">첫 뽑기 직전 상태 → 직접 재현</option></select></div></div>
-<div id="idBox"><label for="npln">NPLN 유저 ID (이 기기에 저장하지 않음)</label><input id="npln" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="u-로 시작하는 22자 (예: u-abc…)"></div>
+<div id="idBox"><label for="npln">NPLN 유저 ID (0번에서 가져오거나 직접 입력)</label><input id="npln" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="u-로 시작하는 22자 (예: u-abc…)"></div>
 <div id="stateBox" hidden><label>첫 뽑기 직전 상태 4워드 (아래 2번에 입력할 <b>첫 결과를 뽑기 직전</b> 값)</label><div class="hex"><input id="s0" placeholder="0x…"><input id="s1" placeholder="0x…"><input id="s2" placeholder="0x…"><input id="s3" placeholder="0x…"></div><p class="muted">이 상태를 알면 위치 탐색 없이 바로 재현합니다. ID에서 만든 초기 상태나 이미 뽑은 뒤의 상태를 넣으면 불일치로 표시됩니다.</p></div>
 <label>마지막 뽑기 직후 상태 4워드 (선택 · 계산 결과와 비교)</label><div class="hex"><input id="a0" placeholder="0x…"><input id="a1" placeholder="0x…"><input id="a2" placeholder="0x…"><input id="a3" placeholder="0x…"></div>
 <div class="row"><div><label for="season">시즌 번호</label><input id="season" inputmode="numeric"></div><div id="rangeBox"><label for="range">탐색 범위(난수 위치 수)</label><select id="range"><option value="65536">65,536</option><option value="262144">262,144</option><option value="1048576" selected>1,048,576</option><option value="4194304">4,194,304</option></select></div></div>
@@ -48,12 +59,21 @@ button.a{border:0;border-radius:11px;padding:10px 14px;background:#454351;color:
 <script type="module">
 import { GRADES, seasonAt, jackpotItemsPerKind, makeContext, simulate, pullsUntilGold, OffsetSearch, initialState, reproduce } from './engine/shellout.mjs';
 import { parseStateHex } from './engine/xorshift128.mjs';
+import { idFromSeedExport, lookupReplayCode } from './engine/npln-id.mjs';
 const LABEL=['황금','은색','동색','빨강','보라','하늘'];
 const $=id=>document.getElementById(id); const obs=[];
 const dot=g=>{const i=document.createElement('i');i.className='dot g'+g;i.title=LABEL[g];return i};
 $('season').value=seasonAt(new Date());
 function fillMissing(){const per=jackpotItemsPerKind(parseInt($('season').value)||1);for(const id of ['mb','mt']){const s=$(id),v=s.value;s.replaceChildren(...Array.from({length:per+1},(_,i)=>{const o=document.createElement('option');o.value=i;o.textContent=i===0?'0 (모두 보유)':`${i}`;return o}));s.value=v&&v<=per?v:per}}
 fillMissing();$('season').oninput=fillMissing;
+const ID_KEY='splat-seed-lab-npln';
+const ERR={invalid_code:'리플레이 코드 형식이 아닙니다(16자).',network:'조회 서버에 연결하지 못했습니다. 서버가 멈췄거나, 이 사이트에서의 요청을 막고 있을 수 있습니다.',timeout:'조회 시간이 초과됐습니다.',not_found:'리플레이를 찾지 못했습니다. 코드와 업로드 상태를 확인하세요.',server:'조회 서버 오류입니다.',bad_response:'조회 결과가 올바르지 않아 사용하지 않았습니다.',bad_file:'JSON 파일이 아닙니다.',no_key:'이 파일에는 시드 키가 없습니다. Leanny에 ID가 등록된 상태에서 백업하세요.',bad_key:'파일의 키가 손상됐거나 맞지 않습니다.',bad_id:'파일의 값이 NPLN ID 형식이 아닙니다.'};
+function setId(id,how){$('npln').value=id;$('src').value='id';$('src').onchange();$('idStatus').textContent=`${how}: ${id.slice(0,4)}…${id.slice(-4)} (1번 칸에 채움)`;if($('remember').checked){try{localStorage.setItem(ID_KEY,id)}catch{}}}
+function idError(e){$('idStatus').textContent='실패: '+(ERR[e.kind]??e.message)+(e.kind==='server'?` (${e.message})`:'')}
+try{const saved=localStorage.getItem(ID_KEY);if(saved){$('npln').value=saved;$('remember').checked=true;$('idStatus').textContent='이 기기에 기억된 ID를 불러왔습니다.'}}catch{}
+$('remember').onchange=()=>{try{if($('remember').checked){const v=$('npln').value.trim();if(v)localStorage.setItem(ID_KEY,v)}else localStorage.removeItem(ID_KEY)}catch{}};
+$('lookup').onclick=async()=>{$('lookup').disabled=true;$('idStatus').textContent='조회 중…';try{const r=await lookupReplayCode($('replay').value);setId(r.id,'리플레이 조회 성공'+(r.playerName?` · ${r.playerName}`:''))}catch(e){idError(e)}finally{$('lookup').disabled=false}};
+$('backup').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{if(f.size>20_000_000)throw Object.assign(Error('파일이 너무 큽니다.'),{kind:'too_big'});setId(idFromSeedExport(await f.text()),'백업에서 가져옴')}catch(err){idError(err)}e.target.value=''};
 $('src').onchange=()=>{const id=$('src').value==='id';$('idBox').hidden=!id;$('stateBox').hidden=id;$('rangeBox').style.visibility=id?'visible':'hidden';$('go').textContent=id?'탐색 시작':'직접 재현'};
 $('caps').replaceChildren(...GRADES.map((_,g)=>{const b=document.createElement('button');b.className='cb';b.append(dot(g),document.createElement('br'),LABEL[g]);b.onclick=()=>{obs.push(g);draw()};return b}));
 $('undo').onclick=()=>{obs.pop();draw()};$('clr').onclick=()=>{obs.length=0;draw()};
