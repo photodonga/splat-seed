@@ -23,10 +23,11 @@ button.a{border:0;border-radius:11px;padding:10px 14px;background:#454351;color:
 
 <section class="card"><h2>1. 스트림</h2>
 <div class="row"><div><label for="mode">뽑기 종류</label><select id="mode"><option value="normal">일반 뽑기</option><option value="fest">페스티벌 뽑기</option></select></div>
-<div><label for="src">시작점</label><select id="src"><option value="id">NPLN 유저 ID</option><option value="state">현재 상태 4워드</option></select></div></div>
+<div><label for="src">기준 상태</label><select id="src"><option value="id">NPLN 유저 ID → 위치 탐색</option><option value="before">첫 뽑기 직전 상태 → 직접 재현</option></select></div></div>
 <div id="idBox"><label for="npln">NPLN 유저 ID (이 기기에 저장하지 않음)</label><input id="npln" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="영문 소문자·숫자"></div>
-<div id="stateBox" hidden><label>상태 (16진수, 다른 도구에서 확인한 값)</label><div class="hex"><input id="s0" placeholder="0x…"><input id="s1" placeholder="0x…"><input id="s2" placeholder="0x…"><input id="s3" placeholder="0x…"></div></div>
-<div class="row"><div><label for="season">시즌 번호</label><input id="season" inputmode="numeric"></div><div><label for="range">탐색 범위(난수 위치 수)</label><select id="range"><option value="65536">65,536</option><option value="262144">262,144</option><option value="1048576" selected>1,048,576</option><option value="4194304">4,194,304</option></select></div></div>
+<div id="stateBox" hidden><label>첫 뽑기 직전 상태 4워드 (아래 2번에 입력할 <b>첫 결과를 뽑기 직전</b> 값)</label><div class="hex"><input id="s0" placeholder="0x…"><input id="s1" placeholder="0x…"><input id="s2" placeholder="0x…"><input id="s3" placeholder="0x…"></div><p class="muted">이 상태를 알면 위치 탐색 없이 바로 재현합니다. ID에서 만든 초기 상태나 이미 뽑은 뒤의 상태를 넣으면 불일치로 표시됩니다.</p></div>
+<label>마지막 뽑기 직후 상태 4워드 (선택 · 계산 결과와 비교)</label><div class="hex"><input id="a0" placeholder="0x…"><input id="a1" placeholder="0x…"><input id="a2" placeholder="0x…"><input id="a3" placeholder="0x…"></div>
+<div class="row"><div><label for="season">시즌 번호</label><input id="season" inputmode="numeric"></div><div id="rangeBox"><label for="range">탐색 범위(난수 위치 수)</label><select id="range"><option value="65536">65,536</option><option value="262144">262,144</option><option value="1048576" selected>1,048,576</option><option value="4194304">4,194,304</option></select></div></div>
 <div class="row"><div><label for="mb">이번 시즌 잭팟 배너 중 미보유 수</label><select id="mb"></select></div><div><label for="mt">이번 시즌 잭팟 칭호 중 미보유 수</label><select id="mt"></select></div></div>
 <p class="muted">미보유 수는 <b>입력한 첫 뽑기 직전</b> 기준입니다. 이미 가진 잭팟은 금·은 대신 동색이 나오고 난수 소비도 달라집니다.</p></section>
 
@@ -45,7 +46,7 @@ button.a{border:0;border-radius:11px;padding:10px 14px;background:#454351;color:
 <div class="actions"><label class="muted" style="margin:0">추가 결과를 2번에 입력한 뒤 다시 탐색하면 후보가 줄어듭니다.</label></div></section>
 </div>
 <script type="module">
-import { GRADES, seasonAt, jackpotItemsPerKind, makeContext, simulate, pullsUntilGold, OffsetSearch, initialState } from './engine/shellout.mjs';
+import { GRADES, seasonAt, jackpotItemsPerKind, makeContext, simulate, pullsUntilGold, OffsetSearch, initialState, reproduce } from './engine/shellout.mjs';
 import { parseStateHex } from './engine/xorshift128.mjs';
 const LABEL=['황금','은색','동색','빨강','보라','하늘'];
 const $=id=>document.getElementById(id); const obs=[];
@@ -53,7 +54,7 @@ const dot=g=>{const i=document.createElement('i');i.className='dot g'+g;i.title=
 $('season').value=seasonAt(new Date());
 function fillMissing(){const per=jackpotItemsPerKind(parseInt($('season').value)||1);for(const id of ['mb','mt']){const s=$(id),v=s.value;s.replaceChildren(...Array.from({length:per+1},(_,i)=>{const o=document.createElement('option');o.value=i;o.textContent=i===0?'0 (모두 보유)':`${i}`;return o}));s.value=v&&v<=per?v:per}}
 fillMissing();$('season').oninput=fillMissing;
-$('src').onchange=()=>{const id=$('src').value==='id';$('idBox').hidden=!id;$('stateBox').hidden=id;$('range').value=id?'1048576':'65536'};
+$('src').onchange=()=>{const id=$('src').value==='id';$('idBox').hidden=!id;$('stateBox').hidden=id;$('rangeBox').style.visibility=id?'visible':'hidden';$('go').textContent=id?'탐색 시작':'직접 재현'};
 $('caps').replaceChildren(...GRADES.map((_,g)=>{const b=document.createElement('button');b.className='cb';b.append(dot(g),document.createElement('br'),LABEL[g]);b.onclick=()=>{obs.push(g);draw()};return b}));
 $('undo').onclick=()=>{obs.pop();draw()};$('clr').onclick=()=>{obs.length=0;draw()};
 function draw(){$('seq').replaceChildren(...obs.map(dot));$('seqInfo').textContent=`${obs.length}회 입력 · 색만으로는 약 20회 이상이면 100만 범위에서 대부분 하나로 좁혀집니다.`}
@@ -62,7 +63,7 @@ let worker=null,runner=null,jobId=0;
 function params(){
   const season=parseInt($('season').value,10);const context={season,missingBanners:+$('mb').value,missingTitles:+$('mt').value};
   const p={mode:$('mode').value,observations:obs.map(g=>({grade:g})),context,maxOffset:+$('range').value,maxCandidates:64};
-  if($('src').value==='id'){p.nplnUserId=$('npln').value.trim()}else{p.startState=parseStateHex(['s0','s1','s2','s3'].map(i=>$(i).value))}
+  p.nplnUserId=$('npln').value.trim();
   makeContext(context); if(p.nplnUserId!==undefined) initialState(p.nplnUserId,p.mode); return p}
 function busy(b){$('go').disabled=b;$('stop').disabled=!b;$('prog').hidden=!b}
 function onMsg(m){if(m.id!==jobId)return;
@@ -71,11 +72,22 @@ function onMsg(m){if(m.id!==jobId)return;
   else if(m.type==='cancelled'){busy(false);$('status').textContent=`취소됨 (${m.searched.toLocaleString()}개 위치까지 확인)`}
   else if(m.type==='error'){busy(false);$('status').textContent='오류: '+m.message}}
 function mainThreadRun(id,p){ // fallback when module workers are unavailable (e.g. file://)
-  const startState=p.startState??initialState(p.nplnUserId,p.mode);const s=new OffsetSearch({startState,observations:p.observations,context:makeContext(p.context),maxOffset:p.maxOffset,maxCandidates:p.maxCandidates});const t=performance.now();
+  const startState=initialState(p.nplnUserId,p.mode);const s=new OffsetSearch({startState,observations:p.observations,context:makeContext(p.context),maxOffset:p.maxOffset,maxCandidates:p.maxCandidates});const t=performance.now();
   runner={cancel(){runner=null;onMsg({type:'cancelled',id,searched:s.offset})}};
   (function loop(){if(!runner)return;const t0=performance.now();while(!s.done&&performance.now()-t0<25)s.step(4096);
     if(s.done){runner=null;onMsg({type:'done',id,result:s.result(),ms:performance.now()-t})}else{onMsg({type:'progress',id,progress:s.progress,found:s.candidates.length});setTimeout(loop,0)}})()}
-$('go').onclick=()=>{let p;try{if(!obs.length)throw Error('뽑기 결과를 먼저 입력하세요.');p=params()}catch(e){$('status').textContent='입력 오류: '+e.message;return}
+function afterState(){const v=['a0','a1','a2','a3'].map(i=>$(i).value.trim());if(v.every(x=>!x))return null;return parseStateHex(v)}
+function directRun(){ // startStateBeforeFirstPull: reproduce only, no position search
+  const season=parseInt($('season').value,10);const ctx=makeContext({season,missingBanners:+$('mb').value,missingTitles:+$('mt').value});
+  const before=parseStateHex(['s0','s1','s2','s3'].map(i=>$(i).value));const after=afterState();
+  const r=reproduce(before,ctx,obs.map(g=>({grade:g})));$('out').hidden=false;$('pred').replaceChildren();$('cands').textContent='';
+  const tag=(t,ok)=>`<span class="tag ${ok?'ok':'no'}">${t}</span>`;
+  if(r.firstMismatch>=0){$('verdict').innerHTML=tag(`${r.firstMismatch+1}번째 결과에서 불일치 — 첫 뽑기 직전 상태가 아니거나 보유 수가 다릅니다`,false);$('gold').textContent='—';$('status').textContent='직접 재현 · 탐색 0회';return}
+  let msg=`입력한 ${obs.length}회 모두 재현 일치`;let ok=true;if(after){ok=after.join()===r.stateAfterLastPull.join();msg+=ok?' · 마지막 뽑기 직후 상태 일치':' · 마지막 뽑기 직후 상태 불일치'}
+  $('verdict').innerHTML=tag(msg,ok);$('status').textContent='직접 재현 · 탐색 0회';if(!ok){$('gold').textContent='—';return}
+  $('pred').replaceChildren(...simulate(r.stateAfterLastPull,r.contextAfter,30).pulls.map(x=>dot(x.grade)));const g=pullsUntilGold(r.stateAfterLastPull,r.contextAfter);$('gold').textContent=g?`${g.toLocaleString()}번째`:'20만 회 내 없음'}
+$('go').onclick=()=>{let p;if($('src').value==='before'){try{if(!obs.length)throw Error('뽑기 결과를 먼저 입력하세요.');directRun()}catch(e){$('status').textContent='입력 오류: '+e.message}return}
+  try{if(!obs.length)throw Error('뽑기 결과를 먼저 입력하세요.');p=params()}catch(e){$('status').textContent='입력 오류: '+e.message;return}
   jobId++;busy(true);$('out').hidden=true;
   try{worker??=new Worker(new URL('./engine/search-worker.mjs',import.meta.url),{type:'module'});worker.onmessage=e=>onMsg(e.data);worker.onerror=()=>{worker=null;mainThreadRun(jobId,p)};worker.postMessage({type:'start',id:jobId,params:p})}
   catch{worker=null;mainThreadRun(jobId,p)}};
@@ -85,6 +97,6 @@ function show(r){$('out').hidden=false;const n=r.candidates.length;
   $('verdict').innerHTML=r.unique?tag('후보 1개 · 탐색 범위 내 확정',true):n===0?tag('후보 없음 — 입력·보유 상태·범위를 확인하세요',false):r.truncated?tag(`후보 ${n}개 이상 · 결과를 더 입력하세요`,false):tag(`후보 ${n}개 · 아직 확정 아님`,false);
   $('pred').replaceChildren();$('gold').textContent='—';$('cands').textContent='';
   if(n>=1){const c=r.candidates[0];
-    if(r.unique){$('pred').replaceChildren(...simulate(c.stateAfter,c.contextAfter,30).pulls.map(x=>dot(x.grade)));const g=pullsUntilGold(c.stateAfter,c.contextAfter);$('gold').textContent=g?`${g.toLocaleString()}번째`:'20만 회 내 없음'}
+    if(r.unique){let after=null;try{after=afterState()}catch{}if(after){const same=after.join()===c.stateAfter.join();$('verdict').innerHTML+=' '+tag(same?'마지막 뽑기 직후 상태 일치':'마지막 뽑기 직후 상태 불일치',same)}$('pred').replaceChildren(...simulate(c.stateAfter,c.contextAfter,30).pulls.map(x=>dot(x.grade)));const g=pullsUntilGold(c.stateAfter,c.contextAfter);$('gold').textContent=g?`${g.toLocaleString()}번째`:'20만 회 내 없음'}
     else{const gs=r.candidates.map(c=>pullsUntilGold(c.stateAfter,c.contextAfter));$('gold').textContent='확정 전';$('cands').textContent='후보별 황금까지: '+gs.slice(0,12).map(g=>g??'∞').join(', ')+(n>12?' …':'')}}}
 </script></body></html>

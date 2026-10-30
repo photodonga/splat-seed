@@ -66,14 +66,18 @@ function buildTable(rows) {
 }
 export const TABLES = Object.freeze({ v110: buildTable(TABLE_V110), v300: buildTable(TABLE_V300) });
 
-/** Season numbering: 1 = first season (2022-09-01 UTC). Seasons start every 3 months (Mar/Jun/Sep/Dec 1st, 00:00 UTC). */
+/**
+ * Season numbering: 1 = first season (2022-09-01 UTC). Seasons start every 3 months (Mar/Jun/Sep/Dec 1st, 00:00 UTC).
+ * A season includes its own start instant (start <= t). The public tool counts start < t, so the two differ only at
+ * the exact start millisecond. The in-game reward-table switch time itself is unverified.
+ */
 export function seasonAt(date = new Date()) {
   const t = (date instanceof Date ? date : new Date(date)).getTime();
   if (!Number.isFinite(t)) throw new RangeError('Invalid date');
-  // Number of season starts strictly before t, counting from 2022-09-01.
+  // Number of season starts at or before t, counting from 2022-09-01.
   let count = 0;
   let year = 2022, month = 8; // Sep 2022 (0-based month)
-  while (Date.UTC(year, month, 1) < t && count < 1000) {
+  while (Date.UTC(year, month, 1) <= t && count < 1000) {
     count++;
     month += 3;
     if (month > 11) { month -= 12; year++; }
@@ -119,7 +123,7 @@ export function cloneContext(c) {
   return { season: c.season, table: c.table, ownershipAware: c.ownershipAware, missingBanners: c.missingBanners, missingTitles: c.missingTitles };
 }
 
-function selectRow(table, r) {
+export function selectRow(table, r) {
   for (let i = 0; i < table.length; i++) if (r < table[i].cumulative) return table[i];
   // r is < 100 by construction and table sums to >= 100; unreachable unless table is malformed.
   throw new Error('Reward table does not cover draw');
@@ -166,6 +170,25 @@ export function simulate(state, ctx, n) {
   const out = [];
   for (let i = 0; i < n; i++) out.push(pullOnce(rng, c));
   return { pulls: out, state: rng.state(), ctx: c };
+}
+
+/**
+ * Direct reproduction from a KNOWN state immediately before the first observed pull.
+ * No position search is performed: pull i is predicted from that exact state.
+ * Returns per-pull predictions, the first mismatch index (or -1) and the state after the last pull.
+ */
+export function reproduce(startStateBeforeFirstPull, ctx, observations) {
+  const obs = observations.map(normalizeObservation);
+  const rng = XorShift128.fromState(startStateBeforeFirstPull);
+  const c = cloneContext(ctx);
+  const pulls = [];
+  let firstMismatch = -1;
+  for (let i = 0; i < obs.length; i++) {
+    const r = pullOnce(rng, c);
+    pulls.push(r);
+    if (firstMismatch < 0 && !matches(r, obs[i])) firstMismatch = i;
+  }
+  return { pulls, firstMismatch, stateAfterLastPull: rng.state(), contextAfter: c };
 }
 
 /**

@@ -39,15 +39,19 @@ test('float32 vs double scaling never changes capsule color or RNG consumption (
   }
 });
 
-test('season numbering matches the public season boundary list', () => {
+test('season boundaries: a season includes its exact start instant', () => {
   const starts = [1661990400000, 1669852800000, 1677628800000, 1685577600000, 1693526400000, 1701388800000,
     1709251200000, 1717200000000, 1725148800000, 1733011200000, 1740787200000, 1748736000000, 1756684800000,
     1764547200000, 1772323200000, 1780272000000, 1788220800000, 1796083200000, 1803859200000];
   starts.forEach((ms, i) => {
-    assert.equal(seasonAt(new Date(ms)), i, 'exact start belongs to previous count');
+    assert.equal(seasonAt(new Date(ms - 1)), i, 'one ms before start = previous season');
+    assert.equal(seasonAt(new Date(ms)), i + 1, 'exact start instant = new season');
     assert.equal(seasonAt(new Date(ms + 1)), i + 1);
   });
+  assert.equal(seasonAt(new Date('2026-09-01T00:00:00.000Z')), 17);
+  assert.equal(seasonAt(new Date('2026-08-31T23:59:59.999Z')), 16);
   assert.equal(seasonAt(new Date('2026-10-30T10:00:00Z')), 17);
+  assert.equal(seasonAt(new Date('2022-08-31T23:59:59.999Z')), 0);
 });
 
 // ---------- parity with the public tool (NOT game truth) ----------

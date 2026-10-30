@@ -1,15 +1,25 @@
-name: Shell-Out engine tests
+name: Shell-Out engine
 on:
   pull_request:
   push:
     branches: [engine/shellout-xorshift128]
 jobs:
-  node-tests:
+  engine-tests:
+    name: engine-tests (unit, parity, synthetic round trips, validator meta-tests)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Engine unit, parity and round-trip tests (real-game fixtures run if present)
-        run: node --test tests/*.test.mjs
+      - run: node --test tests/*.test.mjs
+  game-validation:
+    name: game-validation (real-game records; FAILS until verified)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Predict unseen real-game pulls and verify jackpot rules
+        run: node validation/run-game-validation.mjs fixtures/real-game
