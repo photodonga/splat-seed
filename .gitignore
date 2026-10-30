@@ -1,0 +1,13 @@
+# Never commit Nintendo Account credentials or nxapi data.
+# nxapi stores session tokens in ~/Library/Application Support/nxapi-nodejs (macOS) by default;
+# these patterns guard against accidentally using a data path inside this repository.
+.env
+.env.*
+nxapi-data/
+nxapi-nodejs/
+data/
+*.session
+*session_token*
+*session-token*
+*.secret
+secrets/
