@@ -76,18 +76,19 @@ function mainThreadRun(id,p){ // fallback when module workers are unavailable (e
   runner={cancel(){runner=null;onMsg({type:'cancelled',id,searched:s.offset})}};
   (function loop(){if(!runner)return;const t0=performance.now();while(!s.done&&performance.now()-t0<25)s.step(4096);
     if(s.done){runner=null;onMsg({type:'done',id,result:s.result(),ms:performance.now()-t})}else{onMsg({type:'progress',id,progress:s.progress,found:s.candidates.length});setTimeout(loop,0)}})()}
-function afterState(){const v=['a0','a1','a2','a3'].map(i=>$(i).value.trim());if(v.every(x=>!x))return null;return parseStateHex(v)}
+function afterState(){const v=['a0','a1','a2','a3'].map(i=>$(i).value.trim());if(v.every(x=>!x))return null;try{return parseStateHex(v)}catch(e){throw Error('마지막 뽑기 직후 상태: 4칸 모두 올바른 16진수로 입력하거나 모두 비우세요 ('+e.message+')')}}
+let searchAfter=null;
 function directRun(){ // startStateBeforeFirstPull: reproduce only, no position search
   const season=parseInt($('season').value,10);const ctx=makeContext({season,missingBanners:+$('mb').value,missingTitles:+$('mt').value});
   const before=parseStateHex(['s0','s1','s2','s3'].map(i=>$(i).value));const after=afterState();
   const r=reproduce(before,ctx,obs.map(g=>({grade:g})));$('out').hidden=false;$('pred').replaceChildren();$('cands').textContent='';
   const tag=(t,ok)=>`<span class="tag ${ok?'ok':'no'}">${t}</span>`;
   if(r.firstMismatch>=0){$('verdict').innerHTML=tag(`${r.firstMismatch+1}번째 결과에서 불일치 — 첫 뽑기 직전 상태가 아니거나 보유 수가 다릅니다`,false);$('gold').textContent='—';$('status').textContent='직접 재현 · 탐색 0회';return}
-  let msg=`입력한 ${obs.length}회 모두 재현 일치`;let ok=true;if(after){ok=after.join()===r.stateAfterLastPull.join();msg+=ok?' · 마지막 뽑기 직후 상태 일치':' · 마지막 뽑기 직후 상태 불일치'}
+  let msg=`입력한 ${obs.length}회 모두 재현 일치`;let ok=true;if(after){ok=after.join()===r.stateAfterLastPull.join();msg+=ok?' · 마지막 뽑기 직후 상태 일치':' · 마지막 뽑기 직후 상태 불일치 — 예측을 표시하지 않습니다'}
   $('verdict').innerHTML=tag(msg,ok);$('status').textContent='직접 재현 · 탐색 0회';if(!ok){$('gold').textContent='—';return}
   $('pred').replaceChildren(...simulate(r.stateAfterLastPull,r.contextAfter,30).pulls.map(x=>dot(x.grade)));const g=pullsUntilGold(r.stateAfterLastPull,r.contextAfter);$('gold').textContent=g?`${g.toLocaleString()}번째`:'20만 회 내 없음'}
 $('go').onclick=()=>{let p;if($('src').value==='before'){try{if(!obs.length)throw Error('뽑기 결과를 먼저 입력하세요.');directRun()}catch(e){$('status').textContent='입력 오류: '+e.message}return}
-  try{if(!obs.length)throw Error('뽑기 결과를 먼저 입력하세요.');p=params()}catch(e){$('status').textContent='입력 오류: '+e.message;return}
+  try{if(!obs.length)throw Error('뽑기 결과를 먼저 입력하세요.');p=params();searchAfter=afterState()}catch(e){$('status').textContent='입력 오류: '+e.message;return}
   jobId++;busy(true);$('out').hidden=true;
   try{worker??=new Worker(new URL('./engine/search-worker.mjs',import.meta.url),{type:'module'});worker.onmessage=e=>onMsg(e.data);worker.onerror=()=>{worker=null;mainThreadRun(jobId,p)};worker.postMessage({type:'start',id:jobId,params:p})}
   catch{worker=null;mainThreadRun(jobId,p)}};
@@ -97,6 +98,6 @@ function show(r){$('out').hidden=false;const n=r.candidates.length;
   $('verdict').innerHTML=r.unique?tag('후보 1개 · 탐색 범위 내 확정',true):n===0?tag('후보 없음 — 입력·보유 상태·범위를 확인하세요',false):r.truncated?tag(`후보 ${n}개 이상 · 결과를 더 입력하세요`,false):tag(`후보 ${n}개 · 아직 확정 아님`,false);
   $('pred').replaceChildren();$('gold').textContent='—';$('cands').textContent='';
   if(n>=1){const c=r.candidates[0];
-    if(r.unique){let after=null;try{after=afterState()}catch{}if(after){const same=after.join()===c.stateAfter.join();$('verdict').innerHTML+=' '+tag(same?'마지막 뽑기 직후 상태 일치':'마지막 뽑기 직후 상태 불일치',same)}$('pred').replaceChildren(...simulate(c.stateAfter,c.contextAfter,30).pulls.map(x=>dot(x.grade)));const g=pullsUntilGold(c.stateAfter,c.contextAfter);$('gold').textContent=g?`${g.toLocaleString()}번째`:'20만 회 내 없음'}
+    if(r.unique){if(searchAfter){const same=searchAfter.join()===c.stateAfter.join();$('verdict').innerHTML+=' '+tag(same?'마지막 뽑기 직후 상태 일치':'마지막 뽑기 직후 상태 불일치 — 예측을 표시하지 않습니다',same);if(!same)return}$('pred').replaceChildren(...simulate(c.stateAfter,c.contextAfter,30).pulls.map(x=>dot(x.grade)));const g=pullsUntilGold(c.stateAfter,c.contextAfter);$('gold').textContent=g?`${g.toLocaleString()}번째`:'20만 회 내 없음'}
     else{const gs=r.candidates.map(c=>pullsUntilGold(c.stateAfter,c.contextAfter));$('gold').textContent='확정 전';$('cands').textContent='후보별 황금까지: '+gs.slice(0,12).map(g=>g??'∞').join(', ')+(n>12?' …':'')}}}
 </script></body></html>

@@ -13,6 +13,10 @@ import { evaluateFixture, evaluateGate, parseFixture } from '../validation/game-
 const hex = s => s.map(v => '0x' + v.toString(16).padStart(8, '0'));
 const colors = pulls => pulls.map(p => GRADES[p.grade]);
 const flip = (arr, i) => arr.map((c, k) => (k === i ? (c === 'blue' ? 'purple' : 'blue') : c));
+const PROV = { method: 'manual', evidence: 'synthetic test data', recordedBy: 'test' };
+/** Awards a recorder would actually see on screen (synthetic stand-in for observation). */
+const awardsOf = pulls => pulls.map((p, k) => (p.row.subType === 'Limited' && !p.substituted ? { index: k, kind: 'awarded', rewardType: p.row.type } : null)).filter(Boolean);
+const meta = pulls => ({ provenance: PROV, observedEvents: awardsOf(pulls) });
 
 /** Synthetic direct-mode fixture: `before` pulls into a stream, then `n` recorded pulls. */
 function direct({ key = 'synthetic00000000001', mode = 'normal', season = 17, own = [2, 2], before = 500, n = 30 } = {}) {
@@ -21,7 +25,7 @@ function direct({ key = 'synthetic00000000001', mode = 'normal', season = 17, ow
   const rec = simulate(h.state, h.ctx, n);
   return {
     fixture: {
-      source: 'real-game', mode, season,
+      source: 'real-game', ...meta(rec.pulls), mode, season,
       ownershipBeforeFirstPull: { missingBanners: h.ctx.missingBanners, missingTitles: h.ctx.missingTitles },
       startStateBeforeFirstPull: hex(h.state), pulls: colors(rec.pulls),
     },
@@ -90,7 +94,7 @@ test('search mode: position found from initialState, then unseen pulls must matc
   const ctx = makeContext({ season: 17 });
   const h = simulate(initialState(key, 'fest'), ctx, 700);
   const rec = simulate(h.state, h.ctx, 34);
-  const base = { source: 'real-game', mode: 'fest', season: 17, ownershipBeforeFirstPull: { missingBanners: h.ctx.missingBanners, missingTitles: h.ctx.missingTitles }, initialState: hex(initialState(key, 'fest')), pulls: colors(rec.pulls), useForSearch: 22, maxOffset: 1 << 18 };
+  const base = { source: 'real-game', ...meta(rec.pulls), mode: 'fest', season: 17, ownershipBeforeFirstPull: { missingBanners: h.ctx.missingBanners, missingTitles: h.ctx.missingTitles }, initialState: hex(initialState(key, 'fest')), pulls: colors(rec.pulls), useForSearch: 22, maxOffset: 1 << 18 };
   const ok = evaluateFixture(base);
   assert.equal(ok.ok, true, ok.errors.join());
   assert.equal(ok.heldOutStart, 22); assert.equal(ok.heldOutCount, 12);
@@ -112,7 +116,7 @@ test('search mode via nplnUserId equals search via its initialState', () => {
   const ctx = makeContext({ season: 17 });
   const h = simulate(initialState(key, 'normal'), ctx, 300);
   const rec = simulate(h.state, h.ctx, 32);
-  const r = evaluateFixture({ source: 'real-game', mode: 'normal', season: 17, ownershipBeforeFirstPull: { missingBanners: h.ctx.missingBanners, missingTitles: h.ctx.missingTitles }, nplnUserId: key, pulls: colors(rec.pulls), maxOffset: 1 << 16 });
+  const r = evaluateFixture({ source: 'real-game', ...meta(rec.pulls), mode: 'normal', season: 17, ownershipBeforeFirstPull: { missingBanners: h.ctx.missingBanners, missingTitles: h.ctx.missingTitles }, nplnUserId: key, pulls: colors(rec.pulls), maxOffset: 1 << 16 });
   assert.equal(r.ok, true, r.errors.join());
 });
 
@@ -124,7 +128,7 @@ test('KNOWN LIMITATION: phase-shift twin positions are reported as "not unique" 
   const ctx = makeContext({ season: 17 });
   const h = simulate(initialState(key, 'normal'), ctx, 300);
   const rec = simulate(h.state, h.ctx, 32);
-  const r = evaluateFixture({ source: 'real-game', mode: 'normal', season: 17, ownershipBeforeFirstPull: { missingBanners: h.ctx.missingBanners, missingTitles: h.ctx.missingTitles }, nplnUserId: key, pulls: colors(rec.pulls), maxOffset: 1 << 16 });
+  const r = evaluateFixture({ source: 'real-game', ...meta(rec.pulls), mode: 'normal', season: 17, ownershipBeforeFirstPull: { missingBanners: h.ctx.missingBanners, missingTitles: h.ctx.missingTitles }, nplnUserId: key, pulls: colors(rec.pulls), maxOffset: 1 << 16 });
   assert.equal(r.ok, false);
   assert.match(r.errors.join(), /not unique/);
 });
@@ -163,13 +167,59 @@ test('jackpot award: wrong ownership input fails the record', () => {
   assert.equal(evaluateFixture(wrong).ok, false);
 });
 
-test('jackpot substitution: verified with tail; wrong ownership fails', () => {
+/** Preregistration describing a direct-mode record, predicting substitutions at `indices`. */
+const preregFor = (fixture, indices) => ({
+  kind: 'shellout-preregistration', predictedAt: '2026-11-01T00:00:00Z', mode: fixture.mode, season: fixture.season,
+  ownershipBeforeFirstPull: fixture.ownershipBeforeFirstPull, startStateBeforeFirstPull: fixture.startStateBeforeFirstPull,
+  predictedSubstitutions: indices,
+});
+const accepted = data => ({ data, committedBefore: true, unmodified: true });
+
+test('substitution: matching colors alone do NOT verify it (no preregistration)', () => {
   const { fixture } = eventFixture('substituted');
   const r = evaluateFixture(fixture);
   assert.equal(r.ok, true, r.errors.join());
-  assert.ok(r.events.some(e => e.kind === 'substituted' && e.verified), JSON.stringify(r.events));
-  const wrong = { ...fixture, ownershipBeforeFirstPull: { missingBanners: 2, missingTitles: 2 } };
-  assert.equal(evaluateFixture(wrong).ok, false);
+  const ev = r.events.find(e => e.kind === 'substituted');
+  assert.ok(ev); assert.equal(ev.verified, false); assert.equal(ev.preregistered, false);
+});
+
+test('substitution: verified only via an accepted preregistration at that index', () => {
+  const { fixture } = eventFixture('substituted');
+  const f = { ...fixture, preregistration: 'p.json' };
+  const ok = evaluateFixture(f, { preregistration: accepted(preregFor(fixture, [5])) });
+  assert.equal(ok.ok, true, ok.errors.join());
+  assert.ok(ok.events.some(e => e.kind === 'substituted' && e.index === 5 && e.verified));
+  // committed in the same commit / after the record, or edited later -> not accepted as prior evidence
+  for (const flags of [{ committedBefore: false, unmodified: true }, { committedBefore: true, unmodified: false }]) {
+    const r = evaluateFixture(f, { preregistration: { data: preregFor(fixture, [5]), ...flags } });
+    assert.equal(r.ok, true);
+    assert.equal(r.events.find(e => e.kind === 'substituted').verified, false);
+    assert.ok(r.notes.length > 0);
+  }
+  // missing preregistration file -> record fails
+  assert.equal(evaluateFixture(f).ok, false);
+});
+
+test('substitution: a preregistered prediction that misses fails the record', () => {
+  const { fixture } = eventFixture('substituted');
+  const f = { ...fixture, preregistration: 'p.json' };
+  const r = evaluateFixture(f, { preregistration: accepted(preregFor(fixture, [7])) });
+  assert.equal(r.ok, false);
+  assert.match(r.errors.join(), /preregistered substitution at pull 7/);
+});
+
+test('substitution: preregistration must describe the same state, stream and ownership', () => {
+  const { fixture } = eventFixture('substituted');
+  const f = { ...fixture, preregistration: 'p.json' };
+  for (const change of [{ mode: 'fest' }, { season: 16 }, { ownershipBeforeFirstPull: { missingBanners: 1, missingTitles: 0 } }, { startStateBeforeFirstPull: ['0x1', '0x2', '0x3', '0x4'] }]) {
+    const r = evaluateFixture(f, { preregistration: accepted({ ...preregFor(fixture, [5]), ...change }) });
+    assert.equal(r.ok, false, JSON.stringify(change));
+  }
+});
+
+test('substitution: wrong ownership input fails the record', () => {
+  const { fixture } = eventFixture('substituted');
+  assert.equal(evaluateFixture({ ...fixture, ownershipBeforeFirstPull: { missingBanners: 2, missingTitles: 2 } }).ok, false);
 });
 
 test('a record with no gold/silver/substitution verifies no jackpot rule', () => {
@@ -180,11 +230,42 @@ test('a record with no gold/silver/substitution verifies no jackpot rule', () =>
   assert.equal(r.events.length, 0);
 });
 
-test('jackpotPullIndices annotation must equal engine-predicted awards', () => {
+test('observed awards must equal engine awards exactly (index and reward type)', () => {
   const { fixture } = eventFixture('awarded');
-  assert.equal(evaluateFixture({ ...fixture, jackpotPullIndices: [5] }).ok, true);
-  assert.equal(evaluateFixture({ ...fixture, jackpotPullIndices: [6] }).ok, false);
-  assert.equal(evaluateFixture({ ...fixture, jackpotPullIndices: [] }).ok, false);
+  const ev = fixture.observedEvents[0];
+  assert.equal(ev.index, 5);
+  assert.equal(evaluateFixture(fixture).ok, true);
+  const other = ev.rewardType === 'NamePlateBg' ? 'Byname' : 'NamePlateBg';
+  for (const observed of [[], [{ ...ev, index: 6 }], [{ ...ev, rewardType: other }], [ev, { ...ev, index: 9 }]]) {
+    const r = evaluateFixture({ ...fixture, observedEvents: observed });
+    assert.equal(r.ok, false, JSON.stringify(observed));
+    assert.match(r.errors.join(), /observed jackpot awards/);
+  }
+  // an award observed where the engine predicts none also fails
+  const { fixture: plain } = direct();
+  if (!plain.observedEvents.length) assert.equal(evaluateFixture({ ...plain, observedEvents: [{ index: 3, kind: 'awarded', rewardType: 'Byname' }] }).ok, false);
+});
+
+test('schema: observedEvents and provenance are required; substitutions cannot be "observed"', () => {
+  const { fixture } = direct();
+  const noObs = { ...fixture }; delete noObs.observedEvents;
+  assert.throws(() => parseFixture(noObs), /observedEvents is required/);
+  assert.throws(() => parseFixture({ ...fixture, observedEvents: [{ index: 1, kind: 'substituted', rewardType: 'AllGearSkillChip' }] }), /cannot be observed/);
+  assert.throws(() => parseFixture({ ...fixture, observedEvents: [{ index: 1, kind: 'awarded', rewardType: 'AllGearSkillChip' }] }), /rewardType/);
+  assert.throws(() => parseFixture({ ...fixture, observedEvents: [{ index: 99, kind: 'awarded', rewardType: 'Byname' }] }), /out of range/);
+  assert.throws(() => parseFixture({ ...fixture, jackpotPullIndices: [] }), /replaced/);
+  const noProv = { ...fixture }; delete noProv.provenance;
+  assert.throws(() => parseFixture(noProv), /provenance/);
+  assert.throws(() => parseFixture({ ...fixture, provenance: { method: 'guess', evidence: 'x', recordedBy: 'y' } }), /provenance/);
+  assert.throws(() => parseFixture({ ...fixture, provenance: { method: 'video', evidence: ' ', recordedBy: 'y' } }), /provenance/);
+});
+
+test('schema: preregistration only with a direct state', () => {
+  const key = 'searchmode0000000003';
+  const ctx = makeContext({ season: 17 });
+  const h = simulate(initialState(key, 'normal'), ctx, 300);
+  const rec = simulate(h.state, h.ctx, 32);
+  assert.throws(() => parseFixture({ source: 'real-game', ...meta(rec.pulls), mode: 'normal', season: 17, ownershipBeforeFirstPull: { missingBanners: 2, missingTitles: 2 }, nplnUserId: key, pulls: colors(rec.pulls), preregistration: 'p.json' }), /requires startStateBeforeFirstPull/);
 });
 
 // ---------- gate ----------
@@ -193,15 +274,22 @@ test('gate: fails with no fixtures, with incomplete coverage, and passes only wi
   const normal = direct().fixture;
   const fest = direct({ key: 'festsynthetic0000001', mode: 'fest' }).fixture;
   const award = eventFixture('awarded').fixture;
-  const subst = eventFixture('substituted').fixture;
+  const substBase = eventFixture('substituted').fixture;
+  const subst = { ...substBase, preregistration: 's.json' };
+  const preregs = { 's.json': accepted(preregFor(substBase, [5])) };
   const g1 = evaluateGate([{ name: 'n', data: normal }, { name: 'f', data: fest }]);
   assert.equal(g1.ok, false);
   assert.deepEqual(g1.coverage, { normalStreamHeldOut: true, festStreamHeldOut: true, jackpotAwardedVerified: false, jackpotSubstitutionVerified: false });
   const all = [normal, fest, award, subst].map((data, i) => ({ name: `f${i}`, data }));
-  assert.equal(evaluateGate(all).ok, true, evaluateGate(all).problems.join('\n'));
+  assert.equal(evaluateGate(all, preregs).ok, true, evaluateGate(all, preregs).problems.join('\n'));
+  // without accepted preregistration the substitution rule stays unverified
+  assert.equal(evaluateGate(all, { 's.json': { data: preregFor(substBase, [5]), committedBefore: false, unmodified: true } }).coverage.jackpotSubstitutionVerified, false);
+  // without the observed award the award rule fails
+  const noObs = all.map(x => (x.data === award ? { ...x, data: { ...award, observedEvents: [] } } : x));
+  assert.equal(evaluateGate(noObs, preregs).ok, false);
   // one broken record breaks the whole gate
   all[1] = { name: 'bad', data: { ...fest, pulls: flip(fest.pulls, 20) } };
-  assert.equal(evaluateGate(all).ok, false);
+  assert.equal(evaluateGate(all, preregs).ok, false);
 });
 
 test('gate CLI exits non-zero for the repository (no real records yet) and for an empty dir', () => {
@@ -209,4 +297,50 @@ test('gate CLI exits non-zero for the repository (no real records yet) and for a
   assert.equal(run('fixtures/real-game'), 1);
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gate-'));
   assert.equal(run(tmp), 1);
+});
+
+test('gate CLI reads preregistration order from git history', () => {
+  const normal = direct().fixture;
+  const fest = direct({ key: 'festsynthetic0000001', mode: 'fest' }).fixture;
+  const award = eventFixture('awarded').fixture;
+  const substBase = eventFixture('substituted').fixture;
+  const subst = { ...substBase, preregistration: 's.json' };
+  const prereg = preregFor(substBase, [5]);
+
+  const setup = () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'gate-git-'));
+    const g = (...a) => execFileSync('git', ['-C', root, ...a], { stdio: 'pipe' });
+    g('init', '-q'); g('config', 'user.email', 't@t'); g('config', 'user.name', 't'); g('config', 'commit.gpgsign', 'false');
+    const rec = path.join(root, 'rec');
+    fs.mkdirSync(path.join(rec, 'preregistrations'), { recursive: true });
+    const write = (f, d) => fs.writeFileSync(path.join(rec, f), JSON.stringify(d));
+    const records = () => { write('n.json', normal); write('f.json', fest); write('a.json', award); write('s.json', subst); };
+    return { root, rec, g, write, records };
+  };
+  const run = dir => { try { execFileSync(process.execPath, [path.resolve('validation/run-game-validation.mjs'), dir], { stdio: 'pipe' }); return 0; } catch (e) { return e.status; } };
+
+  { // A: preregistration committed first, records later -> pass
+    const t = setup();
+    t.write('preregistrations/s.json', prereg); t.g('add', '-A'); t.g('commit', '-qm', 'prereg');
+    t.records(); t.g('add', '-A'); t.g('commit', '-qm', 'records');
+    assert.equal(run(t.rec), 0);
+  }
+  { // B: same commit -> substitution not verified -> fail
+    const t = setup();
+    t.write('preregistrations/s.json', prereg); t.records(); t.g('add', '-A'); t.g('commit', '-qm', 'all');
+    assert.equal(run(t.rec), 1);
+  }
+  { // C: preregistration edited after its first commit -> fail
+    const t = setup();
+    t.write('preregistrations/s.json', { ...prereg, predictedSubstitutions: [4] }); t.g('add', '-A'); t.g('commit', '-qm', 'prereg');
+    t.write('preregistrations/s.json', prereg); t.g('add', '-A'); t.g('commit', '-qm', 'fix prereg');
+    t.records(); t.g('add', '-A'); t.g('commit', '-qm', 'records');
+    assert.equal(run(t.rec), 1);
+  }
+  { // D: records not committed -> order unknown -> fail
+    const t = setup();
+    t.write('preregistrations/s.json', prereg); t.g('add', '-A'); t.g('commit', '-qm', 'prereg');
+    t.records();
+    assert.equal(run(t.rec), 1);
+  }
 });
