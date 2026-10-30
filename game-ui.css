@@ -114,10 +114,10 @@ footer{border-top:1px solid #474352;padding-top:15px}
   font-display: swap;
 }
 :root {
-  --font-arcade: 'SplatInstalledEnglishBold', 'Luckiest Guy', 'Lilita One', 'Nunito', system-ui, sans-serif;
-  --font-korean-display: 'SplatInstalledKTitle', 'Black Han Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-  --font-korean-game: 'SplatInstalledKTitle', 'Jua', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-  --font-readable: 'SplatInstalledKBody', 'Nunito', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-arcade: var(--font-loaded-english-display, 'SplatInstalledEnglishBold'), 'Luckiest Guy', 'Lilita One', 'Nunito', system-ui, sans-serif;
+  --font-korean-display: var(--font-loaded-korean-display, 'SplatInstalledKTitle'), 'Black Han Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-korean-game: var(--font-loaded-korean-display, 'SplatInstalledKTitle'), 'Jua', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-readable: var(--font-loaded-english-main, 'SplatInstalledEnglishMain'), var(--font-loaded-korean-body, 'SplatInstalledKBody'), 'Nunito', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
 }
 body {
   font-family: var(--font-readable);
@@ -200,3 +200,18 @@ button {line-height: 1.25}
   .capsule-btn span:last-child {font-size:15px;padding:5px 9px}
   .hero h1 {font-size:32px}
 }
+
+/* Personal font picker. All files are stored only inside this browser. */
+.font-settings{margin-top:24px;max-width:100%;background:#24212e;border:2px solid #4c455d;border-radius:22px;padding:18px 21px;box-shadow:4px 5px 0 #07050b}
+.font-settings summary{cursor:pointer;color:var(--lime);font:400 20px/1.3 var(--font-korean-game);list-style-position:inside}
+.font-settings summary:focus-visible{outline:3px solid var(--lime);outline-offset:4px}
+.font-settings .help{margin:12px 0;color:#cdc6d9}
+.font-settings .font-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}
+.personal-font-row{display:flex;flex-direction:column;gap:8px;padding:14px;background:#15141e;border:1px solid #4b435c;border-radius:14px;min-width:0}
+.personal-font-row label{color:#fff;font:400 16px/1.3 var(--font-korean-game)}
+.personal-font-row input{display:block;width:100%;max-width:100%;color:#e4ddeb;font-size:12px}
+.personal-font-row input::file-selector-button{padding:7px 10px;background:var(--lime);color:#16131b;border:0;border-radius:7px;font-weight:900;cursor:pointer;margin-right:9px}
+.personal-font-row span{color:#aaa4b7;font-size:11px;overflow-wrap:anywhere}
+.font-settings .font-note{font:700 12px/1.65 var(--font-readable);color:#bfb8cb}
+#personalFontStatus{color:#d8ffc0;font-size:12px}
+@media(max-width:680px){.font-settings .font-grid{grid-template-columns:1fr}.font-settings{padding:15px}}
