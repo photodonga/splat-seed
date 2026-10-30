@@ -11,7 +11,7 @@ label{display:block;font-size:13px;color:#cfcddb;margin:8px 0 4px}input,select{w
 .caps{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.cb{border:2px solid #444253;background:#1b1b27;border-radius:12px;color:#fff;padding:8px 0;font-size:11px}
 .dot{display:inline-block;width:22px;height:26px;border-radius:48%;border:2px solid rgba(0,0,0,.3);background:var(--c);vertical-align:middle}
 .g0{--c:#ffc22e}.g1{--c:#dce9f8}.g2{--c:#d98846}.g3{--c:#f15c79}.g4{--c:#9775f5}.g5{--c:#76ddf6}
-.seq{display:flex;flex-wrap:wrap;gap:4px;min-height:30px;margin-top:10px}.seq .dot{width:18px;height:21px}
+.seq{display:flex;flex-wrap:wrap;gap:4px;min-height:30px;margin-top:10px}.seq .dot{width:18px;height:21px}.ent{display:grid;justify-items:center;gap:1px;width:26px}.ent small{font-size:9px;line-height:1;color:#cfcddb;white-space:nowrap}.items{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.items[hidden]{display:none}.ib{border:2px solid #545263;background:#161620;color:#fff;border-radius:10px;padding:7px 10px;font:inherit;font-size:12px}.ib.on{background:var(--lime);color:#171821;border-color:var(--lime)}
 button.a{border:0;border-radius:11px;padding:10px 14px;background:#454351;color:#fff;font:inherit;font-weight:800}button.p{background:var(--lime);color:#171821}button:disabled{opacity:.4}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}progress{width:100%;height:12px;margin-top:10px}
 .big{font-size:40px;font-weight:900;color:var(--lime)}.muted{color:#aaa7b7;font-size:12px}.tag{display:inline-block;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:800}
@@ -43,6 +43,7 @@ button.a{border:0;border-radius:11px;padding:10px 14px;background:#454351;color:
 <p class="muted">미보유 수는 <b>입력한 첫 뽑기 직전</b> 기준입니다. 이미 가진 잭팟은 금·은 대신 동색이 나오고 난수 소비도 달라집니다.</p></section>
 
 <section class="card"><h2>2. 실제 뽑기 결과 (순서대로)</h2><div class="caps" id="caps"></div>
+<div class="items" id="items" hidden></div><div class="muted" id="itemHint"></div>
 <div class="seq" id="seq"></div><div class="muted" id="seqInfo"></div>
 <div class="actions"><button class="a" id="undo">↶ 취소</button><button class="a" id="clr">초기화</button></div></section>
 
@@ -57,7 +58,7 @@ button.a{border:0;border-radius:11px;padding:10px 14px;background:#454351;color:
 <div class="actions"><label class="muted" style="margin:0">추가 결과를 2번에 입력한 뒤 다시 탐색하면 후보가 줄어듭니다.</label></div></section>
 </div>
 <script type="module">
-import { GRADES, seasonAt, jackpotItemsPerKind, makeContext, simulate, pullsUntilGold, OffsetSearch, initialState, reproduce } from './engine/shellout.mjs';
+import { GRADES, seasonAt, jackpotItemsPerKind, makeContext, simulate, pullsUntilGold, OffsetSearch, initialState, reproduce, tableForSeason } from './engine/shellout.mjs';
 import { parseStateHex } from './engine/xorshift128.mjs';
 import { idFromSeedExport, lookupReplayCode } from './engine/npln-id.mjs';
 const LABEL=['황금','은색','동색','빨강','보라','하늘'];
@@ -65,7 +66,7 @@ const $=id=>document.getElementById(id); const obs=[];
 const dot=g=>{const i=document.createElement('i');i.className='dot g'+g;i.title=LABEL[g];return i};
 $('season').value=seasonAt(new Date());
 function fillMissing(){const per=jackpotItemsPerKind(parseInt($('season').value)||1);for(const id of ['mb','mt']){const s=$(id),v=s.value;s.replaceChildren(...Array.from({length:per+1},(_,i)=>{const o=document.createElement('option');o.value=i;o.textContent=i===0?'0 (모두 보유)':`${i}`;return o}));s.value=v&&v<=per?v:per}}
-fillMissing();$('season').oninput=fillMissing;
+fillMissing();$('season').oninput=()=>{fillMissing();draw()};
 const ID_KEY='splat-seed-lab-npln';
 const ERR={invalid_code:'리플레이 코드 형식이 아닙니다(16자).',network:'조회 서버에 연결하지 못했습니다. 서버가 멈췄거나, 이 사이트에서의 요청을 막고 있을 수 있습니다.',timeout:'조회 시간이 초과됐습니다.',not_found:'리플레이를 찾지 못했습니다. 코드와 업로드 상태를 확인하세요.',server:'조회 서버 오류입니다.',bad_response:'조회 결과가 올바르지 않아 사용하지 않았습니다.',bad_file:'JSON 파일이 아닙니다.',no_key:'이 파일에는 시드 키가 없습니다. Leanny에 ID가 등록된 상태에서 백업하세요.',bad_key:'파일의 키가 손상됐거나 맞지 않습니다.',bad_id:'파일의 값이 NPLN ID 형식이 아닙니다.'};
 function setId(id,how){$('npln').value=id;$('src').value='id';$('src').onchange();$('idStatus').textContent=`${how}: ${id.slice(0,4)}…${id.slice(-4)} (1번 칸에 채움)`;if($('remember').checked){try{localStorage.setItem(ID_KEY,id)}catch{}}}
@@ -75,14 +76,26 @@ $('remember').onchange=()=>{try{if($('remember').checked){const v=$('npln').valu
 $('lookup').onclick=async()=>{$('lookup').disabled=true;$('idStatus').textContent='조회 중…';try{const r=await lookupReplayCode($('replay').value);setId(r.id,'리플레이 조회 성공'+(r.playerName?` · ${r.playerName}`:''))}catch(e){idError(e)}finally{$('lookup').disabled=false}};
 $('backup').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{if(f.size>20_000_000)throw Object.assign(Error('파일이 너무 큽니다.'),{kind:'too_big'});setId(idFromSeedExport(await f.text()),'백업에서 가져옴')}catch(err){idError(err)}e.target.value=''};
 $('src').onchange=()=>{const id=$('src').value==='id';$('idBox').hidden=!id;$('stateBox').hidden=id;$('rangeBox').style.visibility=id?'visible':'hidden';$('go').textContent=id?'탐색 시작':'직접 재현'};
-$('caps').replaceChildren(...GRADES.map((_,g)=>{const b=document.createElement('button');b.className='cb';b.append(dot(g),document.createElement('br'),LABEL[g]);b.onclick=()=>{obs.push(g);draw()};return b}));
+// Item names per reward row (type|subType). Rows come from the season's reward table.
+const ITEM={'MiniGameCardPack|None':['카드 팩','카드'],'FoodTicket|FoodParty':['파티 음식 티켓','파티'],'Emote|None':['이모트','이모트'],'NamePlateBg|None':['배너','배너'],
+ 'GearSkillChip|None':['기어 파워 조각 ×3','조각'],'FoodTicket|Food100':['음식 티켓 (경험치 100%)','음100'],'Byname|None':['칭호','칭호'],
+ 'LockerSticker|None':['스티커 ×2','스티커'],'LockerFigure|None':['피규어 ×2','피규어'],'FoodTicket|Food50':['음식 티켓 (경험치 50%)','음50'],'DrinkTicket|None':['드링크 티켓','드링크']};
+const rowsFor=g=>tableForSeason(parseInt($('season').value,10)||1).filter(r=>r.grade===g&&ITEM[r.type+'|'+r.subType]);
+const obsOut=()=>obs.map(o=>o.type?{grade:o.grade,type:o.type,subType:o.subType}:{grade:o.grade});
+function showItems(){const last=obs.at(-1);const rows=last?rowsFor(last.grade):[];$('items').hidden=!rows.length;
+  $('itemHint').textContent=rows.length?`${obs.length}번째 결과의 아이템을 고르세요 (선택 사항 · 고르면 더 빨리 좁혀집니다)`:'';
+  $('items').replaceChildren(...rows.map(r=>{const k=r.type+'|'+r.subType;const b=document.createElement('button');b.type='button';b.className='ib'+(last.type===r.type&&last.subType===r.subType?' on':'');b.textContent=ITEM[k][0];
+    b.onclick=()=>{if(last.type===r.type&&last.subType===r.subType){delete last.type;delete last.subType}else{last.type=r.type;last.subType=r.subType}draw()};return b}))}
+$('caps').replaceChildren(...GRADES.map((_,g)=>{const b=document.createElement('button');b.className='cb';b.append(dot(g),document.createElement('br'),LABEL[g]);b.onclick=()=>{obs.push({grade:g});draw()};return b}));
 $('undo').onclick=()=>{obs.pop();draw()};$('clr').onclick=()=>{obs.length=0;draw()};
-function draw(){$('seq').replaceChildren(...obs.map(dot));$('seqInfo').textContent=`${obs.length}회 입력 · 색만으로는 약 20회 이상이면 100만 범위에서 대부분 하나로 좁혀집니다.`}
+function draw(){$('seq').replaceChildren(...obs.map(o=>{const e=document.createElement('span');e.className='ent';const sm=document.createElement('small');const k=o.type?o.type+'|'+o.subType:null;sm.textContent=k?ITEM[k][1]:'';e.title=LABEL[o.grade]+(k?' · '+ITEM[k][0]:'');e.append(dot(o.grade),sm);return e}));
+  const typed=obs.filter(o=>o.type).length;
+  $('seqInfo').textContent=`${obs.length}회 입력 (아이템까지 ${typed}회) · 100만 범위 확정에 보통 색만 약 19회, 아이템까지 넣으면 약 9회가 필요합니다.`;showItems()}
 draw();
 let worker=null,runner=null,jobId=0;
 function params(){
   const season=parseInt($('season').value,10);const context={season,missingBanners:+$('mb').value,missingTitles:+$('mt').value};
-  const p={mode:$('mode').value,observations:obs.map(g=>({grade:g})),context,maxOffset:+$('range').value,maxCandidates:64};
+  const p={mode:$('mode').value,observations:obsOut(),context,maxOffset:+$('range').value,maxCandidates:64};
   p.nplnUserId=$('npln').value.trim();
   makeContext(context); if(p.nplnUserId!==undefined) initialState(p.nplnUserId,p.mode); return p}
 function busy(b){$('go').disabled=b;$('stop').disabled=!b;$('prog').hidden=!b}
@@ -101,7 +114,7 @@ let searchAfter=null;
 function directRun(){ // startStateBeforeFirstPull: reproduce only, no position search
   const season=parseInt($('season').value,10);const ctx=makeContext({season,missingBanners:+$('mb').value,missingTitles:+$('mt').value});
   const before=parseStateHex(['s0','s1','s2','s3'].map(i=>$(i).value));const after=afterState();
-  const r=reproduce(before,ctx,obs.map(g=>({grade:g})));$('out').hidden=false;$('pred').replaceChildren();$('cands').textContent='';
+  const r=reproduce(before,ctx,obsOut());$('out').hidden=false;$('pred').replaceChildren();$('cands').textContent='';
   const tag=(t,ok)=>`<span class="tag ${ok?'ok':'no'}">${t}</span>`;
   if(r.firstMismatch>=0){$('verdict').innerHTML=tag(`${r.firstMismatch+1}번째 결과에서 불일치 — 첫 뽑기 직전 상태가 아니거나 보유 수가 다릅니다`,false);$('gold').textContent='—';$('status').textContent='직접 재현 · 탐색 0회';return}
   let msg=`입력한 ${obs.length}회 모두 재현 일치`;let ok=true;if(after){ok=after.join()===r.stateAfterLastPull.join();msg+=ok?' · 마지막 뽑기 직후 상태 일치':' · 마지막 뽑기 직후 상태 불일치 — 예측을 표시하지 않습니다'}
