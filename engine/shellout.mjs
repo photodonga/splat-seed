@@ -95,11 +95,15 @@ export function jackpotItemsPerKind(season) {
   return season < 9 ? 1 : 2;
 }
 
+export const NPLN_USER_ID_RE = /^u-[0-9a-z]{20}$/;
+
 export function initialState(nplnUserId, mode = 'normal') {
   const key = STREAM_KEYS[mode];
   if (!key) throw new RangeError('mode must be "normal" or "fest"');
-  if (typeof nplnUserId !== 'string' || !/^[0-9a-z]{6,64}$/i.test(nplnUserId)) {
-    throw new RangeError('NPLN user ID must be 6-64 ASCII letters/digits');
+  // Real NPLN user IDs look like "u-" + 20 lowercase letters/digits. The "u-" prefix is part of the
+  // hashed string (same as the public seed tool and nxapi's seed export), so it must not be stripped.
+  if (typeof nplnUserId !== 'string' || !NPLN_USER_ID_RE.test(nplnUserId)) {
+    throw new RangeError('NPLN user ID must look like "u-" followed by 20 lowercase letters/digits');
   }
   return [0, 1, 2, 3].map(i => murmur3x86_32(`${nplnUserId}_${key}_${i}`));
 }

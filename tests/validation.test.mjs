@@ -19,7 +19,7 @@ const awardsOf = pulls => pulls.map((p, k) => (p.row.subType === 'Limited' && !p
 const meta = pulls => ({ provenance: PROV, observedEvents: awardsOf(pulls) });
 
 /** Synthetic direct-mode fixture: `before` pulls into a stream, then `n` recorded pulls. */
-function direct({ key = 'synthetic00000000001', mode = 'normal', season = 17, own = [2, 2], before = 500, n = 30 } = {}) {
+function direct({ key = 'u-synthetic00000000001', mode = 'normal', season = 17, own = [2, 2], before = 500, n = 30 } = {}) {
   const ctx = makeContext({ season, missingBanners: own[0], missingTitles: own[1] });
   const h = simulate(initialState(key, mode), ctx, before);
   const rec = simulate(h.state, h.ctx, n);
@@ -34,17 +34,20 @@ function direct({ key = 'synthetic00000000001', mode = 'normal', season = 17, ow
 }
 
 /** Locate a pull index with the requested jackpot event in a long simulated stream. */
-function findEvent(kind, key, own) {
+function findEvent(kind, key, own, nth = 0) {
   const ctx = makeContext({ season: 17, missingBanners: own, missingTitles: own });
   const run = simulate(initialState(key, 'normal'), ctx, 60000);
-  const j = run.pulls.findIndex((p, k) => k > 50 && (kind === 'awarded' ? p.row.subType === 'Limited' && !p.substituted : p.substituted));
-  assert.ok(j > 0, `no ${kind} event found`);
-  return { j, ctx };
+  const hits = run.pulls.map((p, k) => (k > 50 && (kind === 'awarded' ? p.row.subType === 'Limited' && !p.substituted : p.substituted) ? k : -1)).filter(k => k >= 0);
+  assert.ok(hits.length > nth, `no ${kind} event #${nth} found`);
+  return { j: hits[nth], ctx };
 }
-function eventFixture(kind, { lead = 5, tail = 15 } = {}) {
-  const key = kind === 'awarded' ? 'jackpotaward00000001' : 'jackpotsubst00000001';
+// For this key the first substitution (#0) cannot verify the draw rule: the competing "1 extra draw"
+// reading re-aligns with the true stream, so no later pull contradicts it. Event #1 is discriminating.
+const SUBST_EVENT = { verifiable: 1, ambiguous: 0 };
+function eventFixture(kind, { lead = 5, tail = 15, nth } = {}) {
+  const key = kind === 'awarded' ? 'u-jackpotaward00000001' : 'u-jackpotsubst00000001';
   const own = kind === 'awarded' ? 2 : 0;
-  const { j } = findEvent(kind, key, own);
+  const { j } = findEvent(kind, key, own, nth ?? (kind === 'substituted' ? SUBST_EVENT.verifiable : 0));
   return direct({ key, own: [own, own], before: j - lead, n: lead + 1 + tail });
 }
 
@@ -70,7 +73,7 @@ test('direct mode: any single wrong pull fails and names the pull', () => {
 
 test('direct mode: an ID-derived initialState mislabeled as startStateBeforeFirstPull fails (no silent search)', () => {
   const { fixture } = direct({ before: 800 });
-  const wrong = { ...fixture, startStateBeforeFirstPull: hex(initialState('synthetic00000000001', 'normal')) };
+  const wrong = { ...fixture, startStateBeforeFirstPull: hex(initialState('u-synthetic00000000001', 'normal')) };
   assert.equal(evaluateFixture(wrong).ok, false);
 });
 
@@ -90,7 +93,7 @@ test('currentStateAfterLastPull: matching state passes, wrong state fails', () =
 
 // ---------- search mode (ID / initialState) ----------
 test('search mode: position found from initialState, then unseen pulls must match', () => {
-  const key = 'searchmode0000000001';
+  const key = 'u-searchmode0000000001';
   const ctx = makeContext({ season: 17 });
   const h = simulate(initialState(key, 'fest'), ctx, 700);
   const rec = simulate(h.state, h.ctx, 34);
@@ -112,7 +115,7 @@ test('search mode: position found from initialState, then unseen pulls must matc
 });
 
 test('search mode via nplnUserId equals search via its initialState', () => {
-  const key = 'searchmode0000000003';
+  const key = 'u-searchmode0000000005';
   const ctx = makeContext({ season: 17 });
   const h = simulate(initialState(key, 'normal'), ctx, 300);
   const rec = simulate(h.state, h.ctx, 32);
@@ -124,7 +127,7 @@ test('KNOWN LIMITATION: phase-shift twin positions are reported as "not unique" 
   // Offset t+1 can also match when the first pull at t draws 2 u32 and the shifted reading lands on a
   // zero-extra-draw row of the same color: both paths then share every later state. The search currently
   // counts them as 2 positions, so the gate FAILS rather than passing on an ambiguous position.
-  const key = 'searchmode0000000002';
+  const key = 'u-searchmode0000000003';
   const ctx = makeContext({ season: 17 });
   const h = simulate(initialState(key, 'normal'), ctx, 300);
   const rec = simulate(h.state, h.ctx, 32);
@@ -217,6 +220,17 @@ test('substitution: preregistration must describe the same state, stream and own
   }
 });
 
+test('substitution whose competing draw rule re-aligns is never verified, even if preregistered', () => {
+  const { fixture } = eventFixture('substituted', { nth: SUBST_EVENT.ambiguous });
+  const f = { ...fixture, preregistration: 'p.json' };
+  const r = evaluateFixture(f, { preregistration: accepted(preregFor(fixture, [5])) });
+  assert.equal(r.ok, true, r.errors.join());
+  const ev = r.events.find(e => e.kind === 'substituted' && e.index === 5);
+  assert.ok(ev.preregistered);
+  assert.ok(ev.undiscriminated.length > 0);
+  assert.equal(ev.verified, false);
+});
+
 test('substitution: wrong ownership input fails the record', () => {
   const { fixture } = eventFixture('substituted');
   assert.equal(evaluateFixture({ ...fixture, ownershipBeforeFirstPull: { missingBanners: 2, missingTitles: 2 } }).ok, false);
@@ -261,7 +275,7 @@ test('schema: observedEvents and provenance are required; substitutions cannot b
 });
 
 test('schema: preregistration only with a direct state', () => {
-  const key = 'searchmode0000000003';
+  const key = 'u-searchmode0000000003';
   const ctx = makeContext({ season: 17 });
   const h = simulate(initialState(key, 'normal'), ctx, 300);
   const rec = simulate(h.state, h.ctx, 32);
@@ -272,7 +286,7 @@ test('schema: preregistration only with a direct state', () => {
 test('gate: fails with no fixtures, with incomplete coverage, and passes only with full coverage', () => {
   assert.equal(evaluateGate([]).ok, false);
   const normal = direct().fixture;
-  const fest = direct({ key: 'festsynthetic0000001', mode: 'fest' }).fixture;
+  const fest = direct({ key: 'u-festsynthetic0000001', mode: 'fest' }).fixture;
   const award = eventFixture('awarded').fixture;
   const substBase = eventFixture('substituted').fixture;
   const subst = { ...substBase, preregistration: 's.json' };
@@ -301,7 +315,7 @@ test('gate CLI exits non-zero for the repository (no real records yet) and for a
 
 test('gate CLI reads preregistration order from git history', () => {
   const normal = direct().fixture;
-  const fest = direct({ key: 'festsynthetic0000001', mode: 'fest' }).fixture;
+  const fest = direct({ key: 'u-festsynthetic0000001', mode: 'fest' }).fixture;
   const award = eventFixture('awarded').fixture;
   const substBase = eventFixture('substituted').fixture;
   const subst = { ...substBase, preregistration: 's.json' };

@@ -1,0 +1,766 @@
+{
+ "description": "NPLN user ID vectors. nxapiHash/nxapiKey reproduce nxapi `util splatoon3-seed` output (murmurhash npm v2.0.1); leannyInitial is the public seed tool's initial lottery state (murmurhash3js). Synthetic IDs in the real \"u-\" format; parity only, not game truth.",
+ "generatedAt": "2026-10-30T11:22:45.402Z",
+ "vectors": [
+  {
+   "id": "u-aaaaaaaaaaaaaaaaaaaa",
+   "nxapiHash": 3285566379,
+   "nxapiKey": "3obKysrKysrKysrKysrKysrKysrKyg==",
+   "leannyInitial": {
+    "normal": [
+     773540429,
+     1453278805,
+     1876068873,
+     448800283
+    ],
+    "fest": [
+     1682045571,
+     2766683627,
+     1931460793,
+     4287364338
+    ]
+   }
+  },
+  {
+   "id": "u-00000000000000000000",
+   "nxapiHash": 3166237497,
+   "nxapiKey": "TBQJCQkJCQkJCQkJCQkJCQkJCQkJCQ==",
+   "leannyInitial": {
+    "normal": [
+     23531588,
+     2010968474,
+     585737845,
+     1963450642
+    ],
+    "fest": [
+     2663015733,
+     2257827748,
+     2353641404,
+     1388992807
+    ]
+   }
+  },
+  {
+   "id": "u-abcdefghij0123456789",
+   "nxapiHash": 2456703183,
+   "nxapiKey": "uuKurayrqqmop6al//79/Pv6+fj39g==",
+   "leannyInitial": {
+    "normal": [
+     1252505584,
+     3719903403,
+     2835380819,
+     1233773742
+    ],
+    "fest": [
+     2933694304,
+     3383172739,
+     3009770400,
+     1770382908
+    ]
+   }
+  },
+  {
+   "id": "u-5toa89tcvjcwtwf67kcx",
+   "nxapiHash": 1386201822,
+   "nxapiKey": "q/PrqrG/5ueqvai0vamqqbjo6bW9pg==",
+   "leannyInitial": {
+    "normal": [
+     863700285,
+     835864772,
+     341064567,
+     2070189329
+    ],
+    "fest": [
+     626348722,
+     1878321077,
+     2890637171,
+     3688361826
+    ]
+   }
+  },
+  {
+   "id": "u-9itqtna6ammd5plg6bm3",
+   "nxapiHash": 632277663,
+   "nxapiKey": "6rKm9uvu6/H+qf7y8vuq7/P4qf3yrA==",
+   "leannyInitial": {
+    "normal": [
+     4282977305,
+     3759414048,
+     4280470135,
+     2802344377
+    ],
+    "fest": [
+     2886525909,
+     481957882,
+     613509784,
+     2740782115
+    ]
+   }
+  },
+  {
+   "id": "u-4xkt97ipxhvme8e7l1jq",
+   "nxapiHash": 1290210063,
+   "nxapiKey": "eiI7d2R7Njhmf3dneWJqN2o4Yz5lfg==",
+   "leannyInitial": {
+    "normal": [
+     1257633099,
+     2960976408,
+     435014029,
+     1936833158
+    ],
+    "fest": [
+     2936543913,
+     3516469678,
+     4194229088,
+     2860950488
+    ]
+   }
+  },
+  {
+   "id": "u-zbkolg6xc7mnpe2483cx",
+   "nxapiHash": 790887884,
+   "nxapiKey": "ueG2rqejoKv6tK/7oaK8qf749P+vtA==",
+   "leannyInitial": {
+    "normal": [
+     3076958506,
+     1129175627,
+     960369283,
+     2982798716
+    ],
+    "fest": [
+     3322178177,
+     609033645,
+     3276288177,
+     3020410604
+    ]
+   }
+  },
+  {
+   "id": "u-1jwk02cxdoz8kk37kqkm",
+   "nxapiHash": 362984767,
+   "nxapiKey": "ShIOVUhUDw1cR1tQRQdUVAwIVE5UUg==",
+   "leannyInitial": {
+    "normal": [
+     3072342772,
+     3839795878,
+     1195872534,
+     1508851299
+    ],
+    "fest": [
+     110758962,
+     3152182051,
+     1917663297,
+     4229532942
+    ]
+   }
+  },
+  {
+   "id": "u-9z61zb5wsq4gxmjupi9z",
+   "nxapiHash": 3074439935,
+   "nxapiKey": "itLGhcnOhZ3KiIyOy5iHkpWKj5bGhQ==",
+   "leannyInitial": {
+    "normal": [
+     2141130417,
+     2600811958,
+     1365593363,
+     3054438053
+    ],
+    "fest": [
+     938114950,
+     3943945165,
+     3381917896,
+     1615701148
+    ]
+   }
+  },
+  {
+   "id": "u-e8vfx0cev0d4ih9ffpdl",
+   "nxapiHash": 3891614804,
+   "nxapiKey": "IXkxbCIyLGQ3MSJkMGA9PG0yMiQwOA==",
+   "leannyInitial": {
+    "normal": [
+     210378895,
+     1564966608,
+     4051932198,
+     111206992
+    ],
+    "fest": [
+     2288333517,
+     250432261,
+     2556398289,
+     248013348
+    ]
+   }
+  },
+  {
+   "id": "u-4z9o42muiootfgi8923z",
+   "nxapiHash": 1373280367,
+   "nxapiKey": "GkJbFVYAW10CGgYAABsJCAZXVl1cFQ==",
+   "leannyInitial": {
+    "normal": [
+     3275437783,
+     3744304021,
+     120515155,
+     406448455
+    ],
+    "fest": [
+     2117290085,
+     327096626,
+     94585835,
+     554444269
+    ]
+   }
+  },
+  {
+   "id": "u-43jp28lqe29fun71gn89",
+   "nxapiHash": 279456415,
+   "nxapiKey": "6rKrrPXvrafz7vqtpvnq8aiu+PGnpg==",
+   "leannyInitial": {
+    "normal": [
+     1271849309,
+     1851130984,
+     459035919,
+     2613838182
+    ],
+    "fest": [
+     1521937665,
+     4019807626,
+     1496439849,
+     947230191
+    ]
+   }
+  },
+  {
+   "id": "u-41lw8kwey7gkf7d058sa",
+   "nxapiHash": 2574530493,
+   "nxapiKey": "yJCJjNHKhdbK2MSK2tbbitmNiIXO3A==",
+   "leannyInitial": {
+    "normal": [
+     3943204394,
+     3542662483,
+     2071915964,
+     4008092622
+    ],
+    "fest": [
+     4112471518,
+     1885128656,
+     947159817,
+     2681898853
+    ]
+   }
+  },
+  {
+   "id": "u-6nuom830ca5t2h8gwodg",
+   "nxapiHash": 1337300038,
+   "nxapiKey": "M2twKDMpK351diUnczJ0Ln4hMSkiIQ==",
+   "leannyInitial": {
+    "normal": [
+     4256339570,
+     3231559252,
+     4246267483,
+     3381033189
+    ],
+    "fest": [
+     848147887,
+     2915995009,
+     3870825730,
+     2084352224
+    ]
+   }
+  },
+  {
+   "id": "u-hmw5iui67al83q99br3q",
+   "nxapiHash": 1264704045,
+   "nxapiKey": "WABFQFoYRFhEGxpMQRUeXBQUT18eXA==",
+   "leannyInitial": {
+    "normal": [
+     4017242928,
+     3974687899,
+     1832021479,
+     1407933687
+    ],
+    "fest": [
+     1425467401,
+     2718199878,
+     3433729095,
+     4176285039
+    ]
+   }
+  },
+  {
+   "id": "u-kul9kpvycgmmcg7x0yej",
+   "nxapiHash": 3710085925,
+   "nxapiKey": "UAhOUEkcTlVTXEZCSEhGQhJdFVxATw==",
+   "leannyInitial": {
+    "normal": [
+     1335930365,
+     1702460225,
+     3603668512,
+     706995077
+    ],
+    "fest": [
+     3715404106,
+     1999838424,
+     3066047404,
+     1215551816
+    ]
+   }
+  },
+  {
+   "id": "u-05tcxfmulg2ad9xdvper",
+   "nxapiHash": 3043298307,
+   "nxapiKey": "di4zNndge2Vudm9kMWJnOntndXNmcQ==",
+   "leannyInitial": {
+    "normal": [
+     4026823860,
+     1388641049,
+     3721955850,
+     3475964255
+    ],
+    "fest": [
+     22952339,
+     252370668,
+     3591119395,
+     939522225
+    ]
+   }
+  },
+  {
+   "id": "u-lpbwgxo8pyqyjl94s557",
+   "nxapiHash": 3742053135,
+   "nxapiKey": "eiJjf214aHdgN392fnZlYzY7fDo6OA==",
+   "leannyInitial": {
+    "normal": [
+     812473387,
+     597012099,
+     2476291433,
+     1755248504
+    ],
+    "fest": [
+     2397636346,
+     2957426022,
+     3667695443,
+     2161441232
+    ]
+   }
+  },
+  {
+   "id": "u-9ylywfgh17l0gz3r7syx",
+   "nxapiHash": 3990601578,
+   "nxapiKey": "H0dTEwYTHQwNAltdBloNEFkYXRkTEg==",
+   "leannyInitial": {
+    "normal": [
+     1622153511,
+     1222135712,
+     639193085,
+     3863240939
+    ],
+    "fest": [
+     910453676,
+     2382294077,
+     206108472,
+     3428350152
+    ]
+   }
+  },
+  {
+   "id": "u-w3mquwbvq02xqoxwyk5e",
+   "nxapiHash": 1427305474,
+   "nxapiKey": "dy91MW9zd3VgdHMyMHpzbXp1e2k3Zw==",
+   "leannyInitial": {
+    "normal": [
+     4256524913,
+     11802673,
+     2265312524,
+     2412065084
+    ],
+    "fest": [
+     3967437523,
+     3656632052,
+     3140878209,
+     3426944466
+    ]
+   }
+  },
+  {
+   "id": "u-kma7brk31gf6tl04cc8f",
+   "nxapiHash": 757392807,
+   "nxapiKey": "0orMysaQxdXMlJbAwZHTy5eTxMSfwQ==",
+   "leannyInitial": {
+    "normal": [
+     3272847116,
+     1671038656,
+     4294532185,
+     3901942467
+    ],
+    "fest": [
+     1468151472,
+     3722991389,
+     279296416,
+     3525410495
+    ]
+   }
+  },
+  {
+   "id": "u-qj1il90pfc45zj1h0uok",
+   "nxapiHash": 1199320201,
+   "nxapiKey": "/KT447jg5bC5+e/qvbzz47jhufzm4g==",
+   "leannyInitial": {
+    "normal": [
+     1707712072,
+     2787209901,
+     1149757299,
+     2604709896
+    ],
+    "fest": [
+     1020035818,
+     1529377476,
+     2989229879,
+     3741101867
+    ]
+   }
+  },
+  {
+   "id": "u-um5ka2ez0ka8lned4m18",
+   "nxapiHash": 3122000950,
+   "nxapiKey": "QxtDWwNdVwRTTAZdVw5aWFNSAlsHDg==",
+   "leannyInitial": {
+    "normal": [
+     2490453451,
+     1555686749,
+     4223195884,
+     1867960313
+    ],
+    "fest": [
+     3992867551,
+     3216002308,
+     2047573989,
+     2077443343
+    ]
+   }
+  },
+  {
+   "id": "u-lnmmzed6zamsvl2rydn7",
+   "nxapiHash": 2569553328,
+   "nxapiKey": "xZ3c3t3dytXUhsrR3cPG3ILCydTehw==",
+   "leannyInitial": {
+    "normal": [
+     1910115978,
+     1604573965,
+     1384788742,
+     3663455627
+    ],
+    "fest": [
+     1855132613,
+     910363983,
+     902967486,
+     4086969184
+    ]
+   }
+  },
+  {
+   "id": "u-vobcijqqenfm0r4laipd",
+   "nxapiHash": 3180470744,
+   "nxapiKey": "rfWut7q7sbKpqb22vrXoquy0ubGovA==",
+   "leannyInitial": {
+    "normal": [
+     2292796384,
+     3085470465,
+     1359707178,
+     377832436
+    ],
+    "fest": [
+     2575030707,
+     1730688406,
+     1611477337,
+     2203561720
+    ]
+   }
+  },
+  {
+   "id": "u-qnfzjzdemj2fpf5od425",
+   "nxapiHash": 4043428696,
+   "nxapiKey": "LXUpNj4iMiI8PTUyaj4oPm03PGxqbQ==",
+   "leannyInitial": {
+    "normal": [
+     2654518912,
+     758952396,
+     3818230262,
+     2244952517
+    ],
+    "fest": [
+     492674246,
+     3154821308,
+     1211491011,
+     1050372079
+    ]
+   }
+  },
+  {
+   "id": "u-2jfelj6gem8c3j9m5xot",
+   "nxapiHash": 1887153931,
+   "nxapiKey": "fiY5YW1uZ2E9bG5mM2g4YTJmPnNkfw==",
+   "leannyInitial": {
+    "normal": [
+     3028623212,
+     2689969354,
+     2986601407,
+     1212706954
+    ],
+    "fest": [
+     2767548798,
+     764016482,
+     3632539643,
+     1923455658
+    ]
+   }
+  },
+  {
+   "id": "u-x6x6blnibo6i3c5n7928",
+   "nxapiHash": 3342981995,
+   "nxapiKey": "HkYTXRNdCQcFAgkEXQJYCF4FXFJZUw==",
+   "leannyInitial": {
+    "normal": [
+     3179794564,
+     723555072,
+     3989999423,
+     2859396545
+    ],
+    "fest": [
+     2111990295,
+     3739950923,
+     420831292,
+     2331400222
+    ]
+   }
+  },
+  {
+   "id": "u-pmrkquu0mz2k55pdlnon",
+   "nxapiHash": 2891311740,
+   "nxapiKey": "CVEMEQ4XDQkJTBEGThdJSQwYEBITEg==",
+   "leannyInitial": {
+    "normal": [
+     2273092622,
+     4083321406,
+     2666713409,
+     3190974279
+    ],
+    "fest": [
+     5615945,
+     547937753,
+     3403630703,
+     4109367658
+    ]
+   }
+  },
+  {
+   "id": "u-j94enxchcyb67dnhyzd8",
+   "nxapiHash": 395364933,
+   "nxapiKey": "MGgvfHEgKz0mLSY8J3NyISstPD8hfQ==",
+   "leannyInitial": {
+    "normal": [
+     2271472850,
+     2414120958,
+     3448472831,
+     1710733712
+    ],
+    "fest": [
+     312205924,
+     3498535532,
+     3369180729,
+     3161534381
+    ]
+   }
+  },
+  {
+   "id": "u-sblq8i6itac4pnpsqngj",
+   "nxapiHash": 3963968228,
+   "nxapiKey": "kcmXhoiV3I3SjZCFh9CUipSXlYqDjg==",
+   "leannyInitial": {
+    "normal": [
+     1012084628,
+     2151763296,
+     279788833,
+     1557502541
+    ],
+    "fest": [
+     4031367260,
+     2067491395,
+     2851040257,
+     3079270228
+    ]
+   }
+  },
+  {
+   "id": "u-tk7h9zfmzpctquowh73c",
+   "nxapiHash": 4058291953,
+   "nxapiKey": "hNyFmsaZyIuXnIuBkoWAhJ6GmcbCkg==",
+   "leannyInitial": {
+    "normal": [
+     3213999863,
+     3108802005,
+     2693275602,
+     2585215004
+    ],
+    "fest": [
+     433498918,
+     340384784,
+     1195698120,
+     1437768478
+    ]
+   }
+  },
+  {
+   "id": "u-q1r0rfsqdn81x0rd9fo9",
+   "nxapiHash": 3061502835,
+   "nxapiKey": "Bl4CQgFDARUAAhcdS0ILQwEXShUcSg==",
+   "leannyInitial": {
+    "normal": [
+     1301347994,
+     3222546815,
+     2994562511,
+     209968416
+    ],
+    "fest": [
+     1912076513,
+     1692915352,
+     1368354060,
+     2829818971
+    ]
+   }
+  },
+  {
+   "id": "u-oxoo82malos10vjiho91",
+   "nxapiHash": 4281384846,
+   "nxapiKey": "+6Ph9uHhtrzj7+Lh/b+++OTn5uG3vw==",
+   "leannyInitial": {
+    "normal": [
+     3713173285,
+     3890821142,
+     2807726275,
+     2670145683
+    ],
+    "fest": [
+     3843918246,
+     659869359,
+     3403123187,
+     3541591995
+    ]
+   }
+  },
+  {
+   "id": "u-6l03hn52xy6i2c03t01w",
+   "nxapiHash": 2949678426,
+   "nxapiKey": "L3dsNmppMjRvaCIjbDNoOWppLmprLQ==",
+   "leannyInitial": {
+    "normal": [
+     3024041412,
+     970465542,
+     2268422497,
+     3696498284
+    ],
+    "fest": [
+     1398564632,
+     2603268595,
+     860620108,
+     3943772687
+    ]
+   }
+  },
+  {
+   "id": "u-jxc10h8gldq07u0mpxx7",
+   "nxapiHash": 3075218035,
+   "nxapiKey": "Bl4ZCxBCQxtLFB8XAkNEBkMeAwsLRA==",
+   "leannyInitial": {
+    "normal": [
+     2156282440,
+     1320575227,
+     59231959,
+     4284298432
+    ],
+    "fest": [
+     1833483579,
+     2207183569,
+     3980013173,
+     2454668288
+    ]
+   }
+  },
+  {
+   "id": "u-4f4q28kl4k7tnxtzx493",
+   "nxapiHash": 1104149241,
+   "nxapiKey": "jNTNn82Iy8GSlc2Szo2XgY2Dgc3Ayg==",
+   "leannyInitial": {
+    "normal": [
+     1138349043,
+     3470005707,
+     3714339758,
+     1783463706
+    ],
+    "fest": [
+     2838008695,
+     609298197,
+     2573550913,
+     2797021037
+    ]
+   }
+  },
+  {
+   "id": "u-win4zh2q18ggzpi6wl69",
+   "nxapiHash": 579966759,
+   "nxapiKey": "UgpQTkkTXU8VVhYfQEBdV04RUEsRHg==",
+   "leannyInitial": {
+    "normal": [
+     1503778408,
+     3567448260,
+     171388201,
+     505366001
+    ],
+    "fest": [
+     1689932660,
+     693362305,
+     931936799,
+     453477733
+    ]
+   }
+  },
+  {
+   "id": "u-t2lzbk4kyu9cnfivte0l",
+   "nxapiHash": 1205371871,
+   "nxapiKey": "qvKr7bOlvbTrtKaq5ryxubapq7rvsw==",
+   "leannyInitial": {
+    "normal": [
+     2375533841,
+     739214419,
+     3140960026,
+     813105621
+    ],
+    "fest": [
+     4104574803,
+     1312213579,
+     555756102,
+     3311081553
+    ]
+   }
+  },
+  {
+   "id": "u-wcx1hx3hp9i7dt1i2ygj",
+   "nxapiHash": 681668189,
+   "nxapiKey": "KHAqPiVsNSVuNS1kNGo5KWw0byQ6Nw==",
+   "leannyInitial": {
+    "normal": [
+     3570576237,
+     1751620930,
+     1066358784,
+     3327636441
+    ],
+    "fest": [
+     414882126,
+     1997536530,
+     1036676333,
+     2976569442
+    ]
+   }
+  }
+ ]
+}

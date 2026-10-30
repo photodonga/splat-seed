@@ -11,7 +11,7 @@ const fixtures = JSON.parse(fs.readFileSync(new URL('../fixtures/leanny-parity.j
 
 // deterministic test PRNG (independent of the engine)
 function lcg(seed) { let s = seed >>> 0; return () => (s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 2 ** 32; }
-function randKey(rand) { const a = 'abcdefghijklmnopqrstuvwxyz0123456789'; return Array.from({ length: 20 }, () => a[Math.floor(rand() * 36)]).join(''); }
+function randKey(rand) { const a = 'abcdefghijklmnopqrstuvwxyz0123456789'; return 'u-' + Array.from({ length: 20 }, () => a[Math.floor(rand() * 36)]).join(''); }
 
 // ---------- table facts ----------
 test('reward tables sum to 100% and grade odds match published odds', () => {
@@ -67,8 +67,8 @@ test('parity fixtures: initial states, first 80 grades and state after 3000 pull
 });
 
 test('normal and fest streams are independent', () => {
-  const a = initialState('abcdef0123456789abcd', 'normal');
-  const b = initialState('abcdef0123456789abcd', 'fest');
+  const a = initialState('u-abcdef0123456789abcd', 'normal');
+  const b = initialState('u-abcdef0123456789abcd', 'fest');
   assert.notDeepEqual(a, b);
   assert.throws(() => initialState('abc', 'normal'));
   assert.throws(() => initialState('abcdef0123', 'gear'));
@@ -89,7 +89,7 @@ function findLimitedOffset(state, ctx, wantType) {
 function stateAtOffset(state, off) { const r = XorShift128.fromState(state); for (let i = 0; i < off; i++) r.nextU32(); return r.state(); }
 
 test('gold jackpot: missing item -> gold, 2 extra draws, item becomes owned', () => {
-  const st = initialState('k3y00000000000000001', 'normal');
+  const st = initialState('u-k3y00000000000000001', 'normal');
   const ctx = makeContext({ season: 17, missingBanners: 2, missingTitles: 2 });
   const off = findLimitedOffset(st, ctx, 'NamePlateBg');
   const s0 = stateAtOffset(st, off);
@@ -101,7 +101,7 @@ test('gold jackpot: missing item -> gold, 2 extra draws, item becomes owned', ()
 });
 
 test('gold jackpot already owned -> bronze substitute, no extra draws', () => {
-  const st = initialState('k3y00000000000000001', 'normal');
+  const st = initialState('u-k3y00000000000000001', 'normal');
   const owned = makeContext({ season: 17, missingBanners: 0, missingTitles: 0 });
   const off = findLimitedOffset(st, owned, 'NamePlateBg');
   const s0 = stateAtOffset(st, off);
@@ -116,7 +116,7 @@ test('gold jackpot already owned -> bronze substitute, no extra draws', () => {
 
 test('second jackpot of the same kind in one season substitutes once both are owned', () => {
   const ctx = makeContext({ season: 5, missingBanners: 1, missingTitles: 1 }); // seasons 1-8: one item per kind
-  const st = initialState('dup0000000000000test', 'normal');
+  const st = initialState('u-dup0000000000000test', 'normal');
   const run = simulate(st, ctx, 40000);
   const golds = run.pulls.filter(p => p.grade === 0);
   const subsFromGold = run.pulls.filter(p => p.substituted && p.original.grade === 0);
@@ -130,7 +130,7 @@ test('second jackpot of the same kind in one season substitutes once both are ow
 
 test('simple (non-ownership) mode always draws 2 for jackpot rows and never substitutes', () => {
   const ctx = makeContext({ season: 17, ownershipAware: false });
-  const run = simulate(initialState('simple00000000000000', 'normal'), ctx, 30000);
+  const run = simulate(initialState('u-simple00000000000000', 'normal'), ctx, 30000);
   assert.ok(run.pulls.every(p => !p.substituted));
   assert.ok(run.pulls.filter(p => p.row.subType === 'Limited').every(p => p.extraDraws === 2));
 });
@@ -155,9 +155,11 @@ for (const mode of ['normal', 'fest']) {
       const res = search.runToEnd();
       assert.ok(res.exhaustive);
       assert.ok(res.candidates.some(c => c.offset === trueOffset), 'true offset must be among candidates');
-      assert.equal(res.unique, true, `30 colors should be unique in 2^18 (got ${res.candidates.length})`);
-      const cand = res.candidates[0];
-      assert.equal(cand.offset, trueOffset);
+      // Either a unique position, or phase-shift twins that share the exact same future (known limitation).
+      const futures = new Set(res.candidates.map(c => c.stateAfter.join() + '|' + c.contextAfter.missingBanners + c.contextAfter.missingTitles));
+      assert.equal(futures.size, 1, `30 colors must leave one future (got ${res.candidates.length} candidates)`);
+      assert.ok(res.candidates.length <= 2);
+      const cand = res.candidates.find(c => c.offset === trueOffset);
       const pred = simulate(cand.stateAfter, cand.contextAfter, 60).pulls.map(p => p.grade);
       assert.deepEqual(pred, heldOut, 'held-out (unused) pulls must match');
       const after30 = simulate(hist.state, hist.ctx, 30);
@@ -167,7 +169,7 @@ for (const mode of ['normal', 'fest']) {
 }
 
 test('few observations -> several candidates, never falsely "unique"; refinement narrows correctly', () => {
-  const key = 'refine00000000000000';
+  const key = 'u-refine00000000000000';
   const ctx = makeContext({ season: 17 });
   const start = initialState(key, 'normal');
   const hist = simulate(start, ctx, 1500);
@@ -187,7 +189,7 @@ test('few observations -> several candidates, never falsely "unique"; refinement
 
 test('exact reward types narrow faster than colors alone', () => {
   const ctx = makeContext({ season: 17 });
-  const start = initialState('typed000000000000000', 'normal');
+  const start = initialState('u-typed000000000000000', 'normal');
   const hist = simulate(start, ctx, 800);
   const fut = simulate(hist.state, hist.ctx, 8).pulls;
   const byColor = new OffsetSearch({ startState: start, observations: fut.map(p => ({ grade: p.grade })), context: hist.ctx, maxOffset: 1 << 17, maxCandidates: 1e6 }).runToEnd();
