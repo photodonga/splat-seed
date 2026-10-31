@@ -17,6 +17,7 @@
 | 4 | stat.ink | 근거 없음 | s3s는 `splatnet_json`(원본 ID 포함)을 보내지만 stat.ink v3 `PostBattleForm`은 이를 받기만 하고 저장·노출하는 코드가 없음. 공개 API는 stat.ink 자체 UUID, 클라이언트 UUID(`<시각>_<uuid>`만 해시, `u-` 제외), 이름#번호만 |
 | 5 | ID 없는 상태 복원 (SAT/SMT) | 조건부 (미검증) | 정보량 하한 약 40회(아이템 입력), 현행 선형 방식 57~94회. SAT 실험은 중단되어 결과 없음 |
 | 6 | NPLN `Replay.ResolveReplayCode` | 근거 없음 (정상 경로로 사용 불가) | RPC는 존재. 반환 Document에 업로더 ID가 있는지 미확인. 모든 NPLN 토큰(익명 포함)이 스위치 기기 인증 기반 BaaS 토큰을 요구 |
+| 7 | s3s `--getseed` 파일 | 조건부 (인증 세션 필요, 백업 경로) | 필요한 건 `key`+`h`(= NPLN ID)뿐. 현재 위치 정보 없음. 기존 가져오기와 호환 확인 |
 
 ## 1. 대전 상세 공유 링크
 - 앱 공유 링크 형식: `https://s.nintendo.com/av5ja-lp1/znca/game/4834290508791808?p=<앱 내부 경로>`. 문서로 확인된 경로는 리플레이(`/replay?code=…`)뿐 (nxapi Discussion #11, splatoon3-replay-lookup).
@@ -49,6 +50,46 @@
 - 인증(NintendoClients wiki): 모든 요청에 `npln-tenant-id`(스플래툰3 `t-dce9377b-lp1`). 토큰은 Auth 서비스에서 발급되며 **익명 토큰(`IssueAnonymousUserToken`)조차 `nsa_id_token`을 요구**. `nsa_id_token`은 BaaS 로그인으로 얻고, BaaS 로그인은 스위치 기기 인증(dauth) 토큰과 기기 계정이 필요. 21.0.0 이후 BaaS는 유효한 클라이언트 인증서만 허용.
 - 결론: 일반 PC 서버에서 정상 절차로 접근할 방법이 없음. 실제 스위치의 기기 인증 정보를 꺼내 쓰는 방식은 기기 정지 위험과 인증 우회 문제로 **검토 대상에서 제외**. f 생성 서비스를 피할 수는 있어도, 닌텐도 인증은 오징어링3 경로보다 더 어렵다.
 
+## 7. s3s `--getseed` 파일과 Leanny 가져오기 — 최소 필요 데이터
+
+> 이 경로는 **신규 이용자의 자동 ID 조회를 대체하지 않는다.** 파일을 만들려면 인증된 SplatNet 3 세션이 필요하다. 이미 s3s·Leanny를 쓰던 사람을 위한 백업 진입로이자 연구 자료다.
+
+출처: 원본 `frozenpandaman/s3s`의 `export_seed_json`(s3s.py). `cake-monotone/s3s`는 한국어 사용 안내 README만 있고 코드 변경은 없다.
+
+출력 `gear_<시각>.json`:
+
+| 필드 | 생성 방식 | 뽑기 계산에 필요? |
+|---|---|---|
+| `key` | `base64(ID의 각 바이트 XOR (h & 0xFF))` | **필요** — 풀면 NPLN ID |
+| `h` | `mmh3.hash(ID) & 0xFFFFFFFF` (= MurmurHash3_x86_32, seed 0) | 검증용 — 복원한 ID가 맞는지 확인 |
+| `timestamp` | 파일 생성 시각 | 불필요 |
+| `gear` | `MyOutfitCommonDataEquipmentsQuery` 응답(보유 장비) | 불필요 — 장비 시드 체커용 |
+
+- ID 출처: 최근 배틀의 `player.id`(base64 해제 후 `:`로 나눈 마지막 조각, `u-…`). 없으면 연어런 기록 ID(`CoopHistoryDetail-u-…`), 둘 다 없으면 빈 문자열(→ `key` 빈 값).
+- Leanny(`Splatnet.js`)는 업로드 파일에서 `key`·`h`·`timestamp`·`gear`(머리·옷·신발) 존재를 형식 검사하고 `key`↔`h`로 ID를 복원한다. 리플레이 코드 경로는 처음부터 `{Key, H, LastImported}`만 저장한다.
+
+**최소 필요 데이터**: NPLN ID 하나, 또는 동등한 `key` + `h` 한 쌍.
+
+- `key`는 암호화된 비밀값이 아니다. `h`만 있으면 누구나 ID로 되돌릴 수 있는 단순 변환이다. **개인정보로서는 NPLN ID와 똑같이 취급한다**(공개 저장소·로그·공유 링크에 남기지 않음).
+- 이 ID에서 일반(`<ID>_Lot_<i>`)·페스티벌(`<ID>_LotFest_<i>`) 초기 상태가 모두 계산된다.
+- **현재 위치(지금까지 몇 번 뽑았는지)는 이 파일에도, Leanny 가져오기에도 없다.** 위치는 실제 캡슐 결과를 5개부터 입력해 후보가 하나로 확정될 때까지 추가 입력하는 방식으로 찾는다.
+
+**검증 범위**
+
+| 확인한 것 | 결과 |
+|---|---|
+| s3s 방식(파이썬 `pymmh3`)으로 계산한 `key`·`h` vs nxapi 테스트 벡터(`fixtures/npln-id-vectors.json`) | 40/40 일치 |
+| `gear_*.json` 형태 입력 → SPLAT SEED 기존 가져오기(`idFromSeedExport`) | ID 복원 성공, 빈 `key`는 `no_key`로 거부 |
+| 복원한 ID의 초기 상태 vs Leanny 계산 | 일치 |
+
+| 확인하지 않은 것 | |
+|---|---|
+| 실제 s3s 실행으로 만든 파일 | 합성 파일로만 시험 |
+| 실제 게임의 미래 뽑기 | **초기 상태가 Leanny와 같다는 것은 실제 게임 예측이 검증됐다는 뜻이 아니다.** 현재 위치 탐색과 보상별 난수 소비 규칙은 실제 기록(`fixtures/real-game/`)으로 별도 검증해야 한다 |
+| 현재 SplatNet 3 인증 수단 | s3s는 인증 세션이 필요하다. 디시 공략(2024-12)은 에뮬레이터 + mitmproxy 수동 추출을 소개했지만, 그것이 **유일한 방법이라고 단정할 수 없다.** 다른 인증 도구·방식(nxapi, s3s 자동 f 생성 등)의 현재 작동 여부는 별도 확인 필요 |
+
+결론: 가져오기 기능은 현 상태로 충분하므로 추가 개발하지 않는다. 남은 핵심 장애물은 **새 이용자가 리플레이 코드만으로 ID를 얻는 경로**다.
+
 ## 다음 확인 (사용자 휴대폰으로 가능)
 1. 앱에서 대전 상세 공유 → 공유 문구/링크 형태
 2. 마이 코디 공유 이미지 원본 파일 → 메타데이터 검사
@@ -58,6 +99,6 @@
 - https://github.com/kinnay/NPLN-Protocols (latest/proto/toyohr/v1/replay.proto, ugcstore/v1/resources.proto, auth/v1/auth.proto)
 - https://github.com/samuelthomas2774/nxapi (src/app/preload-webservice/znca-js-api.ts, Discussion #11)
 - https://www.npmjs.com/package/splatnet3-types (useShareMyOutfitQuery, PhotoAlbum)
-- https://github.com/frozenpandaman/s3s (s3s.py)
+- https://github.com/frozenpandaman/s3s (s3s.py `export_seed_json`), https://github.com/cake-monotone/s3s (README)
 - https://github.com/fetus-hina/stat.ink (models/api/v3/PostBattleForm.php, components/formatters/api/v3/*)
 - https://splatoonwiki.org/wiki/Tournament_Manager , https://c.nintendo.com/splatoon3-tournament/help
