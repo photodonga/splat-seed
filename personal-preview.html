@@ -156,6 +156,18 @@ body.personal-original-art{
   border-radius:0;overflow:visible;isolation:isolate;
 }
 .personal-original-art .cap.art-capsule.art-ready{box-shadow:none!important;background:transparent!important}
+.personal-original-art .cap.art-pair-ready{background:transparent!important;box-shadow:none!important}
+.personal-original-art .cap.art-pair-ready > .original-art{opacity:0}
+.personal-original-art .cap .art-pair{
+  position:absolute;inset:0;display:block;z-index:2;pointer-events:none;overflow:visible;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.35));
+}
+.personal-original-art .cap .art-half{
+  width:100%;height:auto;max-width:none;display:block;
+  position:absolute;left:0;pointer-events:none;
+}
+.personal-original-art .cap .art-top{top:0;z-index:2}
+.personal-original-art .cap .art-bottom{top:15.625%;z-index:1}
 .personal-original-art .cap .original-art{
   display:block;width:120%;height:120%;max-width:none;object-fit:contain;
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
@@ -1821,6 +1833,39 @@ if (app.id && M().phase === 'locate' && M().cand.observations.length) startSearc
       el.appendChild(img);
     }
     setImage(img, 'capsules/CapsuleIcon_0' + grade + '.png', el, 'art-ready');
+
+    // Leanny/misc.html composes each visible game capsule from Top + Bottom.
+    // Mode-specific pairs take priority; the single icon and CSS color remain fallbacks.
+    let pair = el.querySelector(':scope > .art-pair');
+    if (!pair) {
+      pair = document.createElement('span');
+      pair.className = 'art-pair';
+      pair.setAttribute('aria-hidden', 'true');
+      for (const part of ['Top', 'Bottom']) {
+        const half = document.createElement('img');
+        half.className = 'art-half art-' + part.toLowerCase();
+        half.alt = '';
+        half.decoding = 'async';
+        half.addEventListener('load', () => syncPair(el));
+        half.addEventListener('error', () => syncPair(el));
+        pair.append(half);
+      }
+      el.append(pair);
+    }
+    const suffix = (mode() === 'fest' ? 'Fest0' : '0') + grade;
+    for (const part of ['Top', 'Bottom']) {
+      const half = pair.querySelector('.art-' + part.toLowerCase());
+      setImage(half, 'capsules/LobbyCapsule_' + part + '_' + suffix + '.png');
+    }
+    syncPair(el);
+  }
+
+  function syncPair(el) {
+    const top = el.querySelector(':scope > .art-pair > .art-top');
+    const bottom = el.querySelector(':scope > .art-pair > .art-bottom');
+    const loaded = [top, bottom].every(image => image && image.complete && image.naturalWidth > 0 && !image.hidden);
+    if (loaded && !el.classList.contains('art-pair-ready')) el.classList.add('art-pair-ready');
+    if (!loaded && el.classList.contains('art-pair-ready')) el.classList.remove('art-pair-ready');
   }
 
   function makeReward(parent, path, className = 'reward-art') {
