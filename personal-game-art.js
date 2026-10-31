@@ -35,7 +35,7 @@
   function setImage(img, path, owner, readyClass) {
     const url = source(path);
     if (img.dataset.assetUrl === url) {
-      if (owner && img.complete && img.naturalWidth > 0) owner.classList.add(readyClass);
+      if (owner && img.complete && img.naturalWidth > 0 && !owner.classList.contains(readyClass)) owner.classList.add(readyClass);
       return;
     }
     img.dataset.assetUrl = url;
