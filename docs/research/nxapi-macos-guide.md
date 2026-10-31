@@ -34,11 +34,17 @@ node -v
 npm -v
 ```
 
+**새 터미널 창이나 새 탭을 열면 `BASE`와 `D` 같은 셸 변수가 사라진다.** 이후 단계의 예제는 해당 경로를 다시 설정하므로 아래 블록을 통째로 실행한다. 명령을 일부만 복사해 `--data-path "$D"`로 실행하지 말 것. `--data-path`를 빈 문자열로 지정했을 때 nxapi가 어디에 토큰을 저장할지는 이 문서에서 확인하지 않았으므로 절대 빈 값으로 실행하지 않는다.
+
 Node 26에서의 호환성은 검증되지 않았다. npm이 외부 패키지를 임시로 받아 실행하므로 nxapi 개발자·npm 공급망을 신뢰해야 한다. `npx` 캐시에는 패키지가 남을 수 있지만 토큰 저장 경로와는 별개다.
 
 ## 1. 사용자 본인이 nxapi 로그인 (Claude Code 실행 금지)
 
 ```sh
+umask 077
+BASE="$HOME/splat-seed-test"
+D="$BASE/nxapi-data"
+mkdir -p "$D"
 NXAPI_DEBUG_FILE=0 npx --yes nxapi@1.6.1 --data-path "$D" nso auth
 ```
 
@@ -52,6 +58,10 @@ NXAPI_DEBUG_FILE=0 npx --yes nxapi@1.6.1 --data-path "$D" nso auth
 ## 2. SplatNet 3 접근 검사
 
 ```sh
+umask 077
+BASE="$HOME/splat-seed-test"
+D="$BASE/nxapi-data"
+mkdir -p "$D"
 NXAPI_DEBUG_FILE=0 npx --yes nxapi@1.6.1 --data-path "$D" splatnet3 user
 ```
 
@@ -62,6 +72,10 @@ NXAPI_DEBUG_FILE=0 npx --yes nxapi@1.6.1 --data-path "$D" splatnet3 user
 **중요: 본인 업로드임이 확인된 코드만 이 테스트의 자기 리플레이로 사용.** 아래 `XXXX-XXXX-XXXX-XXXX`는 실제로 본인이 발급받은 코드로 교체한다.
 
 ```sh
+umask 077
+BASE="$HOME/splat-seed-test"
+D="$BASE/nxapi-data"
+mkdir -p "$D"
 NXAPI_DEBUG_FILE=0 npx --yes nxapi@1.6.1 --data-path "$D" util splatoon3-seed --json --no-include-gear > "$BASE/self.json"
 NXAPI_DEBUG_FILE=0 npx --yes nxapi@1.6.1 --data-path "$D" util splatoon3-seed XXXX-XXXX-XXXX-XXXX --json --no-include-gear > "$BASE/replay.json"
 ```
@@ -70,12 +84,14 @@ NXAPI_DEBUG_FILE=0 npx --yes nxapi@1.6.1 --data-path "$D" util splatoon3-seed XX
 - 두 번째 명령은 해당 리플레이의 업로더 ID를 가져오려고 시도한다.
 - 정상 `--json` 출력은 `{ "key": "…", "h": 123, "timestamp": 123 }`과 유사하다. **원본 `u-` 문자열을 출력하지 않는다.**
 - `--no-include-gear`에서는 `gear`가 빠질 수 있어 결과를 그대로 Leanny 전체 백업 JSON으로 간주해서는 안 된다.
-- 두 명령 중 하나라도 실패했다면 빈 파일 또는 불완전 JSON이 남을 수 있다. 아래 비교 결과를 '조회 성공'으로 오인하지 말 것.
+- 셸의 `>` 출력 리디렉션은 nxapi를 실행하기 **전에 파일을 생성하거나 기존 파일을 비운다**. 따라서 조회 명령이 실패해도 `self.json`·`replay.json`이 빈 파일로 남을 수 있다. **파일의 존재만으로 성공을 판정하지 말 것.** 오류 원인은 조회 명령의 종료 상태와 표준 오류를 확인하되, 민감한 인증 출력은 공유하지 않는다.
+- 유효한 `key`·`h` 한 쌍이 양쪽 파일에 모두 있을 때만 아래 비교가 `같음` 또는 `다름`을 출력한다. 빈 파일·깨진 JSON·필드 누락은 `비교 불가`로 처리하고, **값이 다르다는 판정과 구분**한다.
 
-**민감한 결과 내용을 출력하지 않는 비교**:
+**민감한 결과 내용을 출력하지 않는 비교** (새 터미널이라면 `BASE` 재설정 포함):
 
 ```sh
-node -e 'const fs=require("node:fs");try{const [a,b]=process.argv.slice(1).map(p=>JSON.parse(fs.readFileSync(p,"utf8")));const valid=x=>x&&typeof x.key==="string"&&Number.isInteger(x.h);if(!valid(a)||!valid(b))throw Error("결과 파일 형식 오류");console.log(a.key===b.key&&a.h===b.h?"같음":"다름")}catch(e){console.error("비교 불가: "+e.message);process.exitCode=1}' "$BASE/self.json" "$BASE/replay.json"
+BASE="$HOME/splat-seed-test"
+node -e 'const fs=require("node:fs");try{const [a,b]=process.argv.slice(1).map(p=>JSON.parse(fs.readFileSync(p,"utf8")));const valid=x=>x&&typeof x.key==="string"&&x.key.length>0&&Number.isInteger(x.h);if(!valid(a)||!valid(b))throw Error();console.log(a.key===b.key&&a.h===b.h?"같음":"다름")}catch{console.error("비교 불가: 결과 파일이 비었거나 유효한 JSON/key/h가 아닙니다");process.exitCode=1}' "$BASE/self.json" "$BASE/replay.json"
 ```
 
 '같음'은 **내 계정의 기준값과 해당 리플레이 응답의 업로더 식별값이 일치한다**는 근거다. 이 결과만으로 **다른 사람 리플레이 조회**나 **실제 미래 뽑기 예측**이 검증되지는 않는다.
