@@ -101,6 +101,7 @@ details summary{cursor:pointer;color:var(--mute);font-size:13px;font-weight:800}
 .alert b{color:#fff}
 code{font-size:11px;word-break:break-all;color:var(--mute)}
 </style>
+<link rel="stylesheet" href="personal-game-art.css">
 </head>
 <body>
 <main class="app">
@@ -667,5 +668,6 @@ $('kUp').onclick = () => { app.perDay = Math.min(50, app.perDay + 1); save(); re
 render();
 if (app.id && M().phase === 'locate' && M().cand.observations.length) startSearch('search');
 </script>
+<script src="personal-game-art.js" defer></script>
 </body>
 </html>
