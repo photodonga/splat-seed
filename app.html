@@ -144,7 +144,7 @@ code{font-size:11px;word-break:break-all;color:var(--mute)}
       <div class="big" id="locBig">–</div>
       <p class="small" id="locLine" style="margin-top:6px"></p>
       <div class="bar" id="locBar" hidden><i></i></div>
-      <div class="row" style="margin-top:8px"><button class="btn" id="locCancel" hidden>검색 취소</button><button class="btn" id="locRetry" hidden>다시 검색</button></div>
+      <div class="row" style="margin-top:8px"><button class="btn" id="locCancel" hidden>검색 취소</button><button class="btn" id="locRetry" hidden>다시 검색</button><button class="btn" id="locWiden" hidden>더 넓게 찾기 (범위 ×4)</button></div>
       <div id="locConfirm" hidden style="margin-top:12px">
         <button class="btn pri wide" id="btnStartTrack">이 위치로 추적 시작</button>
         <p class="small" style="margin-top:6px">검색 범위 안에서 남은 위치가 하나입니다. 범위 밖 위치나 엔진 오류 가능성은 남아 있으니, 추적하면서 예측과 실제를 계속 대조합니다.</p>
@@ -238,7 +238,7 @@ code{font-size:11px;word-break:break-all;color:var(--mute)}
 <script type="module">
 import {
   newSession, addPull, removeLastPull, changeConditions, status, forecast, withSearchResult,
-  serializeSession, deserializeSession, itemsForGrade, searchParams, RANGE_PRESETS, DEFAULT_RANGE, outcomeKey,
+  serializeSession, deserializeSession, itemsForGrade, searchParams, RANGE_PRESETS, rangeForDate, estimatePulls, outcomeKey,
 } from './engine/candidates.mjs';
 import { OffsetSearch, makeContext, initialState, seasonAt, jackpotItemsPerKind, NPLN_USER_ID_RE } from './engine/shellout.mjs';
 import { idFromSeedExport } from './engine/npln-id.mjs';
@@ -265,7 +265,7 @@ const app = {
 };
 function blankRt() { return { result: null, searching: false, progress: 0, cancelled: false, undo: [], job: null, found: 0, error: null }; }
 function freshMode(mode) {
-  return { phase: 'locate', cand: newSession({ mode, season: seasonAt(new Date()), maxOffset: DEFAULT_RANGE, maxCandidates: 2000 }), stream: null };
+  return { phase: 'locate', cand: newSession({ mode, season: seasonAt(new Date()), maxOffset: rangeForDate(), maxCandidates: 2000 }), stream: null };
 }
 function load() {
   let o = null;
@@ -279,6 +279,7 @@ function load() {
         stream: src?.stream ? deserialize(src.stream) : null,
       };
       if (app.m[mode].phase === 'track' && !app.m[mode].stream) app.m[mode].phase = 'locate';
+      if (app.m[mode].cand.maxOffset === 131072) app.m[mode].cand = changeConditions(app.m[mode].cand, { maxOffset: rangeForDate() }); // old default -> date-based
     } catch { app.m[mode] = freshMode(mode); }
   }
   if (o?.mode === 'fest') app.mode = 'fest';
@@ -455,6 +456,11 @@ function renderLocateStatus() {
   else if (st.kind === 'none') { big.innerHTML = '0<small> 개</small>'; line.textContent = '입력과 맞는 위치가 범위 안에 없습니다. 입력 실수(되돌리기), 뽑기 종류, 보유 개수, 검색 범위를 확인하세요. 모두 맞다면 엔진이 틀렸다는 신호입니다.'; chip.className = 'chip bad'; chip.textContent = '맞는 위치 없음'; }
   else if (st.kind === 'unique') { big.innerHTML = '1<small> 개 · 범위 안</small>'; line.textContent = `${rangeTxt} 안에서 위치가 하나로 좁혀졌습니다.`; chip.className = 'chip ok'; chip.textContent = '위치 확정'; }
   else { big.innerHTML = `${fmt(st.count)}<small> 개</small>`; line.textContent = `${rangeTxt} 전체 검색 · 입력 ${s.observations.length}개`; }
+  const cands = r.result && !r.searching && !r.result.truncated ? r.result.candidates : [];
+  if (cands.length >= 1 && cands.length <= 5) {
+    line.textContent += ` · 후보 위치: ${cands.map(c => `약 ${fmt(estimatePulls(c.offset, s.season, s))}번째`).join(', ')} 뽑기부터`;
+  }
+  $('locWiden').hidden = st.kind !== 'none';
 }
 
 function renderLocate() {
@@ -495,7 +501,8 @@ function renderLocate() {
   // conditions
   const d = app.draft ?? s;
   $('cSeason').textContent = d.season; $('cMB').textContent = d.missingBanners; $('cMT').textContent = d.missingTitles;
-  $('cRange').innerHTML = RANGE_PRESETS.map(v => `<option value="${v}" ${v === d.maxOffset ? 'selected' : ''}>${fmt(v)}</option>`).join('');
+  const opts = [...new Set([rangeForDate(), d.maxOffset, ...RANGE_PRESETS])].sort((a, b) => a - b);
+  $('cRange').innerHTML = opts.map(v => `<option value="${v}" ${v === d.maxOffset ? 'selected' : ''}>${fmt(v)}${v === rangeForDate() ? ' (기본·날짜 기준)' : ''}</option>`).join('');
   $('cCap').value = String(d.maxCandidates);
   $('condSum').textContent = `시즌 ${s.season} · 미보유 ${s.missingBanners}/${s.missingTitles} · 범위 ${fmt(s.maxOffset)}`;
   $('condApply').disabled = !draftChanged();
@@ -616,6 +623,11 @@ $('mFest').onclick = () => switchMode('fest');
 $('locUndo').onclick = locUndo;
 $('locCancel').onclick = () => cancelSearch(false);
 $('locRetry').onclick = () => startSearch('search');
+$('locWiden').onclick = () => {
+  const s = M().cand;
+  try { M().cand = changeConditions(s, { maxOffset: Math.min(2 ** 32, s.maxOffset * 4) }); } catch { return; }
+  R().undo = []; R().result = null; save(); startSearch('research');
+};
 $('btnStartTrack').onclick = startTracking;
 let resetArm = 0;
 $('locReset').onclick = () => {

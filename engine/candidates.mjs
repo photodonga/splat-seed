@@ -20,6 +20,31 @@ import {
 
 export const RANGE_PRESETS = Object.freeze([1 << 14, 1 << 16, 1 << 17, 1 << 18, 1 << 20, 1 << 22]);
 export const DEFAULT_RANGE = 1 << 17;
+
+/**
+ * Realistic search range by date, same heuristic as the public seed tool:
+ * (days since 2022-09-01, local time) * 33 + 20 random numbers. A rule of thumb, not a game rule.
+ */
+export function rangeForDate(date = new Date()) {
+  const days = Math.floor((new Date(date) - new Date(2022, 8, 1)) / (24 * 3600 * 1000));
+  return Math.max(1, days) * 33 + 20;
+}
+
+/** Average random numbers used per pull under a season's table (1 for the row + item draws). */
+export function drawsPerPull(season, { missingBanners = 2, missingTitles = 2 } = {}) {
+  let extra = 0;
+  for (const row of tableForSeason(season)) {
+    const p = row.percent / 100;
+    if (row.subType === 'Limited') extra += p * ((row.type === 'NamePlateBg' ? missingBanners : missingTitles) > 0 ? 2 : 0);
+    else if (row.type === 'FoodTicket' || row.type === 'GearSkillChip' || row.type === 'DrinkTicket') extra += p;
+  }
+  return 1 + extra;
+}
+
+/** Rough number of pulls already made before a candidate position (offset in random numbers). */
+export function estimatePulls(offset, season, own) {
+  return Math.round(offset / drawsPerPull(season, own));
+}
 export const DEFAULT_MAX_CANDIDATES = 2000;
 export const FORECAST_LEN = 10;
 
