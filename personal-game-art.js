@@ -67,6 +67,39 @@
       el.appendChild(img);
     }
     setImage(img, 'capsules/CapsuleIcon_0' + grade + '.png', el, 'art-ready');
+
+    // Leanny/misc.html composes each visible game capsule from Top + Bottom.
+    // Mode-specific pairs take priority; the single icon and CSS color remain fallbacks.
+    let pair = el.querySelector(':scope > .art-pair');
+    if (!pair) {
+      pair = document.createElement('span');
+      pair.className = 'art-pair';
+      pair.setAttribute('aria-hidden', 'true');
+      for (const part of ['Top', 'Bottom']) {
+        const half = document.createElement('img');
+        half.className = 'art-half art-' + part.toLowerCase();
+        half.alt = '';
+        half.decoding = 'async';
+        half.addEventListener('load', () => syncPair(el));
+        half.addEventListener('error', () => syncPair(el));
+        pair.append(half);
+      }
+      el.append(pair);
+    }
+    const suffix = (mode() === 'fest' ? 'Fest0' : '0') + grade;
+    for (const part of ['Top', 'Bottom']) {
+      const half = pair.querySelector('.art-' + part.toLowerCase());
+      setImage(half, 'capsules/LobbyCapsule_' + part + '_' + suffix + '.png');
+    }
+    syncPair(el);
+  }
+
+  function syncPair(el) {
+    const top = el.querySelector(':scope > .art-pair > .art-top');
+    const bottom = el.querySelector(':scope > .art-pair > .art-bottom');
+    const loaded = [top, bottom].every(image => image && image.complete && image.naturalWidth > 0 && !image.hidden);
+    if (loaded && !el.classList.contains('art-pair-ready')) el.classList.add('art-pair-ready');
+    if (!loaded && el.classList.contains('art-pair-ready')) el.classList.remove('art-pair-ready');
   }
 
   function makeReward(parent, path, className = 'reward-art') {
