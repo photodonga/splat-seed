@@ -37,8 +37,8 @@ prepare() {
     echo '오류: 실험 경로가 심볼릭 링크여서 중단합니다.' >&2
     exit 1
   fi
-  mkdir -p -- "$AUTH_A" "$AUTH_B"
-  chmod 700 -- "$BASE" "$AUTH_A" "$AUTH_B"
+  mkdir -p "$AUTH_A" "$AUTH_B"
+  chmod 700 "$BASE" "$AUTH_A" "$AUTH_B"
   if ! command -v node >/dev/null 2>&1 || ! command -v npx >/dev/null 2>&1; then
     echo 'Node.js 와 npx 가 필요합니다.' >&2
     exit 1
@@ -73,21 +73,21 @@ lookup() {
   local outfile="$BASE/$filename.json"
   local temp_file error_file
   # A failed retry must never leave a previously successful result in place.
-  rm -f -- "$outfile"
+  rm -f "$outfile"
   temp_file="$(mktemp "$BASE/.nxapi-output.XXXXXXXX")"
   error_file="$(mktemp "$BASE/.nxapi-error.XXXXXXXX")"
   if nxapi "$account_path" util splatoon3-seed "$@" --json --no-include-gear >"$temp_file" 2>"$error_file"; then
     if node "$VERIFY" validate "$temp_file" >/dev/null 2>&1; then
-      mv -f -- "$temp_file" "$outfile"
-      rm -f -- "$error_file"
+      mv -f "$temp_file" "$outfile"
+      rm -f "$error_file"
       echo "조회 성공 / 형식 검증 성공: $filename (원본 값 숨김)"
     else
-      rm -f -- "$temp_file"
+      rm -f "$temp_file"
       echo "조회 응답 검증 실패: 비공개 오류 파일 $error_file 확인 (내용 공유 금지)" >&2
       return 1
     fi
   else
-    rm -f -- "$temp_file"
+    rm -f "$temp_file"
     echo "nxapi 조회 실패: 비공개 오류 파일 $error_file 확인 (내용 공유 금지)" >&2
     return 1
   fi
@@ -98,8 +98,8 @@ check_code() {
     echo '리플레이 코드 1개가 필요합니다.' >&2
     exit 1
   fi
-  local compact="${1^^}"
-  compact="${compact//-/}"
+  local compact
+  compact="$(printf '%s' "$1" | tr '[:lower:]' '[:upper:]' | tr -d '-')"
   if [[ ! "$compact" =~ ^[A-Z0-9]{16}$ ]]; then
     echo '리플레이 코드는 숫자/영문 16자리여야 합니다 (하이픈 허용).' >&2
     exit 1
@@ -139,7 +139,7 @@ cleanup() {
     echo '삭제 경로 검증 실패' >&2
     return 1
   fi
-  rm -rf -- "$BASE"
+  rm -rf "$BASE"
   echo '로컬 실험 폴더 삭제 완료 (원격 인증 토큰과 npm 캐시는 별도)'
 }
 
