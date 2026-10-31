@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#15121f">
+<meta name="robots" content="noindex">
+<title>SPLAT SEED 트래커</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap">
+<style>
+/* One-thumb phone layout: countdown on an ink splat, prediction strip, capsule pad pinned at the bottom. */
+@font-face{font-family:'SplatInstalledEnglishBold';src:local('BlitzBold'),local('Blitz Bold'),local('Splatfont2');font-display:swap}
+@font-face{font-family:'SplatInstalledEnglishMain';src:local('BlitzMain'),local('Blitz Main'),local('Splatfont');font-display:swap}
+@font-face{font-family:'SplatInstalledKTitle';src:local('AsiaKCUBE'),local('a큐브'),local('a큐브G');font-display:swap}
+@font-face{font-family:'SplatInstalledKBody';src:local('AsiaKERIN'),local('a어린이날'),local('a어린이날M');font-display:swap}
+:root{
+  color-scheme:dark;
+  --ink:#15121f; --ink2:#221d31; --ink3:#2e2843; --line:#3b3454; --mute:#a59fc0; --mute2:#8f88ab;
+  --lime:#c6f432; --violet:#8b5cf6; --pink:#ff4f8b; --sun:#ffc229; --paper:#f4f1ff; --padbg:#e7e2fb;
+  --font-arcade:var(--font-loaded-english-display,'SplatInstalledEnglishBold'),'Lilita One','Nunito',system-ui,sans-serif;
+  --font-k-display:var(--font-loaded-korean-display,'SplatInstalledKTitle'),'Black Han Sans','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --font-k-game:var(--font-loaded-korean-display,'SplatInstalledKTitle'),'Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --font-body:var(--font-loaded-english-main,'SplatInstalledEnglishMain'),var(--font-loaded-korean-body,'SplatInstalledKBody'),'Nunito','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+html{background:var(--ink)}
+body{min-height:100vh;background:var(--ink);color:var(--paper);font:700 15px/1.45 var(--font-body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--lime);outline-offset:2px}
+[hidden]{display:none!important}
+.app{position:relative;max-width:460px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:14px;min-height:100vh;overflow:hidden}
+.bg{position:absolute;pointer-events:none;z-index:0}
+.app>*:not(.bg){position:relative;z-index:1}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:6px}
+.logo{font:400 clamp(22px,7vw,28px)/1 var(--font-arcade);letter-spacing:.5px;color:var(--lime);transform:rotate(-4deg) skewX(-6deg);text-shadow:3px 3px 0 var(--violet);white-space:nowrap}
+.logo small{display:block;font:900 8px/1 var(--font-body);letter-spacing:3px;color:var(--paper);text-shadow:none;margin-top:5px}
+.seg{display:flex;background:var(--ink3);border-radius:99px;padding:3px;border:2px solid var(--line)}
+.seg button{white-space:nowrap;padding:7px 11px;border-radius:99px;font:400 14px/1 var(--font-k-game);color:#b9b2d4}
+.seg button[aria-pressed="true"]{background:var(--paper);color:var(--ink)}
+.iconbtn{width:38px;height:38px;border-radius:12px;background:var(--ink3);border:2px solid var(--line);display:grid;place-items:center;font-size:18px;flex:none}
+
+/* hero */
+.hero{position:relative;height:206px;display:grid;place-items:center;text-align:center;color:var(--ink)}
+.hero svg{position:absolute;inset:-12px -6px;width:calc(100% + 12px);height:calc(100% + 24px)}
+.hero .in{position:relative;display:grid;gap:4px;justify-items:center}
+.big.d3{font-size:80px}.big.d4{font-size:62px}
+.eyebrow{font:400 15px/1 var(--font-k-game);letter-spacing:.5px}
+.big{font:400 100px/.95 var(--font-arcade);letter-spacing:-2px;transform:skewX(-6deg);font-variant-numeric:tabular-nums}
+.big em{font:400 28px/1 var(--font-k-display);font-style:normal;letter-spacing:0;margin-left:4px}
+.cost{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+.cost span{background:var(--ink);color:var(--paper);border-radius:8px;padding:5px 8px;font:800 11.5px/1.2 var(--font-body);transform:rotate(-1.5deg)}
+.cost span:nth-child(2){transform:rotate(1.5deg)}
+.cost b{color:var(--lime);font-family:var(--font-arcade);font-weight:400;letter-spacing:.3px}
+.hero.stop{color:var(--ink)}
+
+/* chips, sections */
+.chip{align-self:flex-start;display:flex;align-items:center;gap:7px;background:var(--ink2);border:2px solid var(--line);border-radius:99px;padding:6px 12px 6px 8px;font:800 12.5px/1.2 var(--font-body)}
+.chip i{width:10px;height:10px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 3px rgba(198,244,50,.25);flex:none}
+.chip.bad i{background:var(--pink);box-shadow:0 0 0 3px rgba(255,79,139,.25)}
+.chip.warn i{background:var(--sun);box-shadow:0 0 0 3px rgba(255,194,41,.25)}
+.sec{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.sec h2,.card h2,.pad h2{font:400 17px/1 var(--font-k-display);transform:skewX(-5deg)}
+.sec span{font:800 11.5px/1.2 var(--font-body);color:var(--mute);text-align:right}
+
+/* capsule (original drawing) */
+svg.cap{width:26px;height:30px;overflow:visible;flex:none}
+
+/* prediction strip */
+.strip{display:flex;gap:5px;align-items:flex-end;background:var(--ink2);border:2px solid var(--line);border-radius:16px;padding:10px 10px 8px;overflow:hidden}
+.strip .p{display:grid;justify-items:center;gap:3px;font:400 11px/1 var(--font-arcade);color:var(--mute);letter-spacing:.3px}
+.strip .p.next{color:var(--lime)}
+.strip .p.next svg.cap{transform:scale(1.18) translateY(-2px)}
+.strip .more{margin-left:auto;display:grid;justify-items:center;gap:3px;font:400 11px/1 var(--font-arcade);color:var(--sun)}
+.strip.hidden{background:repeating-linear-gradient(-45deg,var(--ink2) 0 8px,var(--ink3) 8px 16px);justify-content:center;color:#b9b2d4;font:800 12.5px/1.3 var(--font-body);padding:16px;align-items:center}
+
+/* mismatch */
+.warnbox{background:var(--ink2);border:2px solid var(--pink);border-radius:16px;padding:12px;display:grid;gap:10px}
+.cmp{display:flex;align-items:center;gap:8px;font:800 13.5px/1.3 var(--font-body);flex-wrap:wrap}
+.cmp .pair{margin-left:auto;display:flex;align-items:center;gap:8px}
+.cmp .x{font:400 18px/1 var(--font-arcade);color:var(--pink)}
+.fix{display:grid;gap:6px}
+.fix>div,.fix>button{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--ink3);border-radius:12px;padding:10px 12px;font:800 13.5px/1.25 var(--font-body);text-align:left;width:100%}
+.fix b{color:var(--lime);font:400 14px/1 var(--font-k-game);white-space:nowrap}
+
+/* recent */
+.recent{display:flex;gap:6px;flex-wrap:wrap;min-height:34px}
+.recent .r{display:grid;justify-items:center;gap:2px}
+.recent .r>span{position:relative}
+.recent .r svg.cap{width:20px;height:23px}
+.recent .r b{position:absolute;right:-4px;bottom:-3px;width:12px;height:12px;border-radius:50%;background:var(--lime);color:var(--ink);font:900 8px/12px var(--font-body);text-align:center}
+.recent .ico{width:12px;height:12px;color:#b9b2d4}
+.empty{color:var(--mute2);font:700 12.5px/1.4 var(--font-body)}
+
+/* pad */
+.pad{margin-top:auto;background:var(--paper);color:var(--ink);border-radius:22px 22px 18px 18px;padding:14px 12px 12px;display:grid;gap:10px;box-shadow:0 -4px 0 var(--violet)}
+.pad .sec span{color:#6b6585}
+.pad .undo{font:400 14px/1 var(--font-k-game);color:#4a4466;background:var(--padbg);border-radius:10px;padding:7px 10px}
+.caps{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.cb{display:grid;justify-items:center;gap:4px;padding:8px 0 6px;border-radius:14px;background:var(--padbg);font:400 13px/1 var(--font-k-game);color:var(--ink)}
+.cb svg.cap{width:30px;height:35px}
+.cb[aria-pressed="true"]{background:var(--ink);color:var(--lime);box-shadow:0 0 0 3px var(--lime)}
+.cb:disabled{opacity:.45}
+.items{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.items button{display:inline-flex;align-items:center;gap:5px;border:2px solid var(--ink);border-radius:10px;padding:6px 9px;font:400 13.5px/1 var(--font-k-game);background:#fff;color:var(--ink)}
+.items button[aria-pressed="true"]{background:var(--violet);border-color:var(--violet);color:#fff}
+.items small{font:800 11px/1 var(--font-body);color:#6b6585}
+.ico{width:16px;height:16px;flex:none}
+.go{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--lime);color:var(--ink);border-radius:14px;padding:14px;font:400 18px/1 var(--font-k-display);box-shadow:0 4px 0 var(--ink);width:100%}
+.go:disabled{background:#d6d2e6;color:#8e89a6;box-shadow:none}
+.go.dark{background:var(--ink);color:var(--paper);box-shadow:none}
+
+/* setup */
+.card{background:var(--ink2);border:2px solid var(--line);border-radius:18px;padding:13px;display:grid;gap:10px}
+.card p.hint{font:700 12px/1.45 var(--font-body);color:var(--mute)}
+.state-in{display:flex;gap:6px}
+.state-in input{flex:1;min-width:0;background:var(--ink);border:2px solid var(--line);border-radius:10px;padding:10px;font:700 13px/1.2 ui-monospace,Menlo,monospace;color:#e6e1fb}
+.btn{background:var(--violet);color:#fff;border-radius:10px;padding:9px 12px;font:400 14px/1 var(--font-k-game);white-space:nowrap}
+.btn.ghost{background:var(--ink3);color:var(--paper)}
+.parsed{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.parsed span{background:var(--ink);border:2px solid var(--line);border-radius:9px;padding:7px 2px;text-align:center;font:700 10.5px/1 ui-monospace,Menlo,monospace;color:#d6d0ee;overflow:hidden}
+.msg{font:800 12px/1.4 var(--font-body);color:var(--mute)}
+.msg.err{color:var(--pink)} .msg.ok{color:var(--lime)}
+.own{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.step{background:var(--ink);border-radius:12px;padding:8px 10px;display:grid;gap:6px;font:800 11.5px/1.2 var(--font-body);color:#b9b2d4}
+.step .ctl{display:flex;align-items:center;justify-content:space-between;color:var(--paper);font:400 22px/1 var(--font-arcade)}
+.step .ctl button{width:30px;height:30px;border-radius:9px;background:var(--ink3);display:grid;place-items:center;font:900 17px/1 var(--font-body);color:var(--lime)}
+.step .ctl button:disabled{opacity:.35}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.vs>div{border-radius:16px;padding:12px;display:grid;gap:4px;align-content:start;font:800 11.5px/1.35 var(--font-body);background:var(--ink3);color:#d6d0ee}
+.vs>div.win{background:var(--lime);color:var(--ink);box-shadow:0 4px 0 var(--violet)}
+.vs strong{font:400 36px/1 var(--font-arcade);letter-spacing:-.5px;transform:skewX(-6deg);display:inline-block}
+.vs strong em{font:400 14px/1 var(--font-k-display);font-style:normal;letter-spacing:0}
+.vs .tag{justify-self:start;background:var(--ink);color:var(--lime);border-radius:6px;padding:3px 6px;font:400 11px/1 var(--font-k-game)}
+.toggle{display:flex;align-items:center;gap:8px;font:800 12.5px/1.3 var(--font-body);color:#d6d0ee}
+.toggle input{width:18px;height:18px;accent-color:var(--lime)}
+.note{font:700 10.5px/1.5 var(--font-body);color:var(--mute2);text-align:center}
+.banner{background:#3a2a07;border:2px solid var(--sun);border-radius:14px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;font:800 12.5px/1.35 var(--font-body)}
+
+/* personal fonts (from PR #3 loader) */
+.font-settings{background:var(--ink2);border:2px solid var(--line);border-radius:16px;padding:12px}
+.font-settings summary{cursor:pointer;color:var(--lime);font:400 15px/1.3 var(--font-k-game)}
+.font-settings .help,.font-settings .font-note,#personalFontStatus{font:700 11.5px/1.55 var(--font-body);color:var(--mute);margin-top:8px}
+.font-grid{display:grid;gap:8px;margin-top:10px}
+.personal-font-row{display:grid;gap:4px;font:700 11.5px/1.3 var(--font-body);color:var(--mute)}
+.personal-font-row label{color:var(--paper);font:400 14px/1.3 var(--font-k-game)}
+.personal-font-row input{font-size:12px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="top">
+    <div class="logo" aria-label="SPLAT SEED">SPLAT SEED<small>SHELL-OUT TRACKER</small></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="seg" role="group" aria-label="뽑기 종류">
+        <button type="button" id="mNormal" aria-pressed="true">일반</button>
+        <button type="button" id="mFest" aria-pressed="false">페스티벌</button>
+      </div>
+      <button type="button" class="iconbtn" id="toSetup" aria-label="설정">⚙</button>
+    </div>
+  </div>
+
+  <!-- SETUP -->
+  <section id="setup" hidden style="display:grid;gap:12px">
+    <div class="card">
+      <h2 id="setupTitle">1. 일반 뽑기 상태 붙여넣기</h2>
+      <p class="hint">Leanny Seed Checker의 뽑기 화면에 나오는 현재 시드 4칸을 그대로 복사해 붙여 넣으세요. <b>다음 뽑기 직전</b> 값이어야 합니다. 이미 뽑았다면 Leanny에서 갱신한 뒤 가져오세요.</p>
+      <div class="state-in"><input id="stateText" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="0x… | 0x… | 0x… | 0x…" aria-label="상태 4워드"><button type="button" class="btn" id="pasteBtn">붙여넣기</button></div>
+      <div class="parsed" id="parsed" hidden></div>
+      <div class="msg" id="stateMsg" aria-live="polite"></div>
+    </div>
+    <div class="card">
+      <h2>2. 이번 시즌 잭팟 중 아직 없는 개수</h2>
+      <p class="hint" id="seasonHint"></p>
+      <div class="own">
+        <div class="step">배너<div class="ctl"><button type="button" data-own="b" data-d="-1" aria-label="배너 줄이기">−</button><span id="ownB">2</span><button type="button" data-own="b" data-d="1" aria-label="배너 늘리기">+</button></div></div>
+        <div class="step">칭호<div class="ctl"><button type="button" data-own="t" data-d="-1" aria-label="칭호 줄이기">−</button><span id="ownT">2</span><button type="button" data-own="t" data-d="1" aria-label="칭호 늘리기">+</button></div></div>
+      </div>
+      <p class="hint">이미 가진 잭팟이 걸리면 금·은 대신 동색이 나오고 이후 순서가 달라집니다. 틀리면 트래커가 멈춰서 알려 줍니다.</p>
+    </div>
+    <div class="card" id="vsCard">
+      <h2>3. 어느 쪽 황금이 가까울까</h2>
+      <div class="vs" id="vs"></div>
+      <label class="toggle"><input type="checkbox" id="discountUsed"> 오늘 첫 회 할인(5,000G)을 이미 썼어요</label>
+    </div>
+    <button type="button" class="go" id="startBtn" disabled>트래커 시작</button>
+    <details class="font-settings" id="fontSettings">
+      <summary>개인용 게임 원본 폰트 적용</summary>
+      <p class="help">본인이 적법하게 보유한 글꼴 파일을 이 브라우저에만 적용합니다. 파일은 서버나 GitHub로 전송하지 않습니다.</p>
+      <div class="font-grid" id="personalFontItems"></div>
+      <div style="margin-top:10px"><button class="btn ghost" id="clearPersonalFonts" type="button">내 폰트 초기화</button></div>
+      <p id="personalFontStatus" aria-live="polite"></p>
+    </details>
+    <p class="note">닌텐도와 무관한 팬 제작 도구입니다. 계산 결과는 실제 게임 대조 검증 전이며, 기록은 이 브라우저에만 저장됩니다.</p>
+  </section>
+
+  <!-- TRACKER -->
+  <section id="tracker" hidden style="display:flex;flex-direction:column;gap:14px;flex:1">
+    <div class="banner" id="seasonBanner" hidden><span id="seasonBannerText"></span><button type="button" class="btn" id="seasonApply">반영</button></div>
+    <div class="hero" id="hero"><div class="in" id="heroIn"></div></div>
+    <div class="chip" id="chip"><i></i><span id="chipText"></span></div>
+
+    <div id="mismatch" hidden style="display:grid;gap:10px">
+      <div class="warnbox"><div class="cmp" id="cmp"></div></div>
+      <div class="sec"><h2>이렇게 확인해 보세요</h2></div>
+      <div class="fix">
+        <div style="display:grid;gap:8px;justify-content:stretch">이번 시즌 잭팟 아직 없는 개수가 다를 수 있어요
+          <span class="own">
+            <span class="step"><span>배너</span><span class="ctl"><button type="button" data-fix="b" data-d="-1" aria-label="배너 줄이기">−</button><span id="fixB"></span><button type="button" data-fix="b" data-d="1" aria-label="배너 늘리기">+</button></span></span>
+            <span class="step"><span>칭호</span><span class="ctl"><button type="button" data-fix="t" data-d="-1" aria-label="칭호 줄이기">−</button><span id="fixT"></span><button type="button" data-fix="t" data-d="1" aria-label="칭호 늘리기">+</button></span></span>
+          </span></div>
+        <button type="button" id="fixUndo">방금 누른 색을 잘못 눌렀어요<b>취소 ›</b></button>
+        <button type="button" id="fixPaste">Leanny에서 상태 다시 가져오기<b>붙여넣기 ›</b></button>
+      </div>
+      <div class="msg" id="fixMsg" aria-live="polite"></div>
+    </div>
+
+    <div id="predBlock" style="display:grid;gap:10px">
+      <div class="sec"><h2>다음 예측</h2><span id="ownInfo"></span></div>
+      <div class="strip" id="strip"></div>
+    </div>
+    <div style="display:grid;gap:8px">
+      <div class="sec"><h2>기록</h2><span id="recInfo"></span></div>
+      <div class="recent" id="recent"></div>
+    </div>
+
+    <div class="pad" id="pad">
+      <div class="sec"><h2>방금 뽑은 캡슐</h2><button type="button" class="undo" id="undoBtn">↶ 되돌리기</button></div>
+      <div class="caps" id="caps"></div>
+      <div class="items" id="items" hidden></div>
+      <button type="button" class="go" id="recordBtn" disabled>색을 먼저 고르세요</button>
+    </div>
+  </section>
+</div>
+
+<script type="module">
+import { seasonAt, jackpotItemsPerKind, tableForSeason } from './engine/shellout.mjs';
+import { parseStateText, formatState, newStream, predictions, untilGold, untilGrade, record, undo, setOwnership, replaceState, changeSeason, cashPlan, deserialize } from './engine/tracker.mjs';
+
+const KEY = 'splat-seed-tracker-v1';
+const LBL = ['황금', '은', '동', '빨강', '보라', '하늘'];
+const MODE_NAME = { normal: '일반 뽑기', fest: '페스티벌 뽑기' };
+const $ = id => document.getElementById(id);
+
+/* ---------- original graphics ---------- */
+function rng(seed) { let s = seed >>> 0 || 1; return () => ((s ^= s << 13, s ^= s >>> 17, s ^= s << 5) >>> 0) / 4294967296; }
+function splatPath(cx, cy, r, seed, spikes) {
+  const R = rng(seed), pts = [];
+  for (let i = 0; i < spikes * 2; i++) { const a = i / (spikes * 2) * Math.PI * 2, k = i % 2 ? 0.78 + R() * 0.12 : 0.95 + R() * 0.22; pts.push([cx + Math.cos(a) * r * k, cy + Math.sin(a) * r * k]); }
+  let d = `M${pts[0][0]},${pts[0][1]}`;
+  for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; d += ` Q${p[0]},${p[1]} ${(p[0] + q[0]) / 2},${(p[1] + q[1]) / 2}`; }
+  return d + 'Z';
+}
+function drops(cx, cy, r, seed, n, color) {
+  const R = rng(seed + 7); let s = '';
+  for (let i = 0; i < n; i++) { const a = R() * Math.PI * 2, dist = r * (1.1 + R() * 0.55), rr = r * (0.04 + R() * 0.08); s += `<circle cx="${cx + Math.cos(a) * dist}" cy="${cy + Math.sin(a) * dist}" r="${rr}" fill="${color}"/>`; }
+  return s;
+}
+const splatSVG = (w, h, color, seed) => { const r = Math.min(w, h) * 0.47; return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><path d="${splatPath(w / 2, h / 2, r, seed, 16)}" fill="${color}"/>${drops(w / 2, h / 2, r, seed, 10, color)}</svg>`; };
+const blob = (x, y, size, color, seed, op) => `<svg class="bg" style="left:${x}px;top:${y}px;width:${size}px;height:${size}px;opacity:${op}" viewBox="0 0 100 100" aria-hidden="true"><path d="${splatPath(50, 50, 34, seed, 12)}" fill="${color}"/>${drops(50, 50, 34, seed, 6, color)}</svg>`;
+
+const PAL = [['#fff1a8', '#ffc229', '#c98a00'], ['#ffffff', '#d7e2f0', '#8f9fb6'], ['#f6c79c', '#d9884a', '#9a5422'], ['#ffc2cf', '#ff5d7d', '#c22a4c'], ['#dccbff', '#9b6bff', '#6236c9'], ['#c9f6ff', '#5fdcf5', '#1f9ab8']];
+let cid = 0;
+function cap(g) {
+  const [L, B, D] = PAL[g], id = 'k' + (cid++);
+  const spark = g === 0 ? `<g fill="#fff8d0"><path d="M41 4 l1.6 4.4 4.4 1.6 -4.4 1.6 -1.6 4.4 -1.6 -4.4 -4.4 -1.6 4.4 -1.6z"/><path d="M-1 30 l1 2.6 2.6 1 -2.6 1 -1 2.6 -1 -2.6 -2.6 -1 2.6 -1z"/></g>` : '';
+  return `<svg class="cap" viewBox="0 0 40 46" role="img" aria-label="${LBL[g]} 캡슐"><defs>
+    <linearGradient id="${id}b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${B}"/><stop offset="1" stop-color="${D}"/></linearGradient>
+    <radialGradient id="${id}t" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".55" stop-color="${L}" stop-opacity=".75"/><stop offset="1" stop-color="${B}" stop-opacity=".6"/></radialGradient></defs>
+    ${g === 0 ? `<ellipse cx="20" cy="24" rx="21" ry="23" fill="${B}" opacity=".28"/>` : ''}
+    <ellipse cx="20" cy="43.5" rx="13" ry="2.4" fill="#000" opacity=".28"/>
+    <path d="M3 24 C3 34 10.5 42 20 42 C29.5 42 37 34 37 24 Z" fill="url(#${id}b)" stroke="#1a1626" stroke-opacity=".45" stroke-width="1.5"/>
+    <path d="M3 22 C3 11 10.5 3 20 3 C29.5 3 37 11 37 22 Z" fill="url(#${id}t)" stroke="#1a1626" stroke-opacity=".35" stroke-width="1.5"/>
+    <rect x="13" y="13" width="14" height="9" rx="3" transform="rotate(-14 20 17)" fill="${D}" opacity=".32"/>
+    <rect x="2.2" y="20.6" width="35.6" height="4.6" rx="2.3" fill="${D}" stroke="#1a1626" stroke-opacity=".35" stroke-width="1"/>
+    <path d="M9 13 C10.5 9 13.5 6.5 17 5.8" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" opacity=".9"/>${spark}</svg>`;
+}
+const IC = {
+  'MiniGameCardPack|None': '<rect x="7" y="4" width="11" height="15" rx="2"/><path d="M5 7v11a2 2 0 0 0 2 2h8"/><path d="M12.5 9.5l1.2 2.4 2.3.3-1.7 1.6.4 2.4-2.2-1.2-2.2 1.2.4-2.4-1.7-1.6 2.3-.3z" fill="currentColor" stroke="none"/>',
+  'FoodTicket|FoodParty': '<path d="M3 8a2 2 0 0 0 0 4a2 2 0 0 0 0 4v2h18v-2a2 2 0 0 1 0-4a2 2 0 0 1 0-4V6H3z"/><path d="M9 9l1 2 2 .3-1.5 1.4.4 2-1.9-1-1.9 1 .4-2L6 11.3 8 11z" fill="currentColor" stroke="none"/><path d="M14 10h4M14 14h3"/>',
+  'Emote|None': '<path d="M4 5h16v10H10l-4 4v-4H4z"/><path d="M14 8v4.5"/><circle cx="12.6" cy="12.6" r="1.5" fill="currentColor"/><path d="M14 8l2.5 1"/>',
+  'NamePlateBg|None': '<rect x="2.5" y="7" width="19" height="10" rx="2"/><path d="M8 7l-4 10M13 7l-4 10M18 7l-4 10"/>',
+  'GearSkillChip|None': '<path d="M7 4l3 3-3 3-3-3z"/><path d="M17 4l3 3-3 3-3-3z"/><path d="M12 12l3 3-3 3-3-3z"/><path d="M12 18v3"/>',
+  'FoodTicket|Food100': '<path d="M3 8a2 2 0 0 0 0 4a2 2 0 0 0 0 4v2h18v-2a2 2 0 0 1 0-4a2 2 0 0 1 0-4V6H3z"/><text x="12" y="15" text-anchor="middle" font-size="7" font-weight="900" fill="currentColor" stroke="none" font-family="Nunito,sans-serif">100</text>',
+  'FoodTicket|Food50': '<path d="M3 8a2 2 0 0 0 0 4a2 2 0 0 0 0 4v2h18v-2a2 2 0 0 1 0-4a2 2 0 0 1 0-4V6H3z"/><text x="12" y="15" text-anchor="middle" font-size="7.5" font-weight="900" fill="currentColor" stroke="none" font-family="Nunito,sans-serif">50</text>',
+  'Byname|None': '<path d="M3 6h12l6 6-6 6H3z"/><circle cx="15.5" cy="12" r="1.3" fill="currentColor"/><path d="M6 10h6M6 14h4"/>',
+  'LockerSticker|None': '<path d="M4 4h16v10l-6 6H4z"/><path d="M20 14h-6v6"/><path d="M8 9.5c1.5-2 4.5-2 6 0M8.5 13h.01M13.5 13h.01"/>',
+  'LockerFigure|None': '<circle cx="12" cy="6.5" r="3"/><path d="M8 16c0-3 1.8-5.5 4-5.5s4 2.5 4 5.5"/><path d="M5 16h14l-1.5 4h-11z"/>',
+  'DrinkTicket|None': '<path d="M6 8h12l-1.5 12h-9z"/><path d="M13 8l2-5h3"/><path d="M6.8 13h10.4"/>',
+  'AllGearSkillChip|None': '<path d="M6 5l3 3-3 3-3-3z"/><path d="M14 9l3 3-3 3-3-3z"/><text x="18" y="21" text-anchor="middle" font-size="7.5" font-weight="900" fill="currentColor" stroke="none" font-family="Nunito,sans-serif">10</text>',
+};
+const NM = { 'MiniGameCardPack|None': '카드 팩', 'FoodTicket|FoodParty': '파티 음식', 'Emote|None': '이모트', 'NamePlateBg|None': '배너', 'GearSkillChip|None': '조각 ×3', 'FoodTicket|Food100': '음식 100%', 'Byname|None': '칭호', 'LockerSticker|None': '스티커 ×2', 'LockerFigure|None': '피규어 ×2', 'FoodTicket|Food50': '음식 50%', 'DrinkTicket|None': '드링크', 'AllGearSkillChip|None': '조각 ×10', 'NamePlateBg|Limited': '시즌 잭팟 배너', 'Byname|Limited': '시즌 잭팟 칭호' };
+const ico = k => IC[k] ? `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>` : '';
+
+/* ---------- state ---------- */
+const todayUTC = () => new Date().toISOString().slice(0, 10);
+let app = { active: 'normal', view: null, discountDate: null, streams: { normal: null, fest: null } };
+let draft = null;          // setup draft { state, missingBanners, missingTitles }
+let pick = null;           // { grade, type?, subType? }
+let flash = '';            // one-shot status message
+try {
+  const raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+  if (raw && raw.streams) {
+    app.active = raw.active === 'fest' ? 'fest' : 'normal';
+    app.discountDate = typeof raw.discountDate === 'string' ? raw.discountDate : null;
+    for (const m of ['normal', 'fest']) if (raw.streams[m]) { try { app.streams[m] = deserialize(raw.streams[m]); } catch {} }
+  }
+} catch {}
+function persist() {
+  try { localStorage.setItem(KEY, JSON.stringify({ active: app.active, discountDate: app.discountDate, streams: app.streams })); } catch {}
+}
+const cur = () => app.streams[app.active];
+const discountUsed = () => app.discountDate === todayUTC();
+
+/* ---------- setup ---------- */
+function openSetup() {
+  const s = cur(), season = seasonAt(new Date()), per = jackpotItemsPerKind(season);
+  draft = { state: s ? s.state : null, missingBanners: s ? Math.min(s.missingBanners, per) : per, missingTitles: s ? Math.min(s.missingTitles, per) : per, season };
+  $('stateText').value = s ? formatState(s.state) : '';
+  $('stateMsg').textContent = ''; $('stateMsg').className = 'msg';
+  app.view = 'setup'; render();
+}
+function parseDraft() {
+  const t = $('stateText').value.trim();
+  if (!t) { draft.state = null; $('stateMsg').textContent = ''; $('stateMsg').className = 'msg'; return; }
+  try { draft.state = parseStateText(t); $('stateMsg').textContent = '상태 4칸을 읽었습니다.'; $('stateMsg').className = 'msg ok'; }
+  catch (e) { draft.state = null; $('stateMsg').textContent = e.message; $('stateMsg').className = 'msg err'; }
+}
+$('stateText').addEventListener('input', () => { parseDraft(); renderSetup(); });
+$('pasteBtn').addEventListener('click', async () => {
+  try { $('stateText').value = await navigator.clipboard.readText(); parseDraft(); }
+  catch { $('stateMsg').textContent = '이 브라우저는 붙여넣기 버튼을 막았어요. 입력칸을 길게 눌러 직접 붙여 넣어 주세요.'; $('stateMsg').className = 'msg err'; $('stateText').focus(); }
+  renderSetup();
+});
+document.querySelectorAll('[data-own]').forEach(b => b.addEventListener('click', () => {
+  const per = jackpotItemsPerKind(draft.season), k = b.dataset.own === 'b' ? 'missingBanners' : 'missingTitles';
+  draft[k] = Math.max(0, Math.min(per, draft[k] + Number(b.dataset.d))); renderSetup();
+}));
+$('discountUsed').addEventListener('change', e => { app.discountDate = e.target.checked ? todayUTC() : null; persist(); renderSetup(); });
+$('startBtn').addEventListener('click', () => {
+  if (!draft.state) return;
+  const prev = cur();
+  const fresh = newStream({ state: draft.state, season: draft.season, missingBanners: draft.missingBanners, missingTitles: draft.missingTitles });
+  app.streams[app.active] = prev ? { ...fresh, history: prev.history } : fresh;
+  pick = null; app.view = 'tracker'; persist(); render();
+});
+function renderSetup() {
+  const season = draft.season, per = jackpotItemsPerKind(season);
+  $('setupTitle').textContent = `1. ${MODE_NAME[app.active]} 상태 붙여넣기`;
+  $('seasonHint').textContent = `지금은 시즌 ${season}입니다. 시즌마다 잭팟 배너·칭호가 각각 ${per}종씩 있습니다.`;
+  $('ownB').textContent = draft.missingBanners; $('ownT').textContent = draft.missingTitles;
+  document.querySelectorAll('[data-own]').forEach(b => { const v = b.dataset.own === 'b' ? draft.missingBanners : draft.missingTitles; b.disabled = (+b.dataset.d < 0 && v <= 0) || (+b.dataset.d > 0 && v >= per); });
+  $('parsed').hidden = !draft.state;
+  if (draft.state) $('parsed').innerHTML = draft.state.map(v => `<span>0x${v.toString(16).padStart(8, '0')}</span>`).join('');
+  $('discountUsed').checked = discountUsed();
+  $('startBtn').disabled = !draft.state;
+  $('startBtn').textContent = cur() ? '이 상태로 다시 시작' : '트래커 시작';
+  // comparison
+  const cell = m => {
+    let s = null;
+    if (m === app.active && draft.state) s = { state: draft.state, season, missingBanners: draft.missingBanners, missingTitles: draft.missingTitles };
+    else if (app.streams[m] && !app.streams[m].stopped) s = app.streams[m];
+    if (!s) return { m, n: null };
+    try { return { m, n: untilGold(newStream({ state: s.state, season, missingBanners: Math.min(s.missingBanners, per), missingTitles: Math.min(s.missingTitles, per) })) }; } catch { return { m, n: null }; }
+  };
+  const cells = [cell('normal'), cell('fest')];
+  const known = cells.filter(c => c.n);
+  const best = known.length === 2 ? (cells[0].n <= cells[1].n ? 'normal' : 'fest') : null;
+  $('vs').innerHTML = cells.map(c => {
+    const sub = !c.n ? (c.m === app.active ? '위에 상태를 넣으면 계산합니다' : '이 종류를 고르고 상태를 넣으면 계산합니다')
+      : c.m === 'normal' ? `하루 1회 할인으로 ${c.n.toLocaleString()}일` : `페스티벌 기간에만 · 소라껍데기 ${c.n}개`;
+    return `<div class="${best === c.m ? 'win' : ''}">${best === c.m ? '<span class="tag">더 가까움</span>' : ''}${MODE_NAME[c.m]}<strong>${c.n ?? '—'}${c.n ? '<em>회</em>' : ''}</strong>${sub}</div>`;
+  }).join('');
+}
+
+/* ---------- tracker ---------- */
+$('caps').innerHTML = LBL.map((l, g) => `<button type="button" class="cb" data-g="${g}" aria-pressed="false">${cap(g)}${l}</button>`).join('');
+$('caps').addEventListener('click', e => {
+  const b = e.target.closest('.cb'); if (!b || b.disabled) return;
+  const g = +b.dataset.g; pick = pick && pick.grade === g && !pick.type ? null : { grade: g }; renderPad();
+});
+$('items').addEventListener('click', e => {
+  const b = e.target.closest('button[data-k]'); if (!b || !pick) return;
+  const [type, subType] = b.dataset.k.split('|');
+  if (pick.type === type && pick.subType === subType) { delete pick.type; delete pick.subType; } else { pick.type = type; pick.subType = subType; }
+  renderPad();
+});
+$('recordBtn').addEventListener('click', () => {
+  const s = cur(); if (!s || !pick || s.stopped) return;
+  const r = record(s, pick);
+  app.streams[app.active] = r.stream;
+  if (r.match && app.active === 'normal' && !discountUsed()) app.discountDate = todayUTC();
+  pick = null; persist(); render();
+});
+$('undoBtn').addEventListener('click', () => { const s = cur(); if (!s) return; app.streams[app.active] = undo(s); pick = null; persist(); render(); });
+$('fixUndo').addEventListener('click', () => { const s = cur(); if (!s) return; app.streams[app.active] = undo(s); $('fixMsg').textContent = ''; persist(); render(); });
+$('fixPaste').addEventListener('click', openSetup);
+document.querySelectorAll('[data-fix]').forEach(b => b.addEventListener('click', () => {
+  const s = cur(); if (!s) return;
+  const per = jackpotItemsPerKind(s.season);
+  let mb = s.missingBanners, mt = s.missingTitles;
+  if (b.dataset.fix === 'b') mb = Math.max(0, Math.min(per, mb + +b.dataset.d)); else mt = Math.max(0, Math.min(per, mt + +b.dataset.d));
+  if (mb === s.missingBanners && mt === s.missingTitles) return;
+  const r = setOwnership(s, mb, mt);
+  app.streams[app.active] = r.stream;
+  if (r.resolved) flash = '보유 수를 고치니 방금 결과와 일치합니다';
+  else { $('fixMsg').textContent = `배너 ${mb} · 칭호 ${mt}로도 방금 결과와 맞지 않습니다.`; $('fixMsg').className = 'msg err'; }
+  persist(); render();
+}));
+$('seasonApply').addEventListener('click', () => { const s = cur(); if (!s) return; app.streams[app.active] = changeSeason(s, seasonAt(new Date())); persist(); render(); });
+
+function renderPad() {
+  const s = cur(), stopped = !!(s && s.stopped);
+  document.querySelectorAll('.cb').forEach(b => { b.setAttribute('aria-pressed', String(!!pick && pick.grade === +b.dataset.g)); b.disabled = stopped; });
+  const rows = pick && !stopped ? tableForSeason(s.season).filter(r => r.grade === pick.grade && r.subType !== 'Limited') : [];
+  const keys = [...new Set(rows.map(r => r.type + '|' + r.subType))];
+  $('items').hidden = keys.length < 2;
+  $('items').innerHTML = keys.length < 2 ? '' : keys.map(k => `<button type="button" data-k="${k}" aria-pressed="${!!pick.type && pick.type + '|' + pick.subType === k}">${ico(k)}${NM[k] ?? k}</button>`).join('') + '<small>선택 사항</small>';
+  const btn = $('recordBtn');
+  btn.classList.toggle('dark', stopped);
+  btn.disabled = stopped || !pick;
+  btn.textContent = stopped ? '기록 잠시 멈춤' : pick ? `${LBL[pick.grade]}${pick.type ? ' · ' + NM[pick.type + '|' + pick.subType] : ''} 기록하고 다음으로 ✓` : '색을 먼저 고르세요';
+  $('undoBtn').disabled = !s || (!s.history.length && !s.stopped);
+}
+
+function renderTracker() {
+  const s = cur();
+  const season = seasonAt(new Date());
+  $('seasonBanner').hidden = s.season === season;
+  $('seasonBannerText').textContent = `시즌 ${season}이 시작됐어요. 보상표와 잭팟이 바뀌었을 수 있습니다.`;
+  const n = s.stopped ? null : untilGold(s);
+  const stopped = !!s.stopped;
+  $('hero').classList.toggle('stop', stopped);
+  $('hero').querySelector('svg')?.remove();
+  $('hero').insertAdjacentHTML('afterbegin', splatSVG(354, 230, stopped ? '#ff4f8b' : '#c6f432', stopped ? 77 : 42));
+  if (stopped) {
+    $('heroIn').innerHTML = `<div class="eyebrow">예측과 달라요</div><div class="big" style="font-size:64px">STOP</div><div class="eyebrow" style="font-size:13px">맞출 때까지 예측을 숨겼어요</div>`;
+  } else if (s.missingBanners === 0) {
+    const sv = s.missingTitles > 0 ? untilGrade(s, 1) : null;
+    $('heroIn').innerHTML = `<div class="eyebrow">이번 시즌 잭팟 배너를 모두 가졌어요</div><div class="big" style="font-size:52px;letter-spacing:0">NO GOLD</div><div class="eyebrow" style="font-size:13px">${sv ? `금색은 다음 시즌까지 안 나와요 · 은색까지 ${sv}회` : '금·은색은 다음 시즌까지 안 나와요'}</div>`;
+  } else {
+    const plan = n ? cashPlan(n, { discountUsedToday: discountUsed() }) : null;
+    const costs = !n ? '' : app.active === 'normal'
+      ? `<div class="cost"><span>${plan.daily.startsTomorrow ? '내일부터 ' : ''}하루 1회 할인 <b>${plan.daily.days.toLocaleString()}일 · ${plan.daily.gold.toLocaleString()}G</b></span><span>오늘 몰아서 <b>${plan.allToday.toLocaleString()}G</b></span></div>`
+      : `<div class="cost"><span>소라껍데기 <b>${n}개</b> 필요</span></div>`;
+    const digits = n ? String(n).length : 4;
+    $('heroIn').innerHTML = `<div class="eyebrow">다음 황금 캡슐까지</div><div class="big${digits >= 4 ? ' d4' : digits === 3 ? ' d3' : ''}">${n ? n.toLocaleString() : '20만+'}<em>회</em></div>${costs}`;
+  }
+  const chip = $('chip');
+  chip.className = 'chip' + (stopped ? ' bad' : s.streak ? '' : ' warn');
+  $('chipText').textContent = flash && !stopped ? `${flash} · 예측 ${s.streak}회 연속 일치` : stopped ? `${s.stopped.index + 1}번째 기록이 예측과 다릅니다` : s.streak ? `예측 ${s.streak}회 연속 일치 · 상태 자동 진행 중` : '첫 결과를 기록하면 예측과 맞는지 확인합니다';
+  flash = '';
+  $('mismatch').hidden = !stopped;
+  $('predBlock').querySelector('.strip').className = 'strip' + (stopped ? ' hidden' : '');
+  if (stopped) {
+    const p = s.stopped.predicted, o = s.stopped.obs;
+    const pk = p.type + '|' + p.subType, ok = o.type ? o.type + '|' + o.subType : null;
+    $('cmp').innerHTML = `${s.stopped.index + 1}번째 결과<span class="pair">예측 ${cap(p.grade)}${NM[pk] && o.type ? `<small>${NM[pk]}</small>` : ''}<span class="x">≠</span>실제 ${cap(o.grade)}${ok ? `<small>${NM[ok] ?? ''}</small>` : ''}</span>`;
+    $('fixB').textContent = s.missingBanners; $('fixT').textContent = s.missingTitles;
+    $('strip').textContent = '상태를 다시 맞추면 예측이 다시 나타나요';
+  } else {
+    $('fixMsg').textContent = '';
+    const preds = predictions(s, 9);
+    $('strip').innerHTML = preds.map((p, i) => `<div class="p${i === 0 ? ' next' : ''}">${cap(p.grade)}${s.history.length + i + 1}</div>`).join('')
+      + (n && n > 9 && s.missingBanners > 0 ? `<div class="more">${cap(0)}${s.history.length + n}</div>` : '');
+  }
+  $('ownInfo').textContent = `시즌 ${s.season} · 잭팟 미보유 배너 ${s.missingBanners} · 칭호 ${s.missingTitles}`;
+  const recent = s.history.slice(-24);
+  $('recInfo').textContent = s.history.length ? `총 ${s.history.length}회 · 모두 예측과 일치한 기록` : '';
+  $('recent').innerHTML = recent.length ? recent.map(h => { const k = h.type + '|' + h.subType; return `<span class="r" title="${LBL[h.grade]} · ${NM[k] ?? ''}"><span>${cap(h.grade)}<b>✓</b></span>${h.itemGiven ? ico(k) : '<i class="ico"></i>'}</span>`; }).join('') : '<span class="empty">아직 기록이 없습니다. 게임에서 뽑은 캡슐 색을 아래에서 누르세요.</span>';
+  renderPad();
+}
+
+function render() {
+  $('mNormal').setAttribute('aria-pressed', String(app.active === 'normal'));
+  $('mFest').setAttribute('aria-pressed', String(app.active === 'fest'));
+  if (app.view !== 'setup' && !cur()) { openSetup(); return; }
+  $('setup').hidden = app.view !== 'setup';
+  $('tracker').hidden = app.view === 'setup';
+  $('toSetup').setAttribute('aria-label', app.view === 'setup' ? '트래커로' : '설정');
+  $('toSetup').textContent = app.view === 'setup' ? '✕' : '⚙';
+  $('toSetup').disabled = app.view === 'setup' && !cur();
+  if (app.view === 'setup') renderSetup(); else renderTracker();
+}
+for (const [id, m] of [['mNormal', 'normal'], ['mFest', 'fest']]) $(id).addEventListener('click', () => {
+  if (app.active === m) return;
+  app.active = m; pick = null; persist();
+  if (app.view === 'setup' || !cur()) openSetup(); else render();
+});
+$('toSetup').addEventListener('click', () => { if (app.view === 'setup') { if (cur()) { app.view = 'tracker'; render(); } } else openSetup(); });
+
+$('app').insertAdjacentHTML('afterbegin', blob(250, -60, 220, '#8b5cf6', 11, .32) + blob(-90, 340, 200, '#ff4f8b', 5, .16));
+app.view = cur() ? 'tracker' : null;
+render();
+</script>
+<script src="personal-fonts.js" defer></script>
+</body>
+</html>
