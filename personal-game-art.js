@@ -34,7 +34,10 @@
 
   function setImage(img, path, owner, readyClass) {
     const url = source(path);
-    if (img.dataset.assetUrl === url) return;
+    if (img.dataset.assetUrl === url) {
+      if (owner && img.complete && img.naturalWidth > 0) owner.classList.add(readyClass);
+      return;
+    }
     img.dataset.assetUrl = url;
     img.hidden = false;
     if (owner) owner.classList.remove(readyClass);
@@ -53,7 +56,7 @@
   function decorateCapsule(el) {
     const grade = gradeOf(el);
     if (grade === null) return;
-    el.classList.add('art-capsule');
+    if (!el.classList.contains('art-capsule')) el.classList.add('art-capsule');
     let img = el.querySelector(':scope > img.original-art');
     if (!img) {
       img = document.createElement('img');
