@@ -1,114 +1,133 @@
-# macOS에서 nxapi로 리플레이 코드 → NPLN ID 직접 조회하기
+# macOS 실험 안내: nxapi 리플레이 코드 → NPLN ID 검증
 
-목적: [`replay-npln-lookup.md`](replay-npln-lookup.md)의 **경로 1(리플레이 코드 → NPLN ID)이 실제로 되는지** 사용자가 직접 증명한다. 서버를 만들기 전 단계다.
+최종 수정: 2026-10-31. 목적은 사용자 Mac에서 **SplatNet 3 리플레이 검색이 실제 작동하는지**, 특히 **조회 계정과 업로더가 달라도 조회되는지** 확인하는 것이다. 현재까지 실제 닌텐도 서버 조회 성공 사례는 이 프로젝트에서 확보하지 못했다.
 
-> 이 안내는 nxapi 소스(`src/cli/nso/auth.ts`, `src/cli/util/splatoon3-seed.ts`, `src/cli/users.ts`)와 문서(README, `docs/cli.md`, 2026-09 기준)를 읽고 작성했다. **작성자는 실행해 보지 못했다.** 실제 화면이나 오류 문구가 다를 수 있다.
+정적 근거: nxapi v1.6.1의 `src/cli/util/splatoon3-seed.ts`, `src/cli/nso/auth.ts`, `src/cli-entry.ts`, `README.md`, `docs/cli.md`. **여기에 나오는 절차 자체를 이 연구 환경에서 실행한 것은 아니다.** Node 26, 계정별 권한, 현재 닌텐도 인증 및 SplatNet 3 호환 여부는 미검증.
 
-## 보안 규칙 (먼저 읽기)
+## 절대 보안 규칙
 
-- 로그인하면 터미널에 **`Session token …`이 출력된다.** 계정 자격증명과 같으므로 복사·캡처·공유하지 않는다. 채팅이나 GitHub에도 붙이지 않는다.
-- nxapi는 토큰을 `~/Library/Application Support/nxapi-nodejs`에 저장한다. 이 폴더를 저장소로 옮기거나 `--data-path`를 저장소 안으로 지정하지 않는다. (저장소 `.gitignore`에 실수 방지 패턴을 넣어 두었다.)
-- nxapi 디버그 로그에는 토큰이 남을 수 있으므로, 모든 명령 앞에 `NXAPI_DEBUG_FILE=0`을 붙여 파일 로그를 끈다.
-- 로그인은 **본계정이 아닌 보조 계정**을 권장한다. SplatNet 3 비공식 접근으로 계정이 차단된 사례가 있다(2023).
-- 결과 보고에는 `h`(숫자)와 일치 여부만 있으면 된다. NPLN ID 자체도 개인 식별자이므로 공개 저장소에는 올리지 않는다.
+- `nso auth`는 성공 시 **`Session token`을 터미널에 그대로 출력**한다. 로그인 도중 복사하는 `npf71b963c1b7b6d119://auth...` 링크 역시 인증 자격증명이다. 두 값 모두 ChatGPT·Claude·GitHub·스크린샷·공개 채팅으로 전달하지 말 것.
+- 로그인은 **사용자만 직접 연 터미널**에서 할 것. Claude Code의 실행 도구나 공유 셸 로그를 통해 진행하지 말 것. `clear` 또는 터미널의 ⌘K는 화면·스크롤백 노출을 줄이지만 이미 저장된 외부 로그나 유출된 인증 정보까지 되돌리지는 못한다.
+- 모든 nxapi 명령에는 `NXAPI_DEBUG_FILE=0` 사용. 이는 **nxapi 디버그 로그 파일을 끌 뿐, 터미널 표준 출력의 토큰을 숨기지는 않는다.**
+- 아래 예시는 `--data-path`로 nxapi 저장 위치를 격리한다. 이 안에는 세션 토큰이 들어갈 수 있다. 저장소·클라우드 동기화 폴더·공유 화면에는 두지 않는다.
+- `self.json`, `replay.json` 역시 `key`, `h`에 의해 **NPLN ID를 복원할 수 있는 개인정보**이다. 파일 내용이나 `h` 값 자체를 굳이 대화에 붙이지 말 것. 성공/실패 또는 같음/다름만 보고한다.
+- 비공식 접속에는 계정 제한 위험이 있다. 본계정이 중요한 경우 별도 실험 계정을 우선 고려한다. 계정 소유자 본인의 승인 없이 로그인하지 말 것.
 
-## 준비물
+## 준비
 
-| 항목 | 비고 |
-|---|---|
-| Mac + 터미널 | zsh 기준 |
-| Node.js 20 이상 | `node -v`로 확인 |
-| 보조 닌텐도 계정 | NSO 이용권 필요로 알려짐(미확인). 스플래툰 3 플레이 이력이 필요한지도 미확인 |
-| 본계정으로 업로드한 리플레이 코드 | 게임 → 로비 → 리플레이 업로드 → `XXXX-XXXX-XXXX-XXXX` |
-| (대조용) Leanny 백업 파일 | Leanny 설정에서 내보낸 JSON. 안의 `H` 값만 쓴다 |
+- macOS 터미널(zsh 기준), Node.js와 npm. `node -v`, `npm -v`로 확인.
+- npm 전역 설치, `sudo`, `~/.npm-global`, `~/.zshrc` 변경은 **불필요**. `npx --yes nxapi@1.6.1`로 버전을 고정해 실행.
+- **본인 리플레이 코드** A: 본인 계정으로 올린 것이 확인된 유효한 코드. 예시로 전달된 `R63Y-EJTM-MPBY-6DXK`가 본인 것인지는 **확인되지 않았다**. 임의로 본인 코드로 간주하지 말 것.
+- **다른 계정의 리플레이 코드** B: 가능하면 협조받은 다른 계정이 업로드한 코드와 그 계정의 기준값. 공개된 코드만으로는 타인 업로더 ID가 정확한지까지 검증하지 못한다.
+- 새 계정은 NSO 및 SplatNet 3 접근 조건을 충족해야 할 수 있으며 실제 요구 조건은 테스트 전 미확인.
 
-## 단계
+## 0. 실험용 폴더 준비
 
-### 1. Node.js 확인
+아래는 사용자 본인의 터미널에서 실행한다. 이 폴더에는 인증 자격증명과 NPLN ID로 복원 가능한 정보가 저장될 수 있다.
+
 ```sh
+umask 077
+BASE="$HOME/splat-seed-test"
+D="$BASE/nxapi-data"
+mkdir -p "$D"
 node -v
+npm -v
 ```
-`v20` 이상이면 다음 단계. 없으면 https://nodejs.org 의 LTS 설치 파일을 받거나, Homebrew가 있으면 `brew install node`.
 
-### 2. nxapi 설치
+Node 26에서의 호환성은 검증되지 않았다. npm이 외부 패키지를 임시로 받아 실행하므로 nxapi 개발자·npm 공급망을 신뢰해야 한다. `npx` 캐시에는 패키지가 남을 수 있지만 토큰 저장 경로와는 별개다.
+
+## 1. 사용자 본인이 nxapi 로그인 (Claude Code 실행 금지)
+
 ```sh
-npm install --global nxapi
-nxapi --version
+NXAPI_DEBUG_FILE=0 npx --yes nxapi@1.6.1 --data-path "$D" nso auth
 ```
-README에 따르면 npm으로 설치한 CLI는 `f` 생성 서버용 클라이언트 등록(nxapi-auth)을 따로 하지 않아도 된다. 권한 오류가 나면 `sudo`를 쓰지 말고 오류 문구를 알려 줄 것.
 
-### 3. 보조 계정으로 로그인
+1. 터미널에 표시된 로그인 URL을 사용자가 직접 열어 자기 닌텐도 계정으로 로그인.
+2. 계정 선택 페이지에서 요구하는 `npf71b963c1b7b6d119://auth...` 리디렉션 링크를 복사해 터미널 프롬프트에 붙여넣음. **이 링크 자체가 자격증명**이다.
+3. 성공 시 `Session token`이 터미널에 출력되므로 인증 단계의 전체 출력이나 화면을 공유하지 않음.
+4. 필요하면 터미널 스크롤백을 지우되, 화면 지우기가 토큰 폐기·로그 완전 삭제는 아님을 인지할 것.
+
+세션 파일은 `$D`에만 저장하도록 시도한다. 인증 실패 시에도 **링크·토큰·계정 식별자를 가린 오류 종류**만 전달한다.
+
+## 2. SplatNet 3 접근 검사
+
 ```sh
-NXAPI_DEBUG_FILE=0 nxapi nso auth
+NXAPI_DEBUG_FILE=0 npx --yes nxapi@1.6.1 --data-path "$D" splatnet3 user
 ```
-1. 출력된 URL을 브라우저에서 열고 **보조 계정**으로 로그인한다.
-2. "외부 계정 연동(Linking an External Account)" 화면에서 **"이 사람을 선택(Select this person)" 버튼을 우클릭 → 링크 주소 복사.** `npf71b963c1b7b6d119://auth`로 시작해야 한다.
-3. 터미널의 `Paste the link:`에 붙여 넣는다.
-4. `Session token …` 줄이 출력되면 **그대로 두고 공유하지 않는다.** 이어서 `Authenticated as Nintendo Account …`가 나오면 성공.
 
-확인:
+성공 시 접속 가능성을 확인한 것일 뿐, 리플레이 검색 성공이나 타인 코드 조회 성공을 뜻하지 않는다.
+
+## 3. 테스트 A — 내 계정 ID 대 내 리플레이 업로더 ID
+
+**중요: 본인 업로드임이 확인된 코드만 이 테스트의 자기 리플레이로 사용.** 아래 `XXXX-XXXX-XXXX-XXXX`는 실제로 본인이 발급받은 코드로 교체한다.
+
 ```sh
-NXAPI_DEBUG_FILE=0 nxapi nso user
+NXAPI_DEBUG_FILE=0 npx --yes nxapi@1.6.1 --data-path "$D" util splatoon3-seed --json --no-include-gear > "$BASE/self.json"
+NXAPI_DEBUG_FILE=0 npx --yes nxapi@1.6.1 --data-path "$D" util splatoon3-seed XXXX-XXXX-XXXX-XXXX --json --no-include-gear > "$BASE/replay.json"
 ```
 
-### 4. SplatNet 3 접근 확인
+- 인자 없는 첫 명령은 내 코디(없으면 대전 기록)에서 **현재 로그인된 계정**의 ID를 얻는다. 코디와 대전 기록이 모두 없으면 실패할 수 있다.
+- 두 번째 명령은 해당 리플레이의 업로더 ID를 가져오려고 시도한다.
+- 정상 `--json` 출력은 `{ "key": "…", "h": 123, "timestamp": 123 }`과 유사하다. **원본 `u-` 문자열을 출력하지 않는다.**
+- `--no-include-gear`에서는 `gear`가 빠질 수 있어 결과를 그대로 Leanny 전체 백업 JSON으로 간주해서는 안 된다.
+- 두 명령 중 하나라도 실패했다면 빈 파일 또는 불완전 JSON이 남을 수 있다. 아래 비교 결과를 '조회 성공'으로 오인하지 말 것.
+
+**민감한 결과 내용을 출력하지 않는 비교**:
+
 ```sh
-NXAPI_DEBUG_FILE=0 nxapi splatnet3 user
+node -e 'const fs=require("node:fs");try{const [a,b]=process.argv.slice(1).map(p=>JSON.parse(fs.readFileSync(p,"utf8")));const valid=x=>x&&typeof x.key==="string"&&Number.isInteger(x.h);if(!valid(a)||!valid(b))throw Error("결과 파일 형식 오류");console.log(a.key===b.key&&a.h===b.h?"같음":"다름")}catch(e){console.error("비교 불가: "+e.message);process.exitCode=1}' "$BASE/self.json" "$BASE/replay.json"
 ```
-`Player 이름#번호 …`가 나오면 이 계정으로 SplatNet 3를 쓸 수 있다. 오류가 나면 문구를 그대로 기록한다(NSO 이용권·플레이 이력 문제일 수 있음).
 
-### 5. 리플레이 코드로 조회 (핵심)
+'같음'은 **내 계정의 기준값과 해당 리플레이 응답의 업로더 식별값이 일치한다**는 근거다. 이 결과만으로 **다른 사람 리플레이 조회**나 **실제 미래 뽑기 예측**이 검증되지는 않는다.
+
+## 4. 테스트 B — 서로 다른 계정의 리플레이 조회 (핵심)
+
+서로 다른 **계정 A(조회자)**와 **계정 B(업로더)**를 분리해서 검증해야 한다.
+
+1. 계정 B로 본인이 직접 리플레이를 업로드하거나, 협조받은 사람의 공개 코드 사용에 동의받는다.
+2. 계정 A 로그인 상태의 위 `$D`로, B가 발급한 리플레이 코드를 조회한다. 별도 파일 `"$BASE/other-replay.json"`에 저장.
+3. 계정 B의 기준 `key/h`는 **계정 B 자신이 별도로 인증된 환경**에서 인자 없는 `splatoon3-seed`로 획득한다. 이때 A와 B는 **서로 다른 `--data-path`**를 사용한다. B의 원본 토큰은 A의 실험 폴더에 두지 않는다.
+4. B의 기준 `key/h`와 A가 B의 코드를 조회해 얻은 `key/h`를 개인정보 노출 없이 비교한다. **일치해야 업로더 검증까지 충족한다.**
+5. 다른 사람의 공개 코드만 조회해 형식에 맞는 `key/h`를 얻었다면 '교차 계정 조회 응답 성공'까지만 확인할 수 있다. B의 정답을 모르면 **업로더 ID 일치까지 증명했다고 보고하지 않는다.**
+
+A/B 로그인 및 기준 수집 명령은 1·3단계를 각 계정에 맞게 반복하면 된다. 세션 토큰 자체는 비교·공유하지 않는다.
+
+## 5. 일회성 테스트 정리
+
+실험 결과를 복사·백업할 필요가 없다면, 해당 폴더의 자격증명과 변환된 ID 파일을 안전하게 정리한다. `rm`은 복구가 어려우므로 경로를 먼저 확인한다.
+
 ```sh
-NXAPI_DEBUG_FILE=0 nxapi util splatoon3-seed XXXX-XXXX-XXXX-XXXX --json --no-include-gear
+printf '%s\n' "$BASE"
+# 위 출력이 정확히 /Users/<내 계정>/splat-seed-test 인 경우에만:
+rm -r -- "$HOME/splat-seed-test"
 ```
-성공하면 한 줄 JSON이 나온다.
-```json
-{"key":"…base64…","h":1234567890,"timestamp":1700000000}
+
+계정 B에 별도 위치를 설정했다면 그 데이터 경로도 직접 확인 후 정리한다. 실험 폴더 삭제가 닌텐도 서버에서 이미 발급된 인증 토큰을 무효화하는 것은 아니다. **설치된 npm 패키지 캐시는 별도로 남을 수 있다.**
+
+## 보고 양식 — 비밀값 공개 금지
+
+```text
+- Node / nxapi 실행: 성공 또는 실패(민감 정보 제거한 오류 종류)
+- 로그인: 성공 또는 실패
+- SplatNet 3 user 조회: 성공 또는 실패
+- 테스트 A (자기 기준값과 자기 리플레이): 같음 / 다름 / 미실행
+- 테스트 B (타인 리플레이에 대한 다른 계정 조회): 조회 성공 / 실패 / 미실행
+- 테스트 B (B 업로더 기준값과 정확히 일치): 같음 / 다름 / 정답 미확보
+- 실제 게임 뽑기 예측과 비교: 아직 미검증 / 별도로 검증
 ```
-- `h` = NPLN ID의 MurmurHash3 값
-- `key` = NPLN ID를 `h`의 하위 8비트로 XOR한 뒤 base64로 바꾼 값 (Leanny가 저장하는 형식과 같음)
 
-### 6. NPLN ID 확인 (로컬에서만)
-```sh
-node -e 'const [k,h]=process.argv.slice(1);const b=Buffer.from(k,"base64");for(let i=0;i<b.length;i++)b[i]^=Number(h)&255;console.log(b.toString())' '여기에_key' 여기에_h
-```
-`u-`로 시작하는 22자가 나오면 경로 1이 **실제로 동작한 것**이다.
+## 결과 해석과 한계
 
-### 7. Leanny와 대조
-Leanny 백업 JSON의 `H` 값과 5단계의 `h`가 같으면, 리플레이 코드로 얻은 ID가 Leanny에 등록된 본계정 ID와 같다는 뜻이다.
+- 테스트 A에서 일치하더라도 타인 코드 조회 가능성을 증명하지 않는다.
+- 테스트 B에서 **조회 성공 + 업로더 B 기준값과 일치**하면, A의 인증으로 다른 계정의 리플레이를 조회할 수 있다는 첫 실증 근거가 된다.
+- **이 테스트를 통과해도 공개 서비스 운영 가능성, 닌텐도 이용 조건, 계정 정지·요청 제한, nxapi 인증 장기 유지, 게임 예측 정확도는 별도 검토 대상**이다.
+- nxapi 실행 시 `f` 서비스 접근·닌텐도 인증 문제와 Node 버전 문제가 발생할 수 있다. 오류가 발생하면 민감한 출력 대신 오류 *종류*만 보고한다.
+- Node 26이 호환되지 않으면 지원되는 Node LTS 환경을 별도로 검토한다. `npx -p node@22 -p nxapi@1.6.1` 형태는 별도 확인 전까지 검증된 대체 명령이라고 안내하지 않는다.
 
-(선택) SPLAT SEED 쪽 연결 확인: 6단계 ID를 `lab.html`(PR #2 브랜치)의 "NPLN 유저 ID" 칸에 넣고, Leanny의 첫 뽑기 직전 상태로 뽑은 결과를 입력해 위치가 찾아지는지 본다.
+## 참고 소스
 
-### 8. 정리
-```sh
-NXAPI_DEBUG_FILE=0 nxapi users list          # 저장된 계정 ID 확인
-NXAPI_DEBUG_FILE=0 nxapi users forget <ID>   # 해당 계정 데이터 삭제
-```
-더 쓰지 않을 경우 `~/Library/Application Support/nxapi-nodejs`도 지운다.
-
-## 보고 양식
-
-```
-- 3단계 로그인: 성공/실패 (실패 시 오류 문구)
-- 4단계 SplatNet 3 접근: 성공/실패 (오류 문구)
-- 5단계 조회: 성공/실패 (오류 문구)
-- 6단계 결과가 u- + 20자 형식인가: 예/아니오
-- 7단계 Leanny H 값과 일치: 예/아니오
-- 사용한 계정: 보조 계정 / 본계정
-```
-토큰, 리플레이 코드, NPLN ID 원문은 보내지 않아도 된다.
-
-## 예상 오류 (소스·문서 기준, 미확인)
-
-| 증상 | 가능한 원인 |
-|---|---|
-| `Invalid argument` | 리플레이 코드 형식 오류(16자, 하이픈 허용) |
-| `Replay not found` 계열 | 코드 오타, 리플레이 삭제/만료 |
-| 401 `ERROR_INVALID_GAME_WEB_TOKEN` | SplatNet 3 접근 거부(계정 제한 가능성) |
-| `f` 생성·로그인 단계 오류 | 외부 `f` 생성 서비스 장애 또는 NSO 앱 버전 변경 |
-| `Unable to find NPLN user ID from replay ID` | 응답 ID 형식이 바뀜 — 경로 1 자체에 영향, 즉시 보고 |
-
-## 이 안내로 증명되는 것 / 안 되는 것
-
-- 증명: 리플레이 코드 하나로 **다른 계정(보조 계정)에서** 업로더의 NPLN ID를 얻을 수 있다 → 운영자 계정 하나로 사용자 코드를 처리하는 서버 구조의 핵심 가정.
-- 증명 안 됨: 공개 서비스로 운영할 때의 요청 제한·계정 차단 위험, `f` 생성 서비스의 이용 조건, ID로 만든 초기 상태가 실제 게임과 맞는지(별도 실기록 검증).
+- https://github.com/samuelthomas2774/nxapi/blob/main/src/cli/util/splatoon3-seed.ts
+- https://github.com/samuelthomas2774/nxapi/blob/main/src/cli/nso/auth.ts
+- https://github.com/samuelthomas2774/nxapi/blob/main/src/cli-entry.ts
+- https://github.com/samuelthomas2774/nxapi/blob/main/README.md
+- https://github.com/samuelthomas2774/nxapi/blob/main/docs/cli.md
