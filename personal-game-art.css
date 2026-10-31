@@ -52,6 +52,18 @@ body.personal-original-art{
   border-radius:0;overflow:visible;isolation:isolate;
 }
 .personal-original-art .cap.art-capsule.art-ready{box-shadow:none!important;background:transparent!important}
+.personal-original-art .cap.art-pair-ready{background:transparent!important;box-shadow:none!important}
+.personal-original-art .cap.art-pair-ready > .original-art{opacity:0}
+.personal-original-art .cap .art-pair{
+  position:absolute;inset:0;display:block;z-index:2;pointer-events:none;overflow:visible;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.35));
+}
+.personal-original-art .cap .art-half{
+  width:100%;height:auto;max-width:none;display:block;
+  position:absolute;left:0;pointer-events:none;
+}
+.personal-original-art .cap .art-top{top:0;z-index:2}
+.personal-original-art .cap .art-bottom{top:15.625%;z-index:1}
 .personal-original-art .cap .original-art{
   display:block;width:120%;height:120%;max-width:none;object-fit:contain;
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
