@@ -4,6 +4,54 @@
 
 정적 근거: nxapi v1.6.1의 `src/cli/util/splatoon3-seed.ts`, `src/cli/nso/auth.ts`, `src/cli-entry.ts`, `README.md`, `docs/cli.md`. **여기에 나오는 절차 자체를 이 연구 환경에서 실행한 것은 아니다.** Node 26, 계정별 권한, 현재 닌텐도 인증 및 SplatNet 3 호환 여부는 미검증.
 
+## 빠른 실행 — 로그인만 사용자가 직접 진행
+
+GitHub 저장소의 **연구 브랜치 전체**를 Mac에 받으면 `scripts/nxapi-replay-test.sh`가 각 실행마다 경로를 자동 설정하고, 비공개 JSON 파일로 저장하고, 원본 ID·key·h를 화면에 표시하지 않고 검증한다. `D`·`BASE` 환경변수를 미리 설정할 필요가 없다.
+
+아래 명령은 **자신의 macOS 터미널에서만** 실행한다. AI 에이전트 실행 도구에 맡기지 않는다. 인증 도중 nxapi가 세션 토큰을 화면에 출력하기 때문이다.
+
+```sh
+git clone --branch research/replay-npln-lookup --single-branch https://github.com/photodonga/splat-seed.git "$HOME/splat-seed-research"
+cd "$HOME/splat-seed-research"
+bash scripts/nxapi-replay-test.sh prepare
+bash scripts/nxapi-replay-test.sh login-a
+```
+
+로그인 완료 후 본인이 직접 업로드한 리플레이 코드로 테스트 A를 진행한다. 예시의 `XXXX-XXXX-XXXX-XXXX`는 **본인 업로드가 확인된 코드**로 바꾼다.
+
+```sh
+bash scripts/nxapi-replay-test.sh self-a
+bash scripts/nxapi-replay-test.sh replay-a XXXX-XXXX-XXXX-XXXX
+bash scripts/nxapi-replay-test.sh compare-a
+```
+
+- 결과가 `같음`이면 A의 인증으로 A의 리플레이 업로더 키를 조회·복원하는 경로에 대한 근거가 된다. `비교 불가`는 실패·미실행·빈 파일 등으로, `다름`과 구분한다.
+- 조회가 실패하면 기존에 남은 동일 이름의 결과 파일을 먼저 제거해 **과거 성공을 새 성공으로 잘못 판정하지 않는다**. 오류는 `~/splat-seed-test/.nxapi-error.*`에 비공개 저장되므로 **파일을 대화에 업로드하지 않는다**.
+- 개인용 결과 검증기는 key/h를 역변환해 `u-` ID 형식과 MurmurHash3 일치까지 로컬에서 확인하고, 화면에는 성공/실패·같음/다름만 표시한다. 이 ID는 출력·전송하지 않는다.
+- Node 26 및 현재 인증 서비스 호환성은 실제 Mac에서 검증이 필요하다.
+
+테스트 B를 할 수 있다면, **A 계정으로 B 계정이 업로드한 코드**를 먼저 조회한다.
+
+```sh
+bash scripts/nxapi-replay-test.sh replay-other BBBB-BBBB-BBBB-BBBB
+bash scripts/nxapi-replay-test.sh login-b
+bash scripts/nxapi-replay-test.sh self-b
+bash scripts/nxapi-replay-test.sh compare-b
+```
+
+B 로그인은 B 본인이 승인한 계정으로만 진행한다. A·B 인증 데이터는 서로 다른 저장 폴더다. 공개된 타인 코드만 있는 경우 `replay-other` 성공 여부는 확인할 수 있어도, B 기준값 없이 **업로더 일치**까지 증명할 수 없다.
+
+실험 현황과 로컬 정리:
+
+```sh
+bash scripts/nxapi-replay-test.sh status
+bash scripts/nxapi-replay-test.sh cleanup
+```
+
+`cleanup`은 삭제 확인 후 `~/splat-seed-test`만 지운다. 닌텐도 서버에 이미 발급된 토큰 무효화 또는 npm 캐시 삭제와는 다르다. 저장소 `~/splat-seed-research` 자체는 지우지 않는다.
+
+아래는 스크립트를 사용하지 않고 **직접 명령을 하나씩 실행하고 싶은 사람을 위한 상세 절차**다.
+
 ## 절대 보안 규칙
 
 - `nso auth`는 성공 시 **`Session token`을 터미널에 그대로 출력**한다. 로그인 도중 복사하는 `npf71b963c1b7b6d119://auth...` 링크 역시 인증 자격증명이다. 두 값 모두 ChatGPT·Claude·GitHub·스크린샷·공개 채팅으로 전달하지 말 것.
