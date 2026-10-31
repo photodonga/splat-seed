@@ -1,0 +1,110 @@
+/* PERSONAL PREVIEW — Nintendo Splatoon 3 art loaded from Leanny/splat3.
+   PNGs are never copied into this repository. External images may go offline.
+   CSS capsule fallback stays visible on failed loads. */
+@font-face{font-family:'SplatLocalBold';src:local('BlitzBold'),local('Blitz Bold');font-display:swap}
+@font-face{font-family:'SplatLocalKo';src:local('AsiaKCUBE'),local('a큐브');font-display:swap}
+:root{--art-border:#504b72;--art-deep:#11101c;--art-light:#fdfcf6}
+html,body{background:#0c0c16}
+body.personal-original-art{
+  background:
+    radial-gradient(ellipse 65% 25% at 80% 5%,rgba(149,103,254,.23),transparent),
+    radial-gradient(ellipse 52% 32% at 12% 50%,rgba(199,245,40,.07),transparent),
+    repeating-linear-gradient(145deg,transparent 0 54px,rgba(255,255,255,.017) 55px 56px),
+    #0c0c16;
+}
+.personal-original-art .app{max-width:510px;gap:14px}
+.personal-original-art .logo{
+  font-family:'SplatLocalBold',Impact,'Arial Black',system-ui,sans-serif;
+  font-size:clamp(24px,7vw,32px);letter-spacing:1px;
+  text-shadow:-2px 2px #141019,3px 4px #7647d8;transform:rotate(-2deg) skewX(-4deg)
+}
+.personal-original-art .card{
+  background:linear-gradient(140deg,#29263c 0%,#211e31 75%);
+  border:2px solid #4b4666;border-radius:20px;
+  box-shadow:0 5px 0 rgba(0,0,0,.32),inset 0 1px rgba(255,255,255,.06)
+}
+.personal-original-art .h,
+.personal-original-art .pick button,
+.personal-original-art .btn,
+.personal-original-art .tap b{
+  font-family:'SplatLocalKo','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif
+}
+.personal-original-art .h{color:#f4f1ff;font-size:14px;letter-spacing:-.25px}
+.personal-original-art .btn{border-width:2px;border-radius:13px;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+.personal-original-art .btn:active,.personal-original-art .pick button:active{transform:translateY(2px);box-shadow:0 1px rgba(0,0,0,.3)}
+.personal-original-art .btn.pri{background:#ccf83e;color:#1a1725}
+.personal-original-art .seg{border:1px solid var(--art-border);padding:4px;background:#141321}
+.personal-original-art .seg button[aria-pressed="true"]{box-shadow:0 2px 0 rgba(0,0,0,.25);background:var(--lime);color:#17121f}
+.personal-original-art.mode-fest .seg button[aria-pressed="true"]{background:#ff99c9}
+.personal-original-art .pick{gap:7px}
+.personal-original-art .pick button{
+  background:linear-gradient(165deg,#37314b,#262238);
+  border:2px solid #534b71;border-radius:13px;
+  padding:9px 3px 7px;
+  color:#f4f1ff;font-size:11px;
+}
+.personal-original-art .pick button[aria-pressed="true"]{
+  border-color:#c7f534;background:#444037;box-shadow:0 0 0 2px rgba(198,244,50,.2)
+}
+.personal-original-art .pick .cap{width:clamp(31px,8vw,46px);height:clamp(31px,8vw,46px)}
+.personal-original-art .cap.art-capsule{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;
+  border-radius:0;overflow:visible;isolation:isolate;
+}
+.personal-original-art .cap.art-capsule.art-ready{box-shadow:none!important;background:transparent!important}
+.personal-original-art .cap .original-art{
+  display:block;width:120%;height:120%;max-width:none;object-fit:contain;
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  user-select:none;pointer-events:none;filter:drop-shadow(0 3px 2px rgba(0,0,0,.25));
+}
+.personal-original-art .pick .cap .original-art{width:118%;height:118%}
+.personal-original-art .opt .cap{width:36px;height:36px}
+.personal-original-art .tap{
+  position:relative;background:linear-gradient(110deg,#d3fa50,#a9ea2c);
+  border:2px solid #e9ff98;color:#18151a;min-height:92px;
+  box-shadow:0 5px 0 #597717;transition:filter .12s ease
+}
+.personal-original-art.mode-fest .tap{background:linear-gradient(110deg,#f9e1fb,#fb9fda);border-color:#ffe5f2;box-shadow:0 5px 0 #814066}
+.personal-original-art .tap:hover{filter:brightness(1.06)}
+.personal-original-art #tapCap{width:56px;height:56px;flex:none}
+.personal-original-art #tapCap .original-art{width:120%;height:120%}
+.personal-original-art .strip{gap:4px}
+.personal-original-art .strip .cap{width:clamp(19px,5vw,29px);height:clamp(19px,5vw,29px)}
+.personal-original-art .strip .now.art-capsule{outline:none}
+.personal-original-art .strip .now.art-capsule::after{
+  content:'';position:absolute;inset:-3px;border:2px solid var(--lime);
+  border-radius:50%;pointer-events:none
+}
+.personal-original-art .hist span{padding:4px 9px 4px 5px;gap:7px}
+.personal-original-art .hist span i.art-capsule{
+  position:relative;width:24px;height:24px;flex:none;background:transparent
+}
+.personal-original-art .hist span i.art-capsule .original-art{width:118%;height:118%}
+.personal-original-art .items{gap:7px}
+.personal-original-art .items button{
+  display:inline-flex;align-items:center;gap:7px;
+  border:2px solid #4d456d;padding:7px 12px 7px 7px;border-radius:12px;
+  background:linear-gradient(135deg,#3b3553,#2b273f);
+  min-height:44px;font-size:12px;text-align:left
+}
+.personal-original-art .items button.hint{border-color:#d7acff}
+.personal-original-art .reward-art{
+  width:29px;height:29px;object-fit:contain;flex:none;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.32));pointer-events:none
+}
+.personal-original-art .opt .reward-art{width:24px;height:24px;margin-left:0}
+.personal-original-art .tap .reward-art{width:46px;height:46px}
+.personal-original-art .hero .num{font-family:'SplatLocalBold',Impact,'Arial Black',system-ui,sans-serif}
+.personal-original-art .drop{background:radial-gradient(circle at 50% 0%,#3e3169,transparent 75%),#171525}
+.personal-original-art .art-source{
+  padding:8px 12px;border:1px dashed #615876;border-radius:10px;
+  color:#afa6c4;font-size:11px;line-height:1.6;text-align:center
+}
+.personal-original-art .art-source a{color:#d7f683;text-decoration:underline}
+@media(max-width:360px){
+  .personal-original-art .pick{gap:4px}
+  .personal-original-art .pick button{font-size:10px;padding:7px 0}
+  .personal-original-art .tap{gap:8px;padding:10px}
+  .personal-original-art .tap .reward-art{width:34px;height:34px}
+}
+@media(prefers-reduced-motion:reduce){.personal-original-art *, .personal-original-art *::before,.personal-original-art *::after{transition:none!important}}
