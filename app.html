@@ -3,9 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#15121f">
+<meta name="theme-color" content="#171122">
 <meta name="robots" content="noindex">
-<title>SPLAT SEED</title>
+<title>SPLAT SEED — Shell-Out Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Lilita+One&display=swap" rel="stylesheet">
 <style>
 /* One flow: load ID -> find position -> plan to gold -> one-tap daily tracking. Experimental page. */
 :root{
@@ -100,11 +102,70 @@ details summary{cursor:pointer;color:var(--mute);font-size:13px;font-weight:800}
 .alert{background:#3a1222;border:1px solid #7a2a45;border-radius:14px;padding:12px;font-size:13px;color:#ffc4d3;line-height:1.5}
 .alert b{color:#fff}
 code{font-size:11px;word-break:break-all;color:var(--mute)}
+
+/* SPLAT_GAME_ART_V1: original stylesheet, remotely linked game icon images, CSS fallback. */
+:root{--ink:#171122;--ink2:#272037;--ink3:#372b4d;--line:#615078;--mute:#c1b2d7;--paper:#fff7ef;--lime:#d2fb3a;--violet:#8955ef;--pink:#fe5899;--sun:#ffd23a;--font:'Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif}
+html,body{min-height:100%;background:#15101f}
+body{font-family:var(--font);letter-spacing:-.018em;background:radial-gradient(circle at 8% 8%,#63429755,transparent 29%),radial-gradient(circle at 92% 24%,#c2fb3120,transparent 29%),repeating-linear-gradient(135deg,#211631 0 15px,#1c142b 15px 30px);background-attachment:fixed}
+.app{max-width:540px;padding:22px 17px calc(42px + env(safe-area-inset-bottom));gap:16px}
+.top{min-height:80px;padding-bottom:10px;border-bottom:2px dashed #75569d}
+.masthead{display:flex;flex-direction:column;position:relative;padding-left:50px}
+.masthead:before{content:"";position:absolute;left:0;top:8px;width:43px;height:43px;background:#cfef37 url("https://raw.githubusercontent.com/Leanny/splat3/main/images/capsules/CapsuleIcon_00.png") center/contain no-repeat;border-radius:13px;transform:rotate(-13deg);border:3px solid #101018;box-shadow:3px 4px 0 #8a55eb}
+.top-kicker{font:400 10px/1.2 'Lilita One',system-ui,sans-serif;letter-spacing:.15em;color:#f7c63c}
+.logo{font:400 clamp(27px,7vw,36px)/1 'Lilita One',system-ui,sans-serif;letter-spacing:.01em;transform:rotate(-3deg);text-shadow:3px 3px 0 #6f38bc,5px 5px 0 #08050d;color:#d6ff42}
+.chip{font-size:11px;line-height:1.2;border:2px solid #745b8b;color:#f9eaff;background:#2d243e;border-radius:8px;transform:rotate(2deg);box-shadow:2px 3px 0 #0a0711;padding:6px 9px;white-space:normal;text-align:center;max-width:137px}
+.chip.ok{background:#304c17;border-color:#c6f035;color:#e8ffb6}.chip.warn{background:#57401a;border-color:#ffc92a;color:#fff0b5}.chip.bad{background:#632943;border-color:#ff6d8f;color:#ffebed}
+.card{border:2px solid #695582;box-shadow:4px 5px 0 #0a0812;border-radius:22px;background:linear-gradient(155deg,#332746,#241c33 80%);padding:16px}
+.h{font-size:14px;color:#d3ff56}.small{color:#d4c7e3}
+.btn{background:#45345d;border:2px solid #8978a1;box-shadow:2px 3px 0 #130e1c;color:#fff5e8;transition:transform .12s,filter .12s;touch-action:manipulation}
+.btn:hover:not(:disabled){filter:brightness(1.1)}.btn:active:not(:disabled){transform:translate(2px,2px);box-shadow:none}
+.btn.pri{background:#d2fa3b;color:#1a1520;border-color:#fcff9b}.btn.dan{background:#4a273d;border-color:#a35979;color:#ffe4e9}
+input[type=text],select{border:2px solid #74628b;background:#1b1628}
+.seg{border:2px solid #57416d;border-radius:15px;background:#1a1525;gap:5px;padding:5px;box-shadow:3px 4px 0 #080610}
+.seg button{font-size:15px;color:#d2c6e4}.seg button[aria-pressed=true]{background:#cefa34;color:#1c1428;box-shadow:3px 3px 0 #6c3ac0;transform:rotate(-1deg)}
+body[data-splat-mode=fest] .seg button[aria-pressed=true]{background:#ff8ec6}
+.cap{position:relative;isolation:isolate;display:inline-block;overflow:visible;vertical-align:middle;flex-shrink:0}
+.cap:not(.mix):after{content:"";position:absolute;inset:-13%;background-image:var(--art,none);background-size:contain;background-position:center;background-repeat:no-repeat;filter:drop-shadow(0 3px 2px #0a071188);pointer-events:none}
+body[data-splat-mode="normal"] .cap.g0{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/8/8e/S3_Shell-Out_Gold_Capsule.png")}
+body[data-splat-mode="normal"] .cap.g1{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/3/3f/S3_Shell-Out_Silver_Capsule.png")}
+body[data-splat-mode="normal"] .cap.g2{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/8/8e/S3_Shell-Out_Bronze_Capsule.png")}
+body[data-splat-mode="normal"] .cap.g3{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/c/c4/S3_Shell-Out_Red_Capsule.png")}
+body[data-splat-mode="normal"] .cap.g4{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/b/b4/S3_Shell-Out_Purple_Capsule.png")}
+body[data-splat-mode="normal"] .cap.g5{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/f/f2/S3_Shell-Out_Blue_Capsule.png")}
+body[data-splat-mode="fest"] .cap.g0{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/0/01/S3_Shell-Out_Gold_Capsule_Splatfest.png")}
+body[data-splat-mode="fest"] .cap.g1{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/8/8b/S3_Shell-Out_Silver_Capsule_Splatfest.png")}
+body[data-splat-mode="fest"] .cap.g2{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/4/47/S3_Shell-Out_Bronze_Capsule_Splatfest.png")}
+body[data-splat-mode="fest"] .cap.g3{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/f/f9/S3_Shell-Out_Red_Capsule_Splatfest.png")}
+body[data-splat-mode="fest"] .cap.g4{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/b/b1/S3_Shell-Out_Purple_Capsule_Splatfest.png")}
+body[data-splat-mode="fest"] .cap.g5{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/e/e6/S3_Shell-Out_Blue_Capsule_Splatfest.png")}
+.pick{grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}
+.pick button{min-width:0;min-height:83px;padding:9px 1px 6px;background:linear-gradient(#45385c,#30263f);border:2px solid #6f5c88;border-radius:14px;color:#fff3ee;box-shadow:1px 2px 0 #0e0b15;touch-action:manipulation;font-size:12px}
+.pick button .cap{width:clamp(30px,9vw,46px);height:clamp(30px,9vw,46px)}
+.pick button[aria-pressed=true]{border-color:#d3ff3e;background:#54416d;box-shadow:0 0 0 2px #d2fb3a33}
+.opt{background:#392e4a;border:2px solid #665477;border-radius:13px;min-height:52px}.opt .cap{width:31px;height:31px}.opt em{color:#d2ff48}#nextOpts{min-width:0}.opt{min-width:0;overflow-wrap:anywhere}
+.hist{gap:7px}.hist span{background:#3d3053;border:1px solid #604d76;border-radius:10px;padding:4px 7px 4px 5px}.hist span .cap{width:23px;height:23px}
+.drop{background:radial-gradient(circle at 50% 20%,#4e3671,#231a32 84%);border:3px dashed #d3ff45;border-radius:22px;padding:30px 12px}
+.drop .ic{background:#b384ff;color:#171024;border:2px solid #edcdff;transform:rotate(-8deg);box-shadow:3px 4px 0 #0f081b}.drop b{color:#f8eaff;font-size:18px}
+.big{color:#f0ffaf;font-family:'Lilita One',var(--font)}.bar{background:#160e23;height:12px;border:1px solid #615075}.bar i{background:linear-gradient(90deg,#ffb637,#d2fd38)}
+.hero{min-height:226px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:3px solid #15101b;border-radius:34px 23px 36px 24px;background:radial-gradient(circle at 80% 15%,#f2ff916b,transparent 40%),repeating-radial-gradient(circle at 15% 50%,#d9ff52 0 8px,#d3fc3e 8px 20px);box-shadow:6px 8px 0 #080611;transform:rotate(-1deg);overflow:hidden;padding:24px 8px}
+.splat{width:280px;height:175px;max-width:75%;opacity:.36;transform:rotate(16deg)}
+.hero .lab{font:400 17px/1.2 'Jua',sans-serif;color:#29242e;background:#fff7d6;padding:5px 12px;border:2px solid #1b1420;border-radius:10px;transform:rotate(2deg);box-shadow:3px 4px 0 #8cbd2d}
+.hero .num{font:400 clamp(68px,19vw,105px)/1 'Lilita One',var(--font);color:#17101d;letter-spacing:-.025em;text-shadow:3px 3px 0 #ffffff77}.hero .unit{font-size:16px;line-height:1.2;color:#27212d}.hero.none .num{font-size:42px}
+.tap{border:3px solid #e9ff9c;border-radius:17px;box-shadow:4px 5px 0 #0e0a14;background:linear-gradient(125deg,#d9ff4b,#aeee25);min-height:88px;touch-action:manipulation}
+.tap .cap{width:64px;height:64px}.tap b{font-size:20px;line-height:1.22}.tap span{opacity:.8}
+.strip{gap:3px;margin-top:18px}.strip .cap{width:clamp(18px,5.6vw,27px);height:clamp(18px,5.6vw,27px)}.strip .now{outline:3px solid #dcff4d;outline-offset:2px}
+.pl{border:1px solid #735c8c;background:#392c4c;min-height:87px}.pl b{color:#fff4e6}.pl i{color:#daff4f}
+.items button{background:#48345d;border:1px solid #806a98}.items button.hint{border-color:#d6ff42}
+.warnbox{background:#3a2a17;border:2px solid #947124;border-radius:12px;color:#ffeca5}.alert{background:#542238;border:2px solid #d05b7b}
+.credits{font-size:11px;color:#b6abc7;line-height:1.6;text-align:center;padding:5px 8px 0}.credits a{color:#e0ff6a;text-underline-offset:3px}
+@media(max-width:370px){.app{padding-left:11px;padding-right:11px}.card{padding:11px}.pick button{font-size:11px;min-height:70px}.top{gap:5px}.masthead{padding-left:44px}.masthead:before{width:36px;height:36px}.chip{font-size:10px;padding:4px 5px}}
+@media(prefers-reduced-motion:reduce){.btn{transition:none}}
+
 </style>
 </head>
-<body>
+<body data-splat-mode="normal">
 <main class="app">
-  <div class="top"><span class="logo">SPLAT SEED</span><span class="chip" id="topChip"></span></div>
+  <div class="top"><div class="masthead"><span class="top-kicker">SHELL-OUT MACHINE · FAN TOOL</span><span class="logo">SPLAT SEED</span></div><span class="chip" id="topChip"></span></div>
 
   <!-- ===== 1. setup ===== -->
   <section id="vSetup" hidden>
@@ -233,6 +294,7 @@ code{font-size:11px;word-break:break-all;color:var(--mute)}
   </section>
 
   <p class="warnbox"><b>미검증:</b> 계산은 공개 시드 도구(Leanny)와 같은 결과를 내지만, 실제 게임 기록과의 대조는 아직 진행 중입니다. 예측과 다르면 즉시 멈추고 알려 줍니다.</p>
+  <p class="credits">비공식 팬 제작 도구 · Nintendo와 무관합니다. 게임 캡슐 아이콘: <a href="https://splatoonwiki.org/wiki/Category:Splatoon_3_icons" target="_blank" rel="noopener noreferrer">Inkipedia</a>, 자료 구조 참고: <a href="https://github.com/Leanny/splat3" target="_blank" rel="noopener noreferrer">Leanny</a>. 외부 이미지가 차단되면 색상 원형으로 표시됩니다. 게임 이미지의 권리는 원 권리자에게 있습니다.</p>
 </main>
 
 <script type="module">
@@ -420,6 +482,7 @@ function mixDot(colors, total) {
 function setupNeeded() { return !app.id && !app.setupDone && app.m.normal.phase !== 'track' && app.m.fest.phase !== 'track'; }
 
 function render() {
+  document.body.dataset.splatMode = app.mode;
   const setup = setupNeeded();
   $('vSetup').hidden = !setup;
   $('vMain').hidden = setup;
@@ -485,8 +548,7 @@ function renderLocate() {
   if (fc) {
     const st = fc.steps[0], total = fc.used;
     $('locNextH').textContent = r.result.truncated ? `다음 결과 분포 (상한 걸린 후보 ${fmt(total)}개 기준)` : '다음 결과에 따라 남는 후보';
-    $('nextOpts').innerHTML = st.groups.slice(0, 6).map((g, i) => `<button class="opt" data-i="${i}">${dot(g.grade)}${label(g)}<em>${r.result.truncated ? `${g.count}개` : g.count === 1 ? '→ 확정' : `→ ${g.count}개`}</em></button>`).join('')
-      + (st.groups.length > 6 ? `<p class="small">외 ${st.groups.length - 6}가지</p>` : '');
+    $('nextOpts').innerHTML = st.groups.map((g, i) => `<button class="opt" data-i="${i}">${dot(g.grade)}${label(g)}<em>${r.result.truncated ? `${g.count}개` : g.count === 1 ? '→ 확정' : `→ ${g.count}개`}</em></button>`).join('');
     $('locNextNote').textContent = r.result.truncated ? '상한 때문에 일부 후보만 본 분포입니다.' : '눌러서 바로 기록할 수 있습니다. 목록에 없는 결과면 아래에서 직접 고르세요. 비율은 출현 확률이 아닙니다.';
     $('nextOpts').onclick = e => { const b = e.target.closest('button[data-i]'); if (!b) return; const g = st.groups[Number(b.dataset.i)]; locRecord({ grade: g.grade, type: g.type, subType: g.subType }); };
   }
@@ -497,7 +559,7 @@ function renderLocate() {
   renderPicker($('pick'), $('items'), app.picker, s.season, o => locRecord(o), fc?.steps[0]?.groups);
   // history
   $('locHist').hidden = !s.observations.length;
-  $('hist').innerHTML = s.observations.map((o, i) => `<span><i class="g${o.grade}"></i>${i + 1}. ${label(o)}</span>`).join('');
+  $('hist').innerHTML = s.observations.map((o, i) => `<span>${dot(o.grade)}${i + 1}. ${label(o)}</span>`).join('');
   // conditions
   const d = app.draft ?? s;
   $('cSeason').textContent = d.season; $('cMB').textContent = d.missingBanners; $('cMT').textContent = d.missingTitles;
@@ -575,7 +637,7 @@ function renderTrack() {
   // settings
   $('tMB').textContent = s.missingBanners; $('tMT').textContent = s.missingTitles;
   $('tSeasonLine').textContent = `시즌 ${s.season} 기준 · 지금 시즌 ${seasonAt(new Date())}${seasonAt(new Date()) !== s.season ? ' → 시즌이 바뀌었습니다. 새 시즌 한정 아이템으로 바꾸려면 위치 다시 찾기 또는 아래 시즌 갱신' : ''}`;
-  $('tHist').innerHTML = s.history.slice(-30).map(h => `<span><i class="g${h.grade}"></i>${label(h)}</span>`).join('');
+  $('tHist').innerHTML = s.history.slice(-30).map(h => `<span>${dot(h.grade)}${label(h)}</span>`).join('');
   $('stateHex').textContent = formatState(s.state);
 }
 
