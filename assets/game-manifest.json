@@ -1,0 +1,154 @@
+[
+  {
+    "path": "capsules/normal-gold.png",
+    "url": "https://cdn.wikimg.net/en/splatoonwiki/images/8/8e/S3_Shell-Out_Gold_Capsule.png"
+  },
+  {
+    "path": "capsules/normal-silver.png",
+    "url": "https://cdn.wikimg.net/en/splatoonwiki/images/3/3f/S3_Shell-Out_Silver_Capsule.png"
+  },
+  {
+    "path": "capsules/normal-bronze.png",
+    "url": "https://cdn.wikimg.net/en/splatoonwiki/images/8/8e/S3_Shell-Out_Bronze_Capsule.png"
+  },
+  {
+    "path": "capsules/normal-red.png",
+    "url": "https://cdn.wikimg.net/en/splatoonwiki/images/c/c4/S3_Shell-Out_Red_Capsule.png"
+  },
+  {
+    "path": "capsules/normal-purple.png",
+    "url": "https://cdn.wikimg.net/en/splatoonwiki/images/b/b4/S3_Shell-Out_Purple_Capsule.png"
+  },
+  {
+    "path": "capsules/normal-blue.png",
+    "url": "https://cdn.wikimg.net/en/splatoonwiki/images/f/f2/S3_Shell-Out_Blue_Capsule.png"
+  },
+  {
+    "path": "capsules/fest-gold.png",
+    "url": "https://cdn.wikimg.net/en/splatoonwiki/images/0/01/S3_Shell-Out_Gold_Capsule_Splatfest.png"
+  },
+  {
+    "path": "capsules/fest-silver.png",
+    "url": "https://cdn.wikimg.net/en/splatoonwiki/images/8/8b/S3_Shell-Out_Silver_Capsule_Splatfest.png"
+  },
+  {
+    "path": "capsules/fest-bronze.png",
+    "url": "https://cdn.wikimg.net/en/splatoonwiki/images/4/47/S3_Shell-Out_Bronze_Capsule_Splatfest.png"
+  },
+  {
+    "path": "capsules/fest-red.png",
+    "url": "https://cdn.wikimg.net/en/splatoonwiki/images/f/f9/S3_Shell-Out_Red_Capsule_Splatfest.png"
+  },
+  {
+    "path": "capsules/fest-purple.png",
+    "url": "https://cdn.wikimg.net/en/splatoonwiki/images/b/b1/S3_Shell-Out_Purple_Capsule_Splatfest.png"
+  },
+  {
+    "path": "capsules/fest-blue.png",
+    "url": "https://cdn.wikimg.net/en/splatoonwiki/images/e/e6/S3_Shell-Out_Blue_Capsule_Splatfest.png"
+  },
+  {
+    "path": "header/CapsuleIcon_00.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/capsules/CapsuleIcon_00.png"
+  },
+  {
+    "path": "images/catalog/IconCardPack_00.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/catalog/IconCardPack_00.png"
+  },
+  {
+    "path": "images/food/IconShopParty_00.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/food/IconShopParty_00.png"
+  },
+  {
+    "path": "images/food/IconShopFoodL.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/food/IconShopFoodL.png"
+  },
+  {
+    "path": "images/food/IconShopFood.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/food/IconShopFood.png"
+  },
+  {
+    "path": "images/food/GearPowerTicketBase.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/food/GearPowerTicketBase.png"
+  },
+  {
+    "path": "images/catalog/IconNameplate_02.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/catalog/IconNameplate_02.png"
+  },
+  {
+    "path": "images/catalog/IconNameplate_03.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/catalog/IconNameplate_03.png"
+  },
+  {
+    "path": "images/misc/SkillIconPiece_00^s.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/misc/SkillIconPiece_00%5Es.png"
+  },
+  {
+    "path": "images/emote/BigJump00.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/emote/BigJump00.png"
+  },
+  {
+    "path": "images/zakka/Grf_Sti_Graffiti_00.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/zakka/Grf_Sti_Graffiti_00.png"
+  },
+  {
+    "path": "images/zakka/Fig_Arcadegame.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/zakka/Fig_Arcadegame.png"
+  },
+  {
+    "path": "images/zakka/Grf_Sti_Character_28.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/zakka/Grf_Sti_Character_28.png"
+  },
+  {
+    "path": "images/zakka/Grf_Sti_Decoration_14.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/zakka/Grf_Sti_Decoration_14.png"
+  },
+  {
+    "path": "images/zakka/Grf_Sti_Graffiti_03.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/zakka/Grf_Sti_Graffiti_03.png"
+  },
+  {
+    "path": "images/zakka/Grf_Sti_Graffiti_08.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/zakka/Grf_Sti_Graffiti_08.png"
+  },
+  {
+    "path": "images/zakka/Emi_Sti_Decoration_31.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/zakka/Emi_Sti_Decoration_31.png"
+  },
+  {
+    "path": "images/zakka/Grf_Sti_Decoration_21.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/zakka/Grf_Sti_Decoration_21.png"
+  },
+  {
+    "path": "images/zakka/Grf_Sti_Graffiti_13.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/zakka/Grf_Sti_Graffiti_13.png"
+  },
+  {
+    "path": "images/zakka/Grf_Sti_Graffiti_16.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/zakka/Grf_Sti_Graffiti_16.png"
+  },
+  {
+    "path": "images/zakka/Grf_Sti_Graffiti_19.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/zakka/Grf_Sti_Graffiti_19.png"
+  },
+  {
+    "path": "images/zakka/Emi_Sti_Decoration_18.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/zakka/Emi_Sti_Decoration_18.png"
+  },
+  {
+    "path": "images/zakka/Emi_Sti_Signboard_15.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/zakka/Emi_Sti_Signboard_15.png"
+  },
+  {
+    "path": "images/zakka/Grf_Sti_Graffiti_20.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/zakka/Grf_Sti_Graffiti_20.png"
+  },
+  {
+    "path": "images/zakka/Grf_Sti_Graffiti_23.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/zakka/Grf_Sti_Graffiti_23.png"
+  },
+  {
+    "path": "images/zakka/Grf_Sti_Graffiti_26.png",
+    "url": "https://raw.githubusercontent.com/Leanny/splat3/main/images/zakka/Grf_Sti_Graffiti_26.png"
+  }
+]
