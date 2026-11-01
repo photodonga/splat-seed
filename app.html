@@ -385,7 +385,7 @@ const label = o => `${GN[o.grade]}${o.type ? ' · ' + itemName(o) : ''}`;
 // The Leanny assets below are category/representative art, NOT a prediction of exact sticker, emote, or food flavor.
 const EMBEDDED_GAME_ASSETS = null; // generated inline PNG map in standalone HTML
 const REWARD_ART_BASE = './assets/game/images/';
-const artUrl = path => EMBEDDED_GAME_ASSETS?.['images/' + path] ?? REWARD_ART_BASE + path;
+const artUrl = path => EMBEDDED_GAME_ASSETS?.[decodeURIComponent('images/' + path)] ?? REWARD_ART_BASE + path;
 const REWARD_ART = Object.freeze({
   'MiniGameCardPack|None': 'catalog/IconCardPack_00.png',
   'FoodTicket|FoodParty': 'food/IconShopParty_00.png',
