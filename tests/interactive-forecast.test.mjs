@@ -33,6 +33,26 @@ for (const [name, source] of pages) {
     assert.match(source, /\$\('previewDetail'\)\.hidden = false/);
     assert.match(source, /grid-template-columns:repeat\(10,minmax\(0,1fr\)\)/);
   });
+  test(name + ': locker sticker preview shows a verified multi-item gallery', () => {
+    const samples = [
+      'Grf_Sti_Character_28','Grf_Sti_Decoration_14','Grf_Sti_Graffiti_00','Grf_Sti_Graffiti_03','Grf_Sti_Graffiti_08',
+      'Emi_Sti_Decoration_31','Grf_Sti_Decoration_21','Grf_Sti_Graffiti_13','Grf_Sti_Graffiti_16','Grf_Sti_Graffiti_19',
+      'Emi_Sti_Decoration_18','Emi_Sti_Signboard_15','Grf_Sti_Graffiti_20','Grf_Sti_Graffiti_23','Grf_Sti_Graffiti_26',
+    ];
+    for (const id of samples) assert.ok(source.includes(id), 'missing sticker sample '+id);
+    assert.match(source, /function renderStickerGallery\(\)/);
+    assert.match(source, /const isSticker = chosen\.type === 'LockerSticker'/);
+    assert.match(source, /\$\('stickerGallery'\)\.hidden = !isSticker/);
+    assert.match(source, /스티커 종류 예시/);
+    assert.match(source, /grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
+  });
+  test(name + ': reward icons never consume the text column', () => {
+    assert.match(source, /grid-template-columns:24px 28px minmax\(0,1fr\) auto/);
+    assert.match(source, /\.tap-copy\{flex:1 1 auto;min-width:0\}/);
+    assert.match(source, /\.item-label\{display:block;min-width:0/);
+    assert.match(source, /\.hist-label\{display:block;min-width:0/);
+    assert.match(source, /\.reward-image\[hidden\]\{display:none!important\}/);
+  });
   test(name + ': selecting a preview is read-only', () => {
     const start = source.indexOf("$('strip').onclick = e => {");
     const end = source.indexOf('const selected = preds[previewIndex];', start);
