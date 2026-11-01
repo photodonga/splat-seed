@@ -251,20 +251,31 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("./assets/game/capsules/fest-blue
 .tgt-pick button .cap{width:22px;height:22px}
 .tgt-pick button[aria-pressed=true]{border-color:#ffd52e;background:#54416d;color:#fff4c2;box-shadow:0 0 0 2px #ffd52e33}
 .tgt-items button[aria-pressed=true]{background:#ffd52e;border-color:#fff1a1;color:#1a1520}
-.tgt-head{display:flex;align-items:center;gap:9px;margin-top:12px;padding:10px 12px;border-radius:13px;background:#21192e;border:2px dashed #ffd52e88}
+.tgt-head{display:flex;align-items:center;gap:7px;margin-top:10px;padding:9px 10px 9px 12px;border-radius:13px;background:#21192e;border:2px dashed #ffd52e88}
+.tgt-sum{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
+.tgt-sum>div{min-width:0}
+.tgt-toggle,.tgt-reset{flex:none;border-radius:10px;padding:7px 9px;font-size:12px;font-weight:900;line-height:1;touch-action:manipulation}
+.tgt-toggle{background:#ffd52e;color:#1a1520;border:2px solid #fff1a1;box-shadow:2px 2px 0 #0e0a14}
+.tgt-toggle span{display:inline-block;transition:transform .15s}.tgt-toggle.open span{transform:rotate(180deg)}
+.tgt-reset{background:#392c4c;color:#fff1a1;border:2px solid #806a98}
+.tgt-reset[hidden],.tgt-panel[hidden]{display:none}
+.tgt-panel{margin-top:2px}
+.tgt-sum b,.tgt-sum small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl b .yr{display:block;font-size:11px;line-height:1.2;color:#d5c5e7;font-weight:800}
 .tgt-head .cap{width:30px;height:30px}.tgt-head .reward-image{width:28px;height:28px}
 .tgt-head b{display:block;font-size:15px;line-height:1.25;color:#fff4c2}
 .tgt-head small{display:block;font-size:11.5px;color:#d5c5e7;margin-top:2px}
-.tgt-more{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:5px}
+.tgt-more{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:5px}
 .tgt-more[hidden]{display:none}
-.tgt-more li{display:grid;grid-template-columns:auto auto 1fr;align-items:baseline;gap:8px;padding:7px 11px;border-radius:11px;background:#2a2139;font-size:12px;color:#d5c5e7}
+.tgt-more li{min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:8px;row-gap:2px;padding:7px 11px;border-radius:11px;background:#2a2139;font-size:12px;color:#d5c5e7}
 .tgt-more .nth{font-size:11px;color:#ffd52e;font-weight:900}
 .tgt-more b{font-size:14px;color:#fff4e6}
-.tgt-more li>span:last-child{text-align:right}
+.tgt-more li>span:last-child{margin-left:auto;white-space:nowrap}
+.tgt-more .nth,.tgt-more b{white-space:nowrap}
 .strip .future-btn{position:relative}
 .strip .future-btn.is-target{background:#4a3a1e;color:#fff1a1}
 .strip .future-btn.is-target:after{content:"★";position:absolute;top:-7px;right:-4px;width:15px;height:15px;border-radius:50%;background:#ffd52e;color:#1a1520;font-size:10px;line-height:15px;text-align:center;box-shadow:1px 1px 0 #0e0a14}
-@media(max-width:370px){.tgt-pick button span{font-size:10px}.tgt-more li{grid-template-columns:auto 1fr;}.tgt-more li>span:last-child{grid-column:1/-1;text-align:left}}
+@media(max-width:370px){.tgt-pick button span{font-size:10px}}
 
 </style>
 </head>
@@ -371,9 +382,11 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("./assets/game/capsules/fest-blue
 
     <div class="card" id="planCard">
       <div class="row"><div class="h" style="margin:0">목표</div><span class="sp"></span><label class="small row" style="gap:5px"><input type="checkbox" id="discUsed"> 오늘 할인 뽑기 씀</label></div>
-      <div class="tgt-pick" id="tgtPick" role="group" aria-label="목표 캡슐 색"></div>
-      <div class="items tgt-items" id="tgtItems" role="group" aria-label="목표 보상 종류"></div>
-      <div class="tgt-head" id="tgtHead" aria-live="polite"></div>
+      <div class="tgt-head"><div class="tgt-sum" id="tgtHead" aria-live="polite"></div><button type="button" class="tgt-reset" id="tgtReset" hidden aria-label="목표를 황금으로 되돌리기">↺ 황금</button><button type="button" class="tgt-toggle" id="tgtToggle" aria-expanded="false" aria-controls="tgtPanel">바꾸기 <span aria-hidden="true">▾</span></button></div>
+      <div class="tgt-panel" id="tgtPanel" hidden>
+        <div class="tgt-pick" id="tgtPick" role="group" aria-label="목표 캡슐 색"></div>
+        <div class="items tgt-items" id="tgtItems" role="group" aria-label="목표 보상 종류"></div>
+      </div>
       <div class="plan" style="margin-top:8px">
         <div class="pl"><span>매일 첫 뽑기만</span><b id="p1d"></b><i id="p1g"></i></div>
         <div class="pl"><span>오늘 몰아서</span><b>오늘</b><i id="pAg"></i></div>
@@ -482,6 +495,8 @@ let previewIndex = 0; // transient display choice: never persisted, never advanc
 const $ = id => document.getElementById(id);
 const fmt = n => n.toLocaleString('ko-KR');
 const dateKo = d => `${d.getMonth() + 1}월 ${d.getDate()}일`;
+/** Date for plan tiles: the year sits on its own small line when it is not this year. */
+const setDate = (el, d) => { const y = d.getFullYear() !== new Date().getFullYear() ? `<small class="yr">${d.getFullYear()}년</small>` : ''; el.innerHTML = y + dateKo(d); };
 const gold = n => n >= 10000 ? `${(n / 10000).toLocaleString('ko-KR', { maximumFractionDigits: 1 })}만 골드` : `${fmt(n)} 골드`;
 
 /* ---------- state ---------- */
@@ -489,6 +504,7 @@ const app = {
   id: null, keepId: false, mode: 'normal', discUsed: false, perDay: 5, target: { grade: 0 },
   m: { normal: null, fest: null },             // persisted per mode: { phase, cand, stream }
   rt: { normal: blankRt(), fest: blankRt() },   // runtime per mode (search results, undo)
+  tgtOpen: false, // target picker panel; not saved, always starts folded
   draft: null, picker: { grade: null, hints: null }, tPicker: { grade: null },
 };
 function blankRt() { return { result: null, searching: false, progress: 0, cancelled: false, undo: [], job: null, found: 0, error: null }; }
@@ -773,7 +789,7 @@ function renderTargetPicker(season, tg) {
     const b = e.target.closest('button[data-item]'); if (!b) return;
     const i = Number(b.dataset.item);
     app.target = i < 0 ? { grade: tg.grade } : { grade: tg.grade, type: list[i].type, subType: list[i].subType ?? 'None' };
-    save(); render();
+    app.tgtOpen = false; save(); render();
   };
 }
 
@@ -845,15 +861,17 @@ function renderTrack() {
   $('streak').textContent = `기록 ${fmt(s.history.length)}개`;
   // plans: target picker, nearest occurrence plans, then the next ones
   renderTargetPicker(s.season, tg);
-  $('tgtHead').innerHTML = `${dot(tg.grade)}${tg.type ? rewardIcon(tg) : ''}<div><b>${targetLabel(tg)}</b><small>${allGoldOwned ? '이번 시즌 황금 배너를 다 모았습니다' : n == null ? `${fmt(TARGET_LIMIT)}회 안에 없음` : `다음은 ${fmt(n)}번째 뽑기`}</small></div>`;
+  $('tgtPanel').hidden = !app.tgtOpen; $('tgtToggle').setAttribute('aria-expanded', String(app.tgtOpen)); $('tgtToggle').classList.toggle('open', app.tgtOpen);
+  $('tgtReset').hidden = isGold;
+  $('tgtHead').innerHTML = `${dot(tg.grade)}${tg.type ? rewardIcon(tg) : ''}<div><b>${targetLabel(tg)}</b><small>${allGoldOwned ? '이번 시즌 황금 배너를 다 모았습니다' : n == null ? `${fmt(TARGET_LIMIT)}회 안에 없음` : `다음 ${fmt(n)}번째`}</small></div>`;
   const target = n;
   $('discUsed').checked = app.discUsed;
   $('kVal').textContent = app.perDay;
   if (target) {
     const a = planPerDay(target, 1, { discountUsedToday: app.discUsed }), b = planAllNow(target, { discountUsedToday: app.discUsed }), k = planPerDay(target, app.perDay, { discountUsedToday: app.discUsed });
-    $('p1d').textContent = dateKo(a.finish); $('p1g').textContent = `${fmt(a.days)}일 · ${gold(a.gold)}`;
+    setDate($('p1d'), a.finish); $('p1g').textContent = `${fmt(a.days)}일 · ${gold(a.gold)}`;
     $('pAg').textContent = `${gold(b.gold)}`;
-    $('pkd').textContent = dateKo(k.finish); $('pkg').textContent = `${fmt(k.days)}일 · ${gold(k.gold)}`;
+    setDate($('pkd'), k.finish); $('pkg').textContent = `${fmt(k.days)}일 · ${gold(k.gold)}`;
   } else { for (const id of ['p1d', 'p1g', 'pAg', 'pkd', 'pkg']) $(id).textContent = '–'; }
   const more = hits.slice(1);
   $('tgtMore').hidden = !more.length;
@@ -953,6 +971,8 @@ $('relocate').onclick = () => {
   const cand = newSession({ mode: app.mode, season: s.season, missingBanners: s.missingBanners, missingTitles: s.missingTitles, maxOffset: M().cand.maxOffset, maxCandidates: M().cand.maxCandidates });
   app.m[app.mode] = { phase: 'locate', cand, stream: null }; app.rt[app.mode] = blankRt(); save(); render();
 };
+$('tgtToggle').onclick = () => { app.tgtOpen = !app.tgtOpen; render(); };
+$('tgtReset').onclick = () => { app.target = { grade: 0 }; app.tgtOpen = false; save(); render(); };
 $('discUsed').onchange = e => { app.discUsed = e.target.checked; render(); };
 $('kDown').onclick = () => { app.perDay = Math.max(2, app.perDay - 1); save(); render(); };
 $('kUp').onclick = () => { app.perDay = Math.min(50, app.perDay + 1); save(); render(); };
