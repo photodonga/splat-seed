@@ -6,8 +6,6 @@
 <meta name="theme-color" content="#171122">
 <meta name="robots" content="noindex">
 <title>SPLAT SEED — Shell-Out Tracker</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Jua&family=Lilita+One&display=swap" rel="stylesheet">
 <style>
 /* One flow: load ID -> find position -> plan to gold -> one-tap daily tracking. Experimental page. */
 :root{
@@ -104,15 +102,15 @@ details summary{cursor:pointer;color:var(--mute);font-size:13px;font-weight:800}
 code{font-size:11px;word-break:break-all;color:var(--mute)}
 
 /* SPLAT_GAME_ART_V1: original stylesheet, remotely linked game icon images, CSS fallback. */
-:root{--ink:#171122;--ink2:#272037;--ink3:#372b4d;--line:#615078;--mute:#c1b2d7;--paper:#fff7ef;--lime:#d2fb3a;--violet:#8955ef;--pink:#fe5899;--sun:#ffd23a;--font:'Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif}
+:root{--ink:#171122;--ink2:#272037;--ink3:#372b4d;--line:#615078;--mute:#c1b2d7;--paper:#fff7ef;--lime:#d2fb3a;--violet:#8955ef;--pink:#fe5899;--sun:#ffd23a;--font:'Apple SD Gothic Neo','Apple SD Gothic Neo','Malgun Gothic',sans-serif}
 html,body{min-height:100%;background:#15101f}
 body{font-family:var(--font);letter-spacing:-.018em;background:radial-gradient(circle at 8% 8%,#63429755,transparent 29%),radial-gradient(circle at 92% 24%,#c2fb3120,transparent 29%),repeating-linear-gradient(135deg,#211631 0 15px,#1c142b 15px 30px);background-attachment:fixed}
 .app{max-width:540px;padding:22px 17px calc(42px + env(safe-area-inset-bottom));gap:16px}
 .top{min-height:80px;padding-bottom:10px;border-bottom:2px dashed #75569d}
 .masthead{display:flex;flex-direction:column;position:relative;padding-left:50px}
-.masthead:before{content:"";position:absolute;left:0;top:8px;width:43px;height:43px;background:#cfef37 url("https://raw.githubusercontent.com/Leanny/splat3/main/images/capsules/CapsuleIcon_00.png") center/contain no-repeat;border-radius:13px;transform:rotate(-13deg);border:3px solid #101018;box-shadow:3px 4px 0 #8a55eb}
-.top-kicker{font:400 10px/1.2 'Lilita One',system-ui,sans-serif;letter-spacing:.15em;color:#f7c63c}
-.logo{font:400 clamp(27px,7vw,36px)/1 'Lilita One',system-ui,sans-serif;letter-spacing:.01em;transform:rotate(-3deg);text-shadow:3px 3px 0 #6f38bc,5px 5px 0 #08050d;color:#d6ff42}
+.masthead:before{content:"";position:absolute;left:0;top:8px;width:43px;height:43px;background:#cfef37 url("./assets/branding/seed-mark.svg") center/contain no-repeat;border-radius:13px;transform:rotate(-13deg);border:3px solid #101018;box-shadow:3px 4px 0 #8a55eb}
+.top-kicker{font:400 10px/1.2 'Arial Rounded MT Bold',system-ui,sans-serif;letter-spacing:.15em;color:#f7c63c}
+.logo{font:400 clamp(27px,7vw,36px)/1 'Arial Rounded MT Bold',system-ui,sans-serif;letter-spacing:.01em;transform:rotate(-3deg);text-shadow:3px 3px 0 #6f38bc,5px 5px 0 #08050d;color:#d6ff42}
 .chip{font-size:11px;line-height:1.2;border:2px solid #745b8b;color:#f9eaff;background:#2d243e;border-radius:8px;transform:rotate(2deg);box-shadow:2px 3px 0 #0a0711;padding:6px 9px;white-space:normal;text-align:center;max-width:137px}
 .chip.ok{background:#304c17;border-color:#c6f035;color:#e8ffb6}.chip.warn{background:#57401a;border-color:#ffc92a;color:#fff0b5}.chip.bad{background:#632943;border-color:#ff6d8f;color:#ffebed}
 .card{border:2px solid #695582;box-shadow:4px 5px 0 #0a0812;border-radius:22px;background:linear-gradient(155deg,#332746,#241c33 80%);padding:16px}
@@ -126,18 +124,18 @@ input[type=text],select{border:2px solid #74628b;background:#1b1628}
 body[data-splat-mode=fest] .seg button[aria-pressed=true]{background:#ff8ec6}
 .cap{position:relative;isolation:isolate;display:inline-block;overflow:visible;vertical-align:middle;flex-shrink:0}
 .cap:not(.mix):after{content:"";position:absolute;inset:-13%;background-image:var(--art,none);background-size:contain;background-position:center;background-repeat:no-repeat;filter:drop-shadow(0 3px 2px #0a071188);pointer-events:none}
-body[data-splat-mode="normal"] .cap.g0{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/8/8e/S3_Shell-Out_Gold_Capsule.png")}
-body[data-splat-mode="normal"] .cap.g1{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/3/3f/S3_Shell-Out_Silver_Capsule.png")}
-body[data-splat-mode="normal"] .cap.g2{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/8/8e/S3_Shell-Out_Bronze_Capsule.png")}
-body[data-splat-mode="normal"] .cap.g3{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/c/c4/S3_Shell-Out_Red_Capsule.png")}
-body[data-splat-mode="normal"] .cap.g4{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/b/b4/S3_Shell-Out_Purple_Capsule.png")}
-body[data-splat-mode="normal"] .cap.g5{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/f/f2/S3_Shell-Out_Blue_Capsule.png")}
-body[data-splat-mode="fest"] .cap.g0{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/0/01/S3_Shell-Out_Gold_Capsule_Splatfest.png")}
-body[data-splat-mode="fest"] .cap.g1{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/8/8b/S3_Shell-Out_Silver_Capsule_Splatfest.png")}
-body[data-splat-mode="fest"] .cap.g2{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/4/47/S3_Shell-Out_Bronze_Capsule_Splatfest.png")}
-body[data-splat-mode="fest"] .cap.g3{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/f/f9/S3_Shell-Out_Red_Capsule_Splatfest.png")}
-body[data-splat-mode="fest"] .cap.g4{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/b/b1/S3_Shell-Out_Purple_Capsule_Splatfest.png")}
-body[data-splat-mode="fest"] .cap.g5{--art:url("https://cdn.wikimg.net/en/splatoonwiki/images/e/e6/S3_Shell-Out_Blue_Capsule_Splatfest.png")}
+body[data-splat-mode="normal"] .cap.g0{--art:url("./assets/capsules/normal-gold.svg")}
+body[data-splat-mode="normal"] .cap.g1{--art:url("./assets/capsules/normal-silver.svg")}
+body[data-splat-mode="normal"] .cap.g2{--art:url("./assets/capsules/normal-bronze.svg")}
+body[data-splat-mode="normal"] .cap.g3{--art:url("./assets/capsules/normal-red.svg")}
+body[data-splat-mode="normal"] .cap.g4{--art:url("./assets/capsules/normal-purple.svg")}
+body[data-splat-mode="normal"] .cap.g5{--art:url("./assets/capsules/normal-blue.svg")}
+body[data-splat-mode="fest"] .cap.g0{--art:url("./assets/capsules/fest-gold.svg")}
+body[data-splat-mode="fest"] .cap.g1{--art:url("./assets/capsules/fest-silver.svg")}
+body[data-splat-mode="fest"] .cap.g2{--art:url("./assets/capsules/fest-bronze.svg")}
+body[data-splat-mode="fest"] .cap.g3{--art:url("./assets/capsules/fest-red.svg")}
+body[data-splat-mode="fest"] .cap.g4{--art:url("./assets/capsules/fest-purple.svg")}
+body[data-splat-mode="fest"] .cap.g5{--art:url("./assets/capsules/fest-blue.svg")}
 .pick{grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}
 .pick button{min-width:0;min-height:83px;padding:9px 1px 6px;background:linear-gradient(#45385c,#30263f);border:2px solid #6f5c88;border-radius:14px;color:#fff3ee;box-shadow:1px 2px 0 #0e0b15;touch-action:manipulation;font-size:12px}
 .pick button .cap{width:clamp(30px,9vw,46px);height:clamp(30px,9vw,46px)}
@@ -146,11 +144,11 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("https://cdn.wikimg.net/en/splato
 .hist{gap:7px}.hist span{background:#3d3053;border:1px solid #604d76;border-radius:10px;padding:4px 7px 4px 5px}.hist span .cap{width:23px;height:23px}
 .drop{background:radial-gradient(circle at 50% 20%,#4e3671,#231a32 84%);border:3px dashed #d3ff45;border-radius:22px;padding:30px 12px}
 .drop .ic{background:#b384ff;color:#171024;border:2px solid #edcdff;transform:rotate(-8deg);box-shadow:3px 4px 0 #0f081b}.drop b{color:#f8eaff;font-size:18px}
-.big{color:#f0ffaf;font-family:'Lilita One',var(--font)}.bar{background:#160e23;height:12px;border:1px solid #615075}.bar i{background:linear-gradient(90deg,#ffb637,#d2fd38)}
+.big{color:#f0ffaf;font-family:'Arial Rounded MT Bold',var(--font)}.bar{background:#160e23;height:12px;border:1px solid #615075}.bar i{background:linear-gradient(90deg,#ffb637,#d2fd38)}
 .hero{min-height:226px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:3px solid #15101b;border-radius:34px 23px 36px 24px;background:radial-gradient(circle at 80% 15%,#f2ff916b,transparent 40%),repeating-radial-gradient(circle at 15% 50%,#d9ff52 0 8px,#d3fc3e 8px 20px);box-shadow:6px 8px 0 #080611;transform:rotate(-1deg);overflow:hidden;padding:24px 8px}
 .splat{width:280px;height:175px;max-width:75%;opacity:.36;transform:rotate(16deg)}
-.hero .lab{font:400 17px/1.2 'Jua',sans-serif;color:#29242e;background:#fff7d6;padding:5px 12px;border:2px solid #1b1420;border-radius:10px;transform:rotate(2deg);box-shadow:3px 4px 0 #8cbd2d}
-.hero .num{font:400 clamp(68px,19vw,105px)/1 'Lilita One',var(--font);color:#17101d;letter-spacing:-.025em;text-shadow:3px 3px 0 #ffffff77}.hero .unit{font-size:16px;line-height:1.2;color:#27212d}.hero.none .num{font-size:42px}
+.hero .lab{font:400 17px/1.2 'Apple SD Gothic Neo',sans-serif;color:#29242e;background:#fff7d6;padding:5px 12px;border:2px solid #1b1420;border-radius:10px;transform:rotate(2deg);box-shadow:3px 4px 0 #8cbd2d}
+.hero .num{font:400 clamp(68px,19vw,105px)/1 'Arial Rounded MT Bold',var(--font);color:#17101d;letter-spacing:-.025em;text-shadow:3px 3px 0 #ffffff77}.hero .unit{font-size:16px;line-height:1.2;color:#27212d}.hero.none .num{font-size:42px}
 .tap{border:3px solid #e9ff9c;border-radius:17px;box-shadow:4px 5px 0 #0e0a14;background:linear-gradient(125deg,#d9ff4b,#aeee25);min-height:88px;touch-action:manipulation}
 .tap .cap{width:64px;height:64px}.tap b{font-size:20px;line-height:1.22}.tap span{opacity:.8}
 .strip{gap:3px;margin-top:18px}.strip .cap{width:clamp(18px,5.6vw,27px);height:clamp(18px,5.6vw,27px)}.strip .now{outline:3px solid #dcff4d;outline-offset:2px}
@@ -363,7 +361,7 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("https://cdn.wikimg.net/en/splato
   </section>
 
   <p class="warnbox"><b>미검증:</b> 계산은 공개 시드 도구(Leanny)와 같은 결과를 내지만, 실제 게임 기록과의 대조는 아직 진행 중입니다. 예측과 다르면 즉시 멈추고 알려 줍니다.</p>
-  <p class="credits">비공식 팬 제작 도구 · Nintendo와 무관합니다. 게임 캡슐 아이콘: <a href="https://splatoonwiki.org/wiki/Category:Splatoon_3_icons" target="_blank" rel="noopener noreferrer">Inkipedia</a>, 자료 구조 참고: <a href="https://github.com/Leanny/splat3" target="_blank" rel="noopener noreferrer">Leanny</a>. 외부 이미지가 차단되면 색상 원형으로 표시됩니다. 게임 이미지의 권리는 원 권리자에게 있습니다.</p>
+  <p class="credits">비공식 팬 제작 도구 · Nintendo와 무관합니다. 그래픽은 SPLAT SEED 전용으로 제작한 오리지널 SVG입니다. 아이템 그림과 스티커는 보상 종류 설명을 위한 예시이며 게임의 실제 당첨 아이템을 특정하지 않습니다.</p>
 </main>
 
 <script type="module">
@@ -383,56 +381,57 @@ const NM = { 'MiniGameCardPack|None': '카드 팩', 'FoodTicket|FoodParty': '파
 const itemName = o => o.type == null ? '' : (NM[`${o.type}|${o.subType ?? 'None'}`] ?? o.type);
 const label = o => `${GN[o.grade]}${o.type ? ' · ' + itemName(o) : ''}`;
 // The Leanny assets below are category/representative art, NOT a prediction of exact sticker, emote, or food flavor.
-const REWARD_ART_BASE = 'https://raw.githubusercontent.com/Leanny/splat3/main/images/';
+const EMBEDDED_ASSETS = null; // bundle.mjs replaces this with inline SVG data only in the standalone build
+const assetUrl = path => EMBEDDED_ASSETS?.[path] ?? './assets/' + path;
+const REWARD_ART_BASE = './assets/';
 const REWARD_ART = Object.freeze({
-  'MiniGameCardPack|None': 'catalog/IconCardPack_00.png',
-  'FoodTicket|FoodParty': 'food/IconShopParty_00.png',
-  'FoodTicket|Food100': 'food/IconShopFoodL.png',
-  'FoodTicket|Food50': 'food/IconShopFood.png',
-  'DrinkTicket|None': 'food/GearPowerTicketBase.png',
-  'NamePlateBg|None': 'catalog/IconNameplate_02.png',
-  'NamePlateBg|Limited': 'catalog/IconNameplate_02.png',
-  'Byname|None': 'catalog/IconNameplate_03.png',
-  'Byname|Limited': 'catalog/IconNameplate_03.png',
-  'GearSkillChip|None': 'misc/SkillIconPiece_00%5Es.png',
-  'AllGearSkillChip|None': 'misc/SkillIconPiece_00%5Es.png',
-  'Emote|None': 'emote/BigJump00.png',
-  'LockerSticker|None': 'zakka/Grf_Sti_Graffiti_00.png', // representative sticker; exact item ID is not predicted
-  'LockerFigure|None': 'zakka/Fig_Arcadegame.png',
+  'MiniGameCardPack|None': 'rewards/card-pack.svg',
+  'FoodTicket|FoodParty': 'rewards/food-party.svg',
+  'FoodTicket|Food100': 'rewards/food-boost.svg',
+  'FoodTicket|Food50': 'rewards/food-small.svg',
+  'DrinkTicket|None': 'rewards/drink.svg',
+  'NamePlateBg|None': 'rewards/banner.svg',
+  'NamePlateBg|Limited': 'rewards/banner-gold.svg',
+  'Byname|None': 'rewards/title.svg',
+  'Byname|Limited': 'rewards/title-silver.svg',
+  'GearSkillChip|None': 'rewards/chip.svg',
+  'AllGearSkillChip|None': 'rewards/chips-10.svg',
+  'Emote|None': 'rewards/emote.svg',
+  'LockerSticker|None': 'rewards/locker-sticker.svg',
+  'LockerFigure|None': 'rewards/locker-figure.svg',
 });
 const rewardPath = o => REWARD_ART[`${o.type}|${o.subType ?? 'None'}`] ?? null;
 const rewardIcon = (o, klass = 'reward-image') => {
   const path = rewardPath(o);
-  return path ? `<img class="${klass}" src="${REWARD_ART_BASE}${path}" alt="" loading="lazy" onerror="this.hidden=true">` : '';
+  return path ? `<img class="${klass}" src="${assetUrl(path)}" alt="" loading="lazy" onerror="this.hidden=true">` : '';
 };
 function updateRewardImage(id, outcome) {
   const el = $(id), path = rewardPath(outcome);
   el.hidden = !path;
-  if (path) { el.onerror = () => { el.hidden = true; }; el.src = REWARD_ART_BASE + path; }
+  if (path) { el.onerror = () => { el.hidden = true; }; el.src = assetUrl(path); }
 }
 const LOCKER_STICKER_SAMPLES = Object.freeze([
-  { id: 'Grf_Sti_Character_28', source: 'Shop', season: 1 },
-  { id: 'Grf_Sti_Decoration_14', source: 'Shop', season: 1 },
-  { id: 'Grf_Sti_Graffiti_00', source: 'Shop', season: 1 },
-  { id: 'Grf_Sti_Graffiti_03', source: 'Shop', season: 1 },
-  { id: 'Grf_Sti_Graffiti_08', source: 'Shop', season: 1 },
-  { id: 'Emi_Sti_Decoration_31', source: 'Catalog', season: 5 },
-  { id: 'Grf_Sti_Decoration_21', source: 'Catalog', season: 3 },
-  { id: 'Grf_Sti_Graffiti_13', source: 'Catalog', season: 1 },
-  { id: 'Grf_Sti_Graffiti_16', source: 'Catalog', season: 1 },
-  { id: 'Grf_Sti_Graffiti_19', source: 'Catalog', season: 1 },
-  { id: 'Emi_Sti_Decoration_18', source: 'Uroko', season: 1 },
-  { id: 'Emi_Sti_Signboard_15', source: 'Uroko', season: 7 },
-  { id: 'Grf_Sti_Graffiti_20', source: 'Uroko', season: 1 },
-  { id: 'Grf_Sti_Graffiti_23', source: 'Uroko', season: 7 },
-  { id: 'Grf_Sti_Graffiti_26', source: 'Uroko', season: 3 },
+  'sticker-01.svg',
+  'sticker-02.svg',
+  'sticker-03.svg',
+  'sticker-04.svg',
+  'sticker-05.svg',
+  'sticker-06.svg',
+  'sticker-07.svg',
+  'sticker-08.svg',
+  'sticker-09.svg',
+  'sticker-10.svg',
+  'sticker-11.svg',
+  'sticker-12.svg',
+  'sticker-13.svg',
+  'sticker-14.svg',
+  'sticker-15.svg',
 ]);
-const STICKER_SOURCE_NAME = { Shop: '상점', Catalog: '카탈로그', Uroko: '비늘 교환' };
 function renderStickerGallery() {
   const el = $('stickerGallery');
   if (el.dataset.ready === 'true') return;
-  el.innerHTML = '<div class="sticker-gallery-head"><strong>로커 스티커 예시 15종</strong><small>실제 당첨 스티커 특정 불가 · 종류 예시</small></div>' +
-    LOCKER_STICKER_SAMPLES.map(st => `<div class="sticker-gallery-item" title="${st.id}"><img src="${REWARD_ART_BASE}zakka/${st.id}.png" alt="" loading="lazy" decoding="async" onerror="this.hidden=true"><small>${STICKER_SOURCE_NAME[st.source]} · S${st.season}</small></div>`).join('');
+  el.innerHTML = '<div class="sticker-gallery-head"><strong>오리지널 스티커 도안 15종</strong><small>실제 게임 아이템이 아닌 일러스트 예시</small></div>' +
+    LOCKER_STICKER_SAMPLES.map((name, i) => `<div class="sticker-gallery-item"><img src="${assetUrl('stickers/' + name)}" alt="스티커 디자인 예시 ${i + 1}" loading="lazy" decoding="async" onerror="this.hidden=true"><small>도안 ${String(i + 1).padStart(2, '0')}</small></div>`).join('');
   el.dataset.ready = 'true';
 }
 let previewIndex = 0; // transient display choice: never persisted, never advances RNG
@@ -761,7 +760,7 @@ function renderTrack() {
     $('previewItemIcon').hidden = isSticker || !rewardPath(chosen);
     $('stickerGallery').hidden = !isSticker;
     if (isSticker) renderStickerGallery();
-    $('previewHint').textContent = isSticker ? '아래는 실제 당첨 예측이 아닌 스티커 종류 예시입니다.' : '예측 보기 전용 · 실제 기록은 위의 버튼으로만 진행합니다.';
+    $('previewHint').textContent = isSticker ? '아래는 오리지널 스티커 일러스트 예시입니다. 실제 게임 스티커는 아닙니다.' : '예측 보기 전용 · 실제 기록은 위의 버튼으로만 진행합니다.';
     $('stripNote').textContent = '숫자가 있는 캡슐을 누르면 해당 순서의 예상 보상을 볼 수 있습니다. 아이템 그림은 종류별 대표 이미지입니다.';
   }
   renderPicker($('tPick'), $('tItems'), app.tPicker, s.season, o => trRecord(o), null);
