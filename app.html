@@ -160,6 +160,25 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("https://cdn.wikimg.net/en/splato
 .credits{font-size:11px;color:#b6abc7;line-height:1.6;text-align:center;padding:5px 8px 0}.credits a{color:#e0ff6a;text-underline-offset:3px}
 @media(max-width:370px){.app{padding-left:11px;padding-right:11px}.card{padding:11px}.pick button{font-size:11px;min-height:70px}.top{gap:5px}.masthead{padding-left:44px}.masthead:before{width:36px;height:36px}.chip{font-size:10px;padding:4px 5px}}
 @media(prefers-reduced-motion:reduce){.btn{transition:none}}
+/* Future ten-tap preview: non-mutating, keyboard and touch accessible. */
+.strip{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:3px;align-items:start;margin-top:12px}
+.strip .future-btn{min-width:0;width:100%;display:flex;align-items:center;flex-direction:column;gap:4px;padding:6px 0 4px;border-radius:10px;border:2px solid transparent;background:#392c4c;color:#d9cee6;touch-action:manipulation}
+.strip .future-btn[aria-pressed=true]{border-color:var(--lime);background:#57416c;color:#f0ffb8}
+.strip .future-btn .cap{width:clamp(18px,5.2vw,27px);height:clamp(18px,5.2vw,27px)}
+.strip .future-btn .future-number{font-size:10px;line-height:1;white-space:nowrap}
+.future-detail{display:flex;align-items:center;gap:10px;padding:12px;margin-top:12px;background:#21192e;border:1px solid #70578d;border-radius:15px;min-width:0}
+.future-detail .cap{width:48px;height:48px;flex-shrink:0}
+.future-detail .future-info{min-width:0;flex:1}
+.future-detail .future-info strong{display:block;font-size:17px;line-height:1.3;overflow-wrap:anywhere}
+.future-detail .future-info small{display:block;font-size:11px;color:#d5c5e7;line-height:1.5}
+.future-detail .reward-image{width:65px;height:65px;object-fit:contain;flex-shrink:0}
+.reward-image{width:25px;height:25px;object-fit:contain;display:inline-block;vertical-align:middle;flex-shrink:0}
+.reward-image[hidden]{display:none!important}
+.items button{display:inline-flex;align-items:center;gap:5px}
+.opt .reward-image{width:29px;height:29px}
+.hist .reward-image{width:20px;height:20px}
+.tap .reward-image{width:36px;height:36px}
+@media(max-width:370px){.strip{gap:1px}.strip .future-btn{padding:5px 0}.strip .future-btn .cap{width:18px;height:18px}.future-detail{padding:9px;gap:7px}.future-detail .reward-image{width:49px;height:49px}}
 
 </style>
 </head>
@@ -251,8 +270,9 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("https://cdn.wikimg.net/en/splato
 
     <div class="card" id="nowCard">
       <div class="h">지금 뽑으면</div>
-      <button class="tap" id="tapBtn"><i class="cap" id="tapCap"></i><div><b id="tapName"></b><span>이게 나왔으면 탭 → 기록하고 다음으로</span></div></button>
-      <div class="strip" id="strip"></div>
+      <button class="tap" id="tapBtn"><i class="cap" id="tapCap"></i><img id="tapItemIcon" class="reward-image" alt="" hidden><div><b id="tapName"></b><span>이게 나왔으면 탭 → 기록하고 다음으로</span></div></button>
+      <div class="strip" id="strip" role="group" aria-label="다음 10회 예측 선택"></div>
+      <div class="future-detail" id="previewDetail" aria-live="polite" hidden><i class="cap" id="previewCap" aria-hidden="true"></i><img id="previewItemIcon" class="reward-image" alt="" hidden><div class="future-info"><small id="previewStep"></small><strong id="previewName"></strong><small id="previewHint">예측 보기 전용 · 실제 기록은 위의 버튼으로만 진행합니다.</small></div></div>
       <div class="small" style="margin-top:6px" id="stripNote"></div>
     </div>
 
@@ -313,6 +333,34 @@ const GN = ['황금', '은', '동', '빨강', '보라', '파랑'];
 const NM = { 'MiniGameCardPack|None': '카드 팩', 'FoodTicket|FoodParty': '파티 음식', 'Emote|None': '이모트', 'NamePlateBg|None': '배너', 'GearSkillChip|None': '기어 파워 조각', 'FoodTicket|Food100': '100% 업 식권', 'Byname|None': '칭호', 'LockerSticker|None': '로커 스티커', 'LockerFigure|None': '로커 피규어', 'FoodTicket|Food50': '50% 업 식권', 'DrinkTicket|None': '음료 티켓', 'AllGearSkillChip|None': '기어 파워 조각 ×10', 'NamePlateBg|Limited': '시즌 황금 배너', 'Byname|Limited': '시즌 은 칭호' };
 const itemName = o => o.type == null ? '' : (NM[`${o.type}|${o.subType ?? 'None'}`] ?? o.type);
 const label = o => `${GN[o.grade]}${o.type ? ' · ' + itemName(o) : ''}`;
+// The Leanny assets below are category/representative art, NOT a prediction of exact sticker, emote, or food flavor.
+const REWARD_ART_BASE = 'https://raw.githubusercontent.com/Leanny/splat3/main/images/';
+const REWARD_ART = Object.freeze({
+  'MiniGameCardPack|None': 'catalog/IconCardPack_00.png',
+  'FoodTicket|FoodParty': 'food/IconShopParty_00.png',
+  'FoodTicket|Food100': 'food/IconShopFoodL.png',
+  'FoodTicket|Food50': 'food/IconShopFood.png',
+  'DrinkTicket|None': 'food/GearPowerTicketBase.png',
+  'NamePlateBg|None': 'catalog/IconNameplate_02.png',
+  'NamePlateBg|Limited': 'catalog/IconNameplate_02.png',
+  'Byname|None': 'catalog/IconNameplate_03.png',
+  'Byname|Limited': 'catalog/IconNameplate_03.png',
+  'GearSkillChip|None': 'misc/SkillIconPiece_00%5Es.png',
+  'AllGearSkillChip|None': 'misc/SkillIconPiece_00%5Es.png',
+  'Emote|None': 'emote/BigJump00.png',
+  'LockerFigure|None': 'zakka/Fig_Arcadegame.png',
+});
+const rewardPath = o => REWARD_ART[`${o.type}|${o.subType ?? 'None'}`] ?? null;
+const rewardIcon = (o, klass = 'reward-image') => {
+  const path = rewardPath(o);
+  return path ? `<img class="${klass}" src="${REWARD_ART_BASE}${path}" alt="" loading="lazy" onerror="this.hidden=true">` : '';
+};
+function updateRewardImage(id, outcome) {
+  const el = $(id), path = rewardPath(outcome);
+  el.hidden = !path;
+  if (path) { el.onerror = () => { el.hidden = true; }; el.src = REWARD_ART_BASE + path; }
+}
+let previewIndex = 0; // transient display choice: never persisted, never advances RNG
 const $ = id => document.getElementById(id);
 const fmt = n => n.toLocaleString('ko-KR');
 const dateKo = d => `${d.getMonth() + 1}월 ${d.getDate()}일`;
@@ -466,10 +514,10 @@ function trRecord(obs) {
   if (x.stream.stopped) return;
   const res = record(x.stream, obs);
   x.stream = res.stream;
-  app.tPicker = { grade: null };
+  app.tPicker = { grade: null }; previewIndex = 0;
   save(); render();
 }
-function trUndo() { M().stream = undo(M().stream); save(); render(); }
+function trUndo() { M().stream = undo(M().stream); previewIndex = 0; save(); render(); }
 
 /* ---------- rendering ---------- */
 const dot = (g, extra = '') => `<i class="cap g${g}${extra}" aria-hidden="true"></i>`;
@@ -548,7 +596,7 @@ function renderLocate() {
   if (fc) {
     const st = fc.steps[0], total = fc.used;
     $('locNextH').textContent = r.result.truncated ? `다음 결과 분포 (상한 걸린 후보 ${fmt(total)}개 기준)` : '다음 결과에 따라 남는 후보';
-    $('nextOpts').innerHTML = st.groups.map((g, i) => `<button class="opt" data-i="${i}">${dot(g.grade)}${label(g)}<em>${r.result.truncated ? `${g.count}개` : g.count === 1 ? '→ 확정' : `→ ${g.count}개`}</em></button>`).join('');
+    $('nextOpts').innerHTML = st.groups.map((g, i) => `<button class="opt" data-i="${i}">${dot(g.grade)}${rewardIcon(g)}${label(g)}<em>${r.result.truncated ? `${g.count}개` : g.count === 1 ? '→ 확정' : `→ ${g.count}개`}</em></button>`).join('');
     $('locNextNote').textContent = r.result.truncated ? '상한 때문에 일부 후보만 본 분포입니다.' : '눌러서 바로 기록할 수 있습니다. 목록에 없는 결과면 아래에서 직접 고르세요. 비율은 출현 확률이 아닙니다.';
     $('nextOpts').onclick = e => { const b = e.target.closest('button[data-i]'); if (!b) return; const g = st.groups[Number(b.dataset.i)]; locRecord({ grade: g.grade, type: g.type, subType: g.subType }); };
   }
@@ -559,7 +607,7 @@ function renderLocate() {
   renderPicker($('pick'), $('items'), app.picker, s.season, o => locRecord(o), fc?.steps[0]?.groups);
   // history
   $('locHist').hidden = !s.observations.length;
-  $('hist').innerHTML = s.observations.map((o, i) => `<span>${dot(o.grade)}${i + 1}. ${label(o)}</span>`).join('');
+  $('hist').innerHTML = s.observations.map((o, i) => `<span>${dot(o.grade)}${rewardIcon(o)}${i + 1}. ${label(o)}</span>`).join('');
   // conditions
   const d = app.draft ?? s;
   $('cSeason').textContent = d.season; $('cMB').textContent = d.missingBanners; $('cMT').textContent = d.missingTitles;
@@ -578,7 +626,7 @@ function renderPicker(gridEl, itemsEl, p, season, onPick, hints) {
   const list = itemsForGrade(season, p.grade);
   if (p.grade === 2 && !list.some(x => x.type === 'AllGearSkillChip')) list.push({ grade: 2, type: 'AllGearSkillChip', subType: 'None' });
   const hk = new Set((hints ?? []).map(outcomeKey));
-  itemsEl.innerHTML = `<button data-item="-1">색만 기록</button>` + list.map((it, i) => `<button data-item="${i}" class="${hk.has(outcomeKey(it)) ? 'hint' : ''}">${itemName(it)}</button>`).join('');
+  itemsEl.innerHTML = `<button data-item="-1">색만 기록</button>` + list.map((it, i) => `<button data-item="${i}" class="${hk.has(outcomeKey(it)) ? 'hint' : ''}">${rewardIcon(it)}${itemName(it)}</button>`).join('');
   itemsEl.onclick = e => { const b = e.target.closest('button[data-item]'); if (!b) return; const i = Number(b.dataset.item); onPick(i < 0 ? { grade: p.grade } : list[i]); };
 }
 
@@ -613,9 +661,28 @@ function renderTrack() {
   if (preds.length) {
     const p0 = preds[0];
     $('tapCap').className = `cap g${p0.grade}`;
-    $('tapName').textContent = label({ grade: p0.grade, type: p0.row.type, subType: p0.row.subType });
-    $('strip').innerHTML = preds.map((p, i) => `<i class="cap g${p.grade}${i === 0 ? ' now' : ''}" title="${label({ grade: p.grade, type: p.row.type, subType: p.row.subType })}"></i>`).join('');
-    $('stripNote').textContent = `다음 10개 · ${preds.map(p => GN[p.grade][0]).join(' ')}`;
+    const actual = { grade: p0.grade, type: p0.row.type, subType: p0.row.subType };
+    $('tapName').textContent = label(actual);
+    updateRewardImage('tapItemIcon', actual);
+    previewIndex = Math.max(0, Math.min(previewIndex, preds.length - 1));
+    $('strip').innerHTML = preds.map((p, i) => {
+      const outcome = { grade: p.grade, type: p.row.type, subType: p.row.subType };
+      return `<button class="future-btn" type="button" data-preview="${i}" aria-pressed="${i === previewIndex}" aria-label="${i + 1}번째 뽑기 예상: ${label(outcome)}">${dot(p.grade)}<span class="future-number">${i + 1}</span></button>`;
+    }).join('');
+    $('strip').onclick = e => {
+      const button = e.target.closest('button[data-preview]');
+      if (!button) return;
+      previewIndex = Number(button.dataset.preview);
+      renderTrack(); // Preview selection is ephemeral and never changes the stream
+    };
+    const selected = preds[previewIndex];
+    const chosen = { grade: selected.grade, type: selected.row.type, subType: selected.row.subType };
+    $('previewDetail').hidden = false;
+    $('previewCap').className = `cap g${chosen.grade}`;
+    $('previewStep').textContent = `현재 위치에서 ${previewIndex + 1}번째 예상 결과`;
+    $('previewName').textContent = label(chosen);
+    updateRewardImage('previewItemIcon', chosen);
+    $('stripNote').textContent = '숫자가 있는 캡슐을 누르면 해당 순서의 예상 보상을 볼 수 있습니다. 아이템 그림은 종류별 대표 이미지입니다.';
   }
   renderPicker($('tPick'), $('tItems'), app.tPicker, s.season, o => trRecord(o), null);
   $('tPick').querySelectorAll('button').forEach(b => b.disabled = !!s.stopped);
@@ -637,7 +704,7 @@ function renderTrack() {
   // settings
   $('tMB').textContent = s.missingBanners; $('tMT').textContent = s.missingTitles;
   $('tSeasonLine').textContent = `시즌 ${s.season} 기준 · 지금 시즌 ${seasonAt(new Date())}${seasonAt(new Date()) !== s.season ? ' → 시즌이 바뀌었습니다. 새 시즌 한정 아이템으로 바꾸려면 위치 다시 찾기 또는 아래 시즌 갱신' : ''}`;
-  $('tHist').innerHTML = s.history.slice(-30).map(h => `<span>${dot(h.grade)}${label(h)}</span>`).join('');
+  $('tHist').innerHTML = s.history.slice(-30).map(h => `<span>${dot(h.grade)}${rewardIcon(h)}${label(h)}</span>`).join('');
   $('stateHex').textContent = formatState(s.state);
 }
 
@@ -676,7 +743,7 @@ $('idKeep').onchange = e => { app.keepId = e.target.checked; save(); };
 function switchMode(mode) {
   if (app.mode === mode) return;
   cancelSearch(true);
-  app.mode = mode; app.draft = null; app.picker = { grade: null, hints: null }; app.tPicker = { grade: null };
+  app.mode = mode; previewIndex = 0; app.draft = null; app.picker = { grade: null, hints: null }; app.tPicker = { grade: null };
   save(); render();
   if (app.id && M().phase === 'locate' && M().cand.observations.length && !R().result) startSearch('search');
 }
