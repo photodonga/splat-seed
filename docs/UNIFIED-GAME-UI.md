@@ -14,7 +14,7 @@ This update replaces the substitute hand-drawn SVGs introduced in PR #11 with th
 
 The modular `app.html` requests all art from `./assets/game/` (this same repository, not Leanny/Inkipedia web servers).
 
-`tools/bundle.mjs` packages the same unmodified original PNG bytes as base64 data URLs into `dist/app-standalone.html`. The standalone page no longer requires an external image network for graphics.
+`tools/bundle.mjs` packages the same original PNG bytes (capsule and food art scaled down to 160 px by `tools/shrink-game-art.py`) as base64 data URLs into `dist/app-standalone.html`. The standalone page no longer requires an external image network for graphics.
 
 Colors and rewards are still controlled by the original engine's grade and reward type; the game art is only a presentation change. In particular, the locker sticker examples are not the exact sticker being awarded. The 10-tap prediction strip remains preview-only, and the fixed-size icon/text layout remains in place to avoid overlap.
 

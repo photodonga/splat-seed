@@ -229,6 +229,22 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("./assets/game/capsules/fest-blue
   .sticker-gallery-item{padding:4px 1px}
 }
 
+/* Icon size pass (2026-11-01): capsule art bled 13% past its box, so every capsule looked ~26% bigger than its CSS size. */
+.cap:not(.mix):after{inset:-6%}
+.tap .cap{width:40px;height:40px;flex:0 0 40px}
+.tap .reward-image{width:30px;height:30px;flex:0 0 30px;filter:drop-shadow(0 0 1px #1a1520) drop-shadow(1px 2px 0 #1a152099)}
+.future-detail .cap{width:36px;height:36px}
+.future-detail .reward-image{width:40px;height:40px;flex:0 0 40px}
+.pick button{min-height:66px;padding:8px 1px 6px}
+.pick button .cap{width:clamp(26px,7.5vw,32px);height:clamp(26px,7.5vw,32px)}
+.btn-ico{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.17em;margin-right:4px}
+@media(max-width:370px){
+  .tap .cap{width:34px;height:34px;flex-basis:34px}
+  .tap .reward-image{width:26px;height:26px;flex-basis:26px}
+  .future-detail .reward-image{width:34px;height:34px;flex-basis:34px}
+  .pick button{min-height:58px}
+}
+
 </style>
 </head>
 <body data-splat-mode="normal">
@@ -329,7 +345,7 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("./assets/game/capsules/fest-blue
       <div class="h">다르게 나왔다면 실제 결과를 눌러 주세요</div>
       <div class="pick" id="tPick"></div>
       <div class="items" id="tItems" hidden></div>
-      <div class="row" style="margin-top:10px"><span class="small" id="streak"></span><span class="sp"></span><button class="btn" id="tUndo">↶ 실행 취소</button></div>
+      <div class="row" style="margin-top:10px"><span class="small" id="streak"></span><span class="sp"></span><button class="btn" id="tUndo"><svg class="btn-ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 4.5 3.5 8.5l4 4" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 8.5h7a4.5 4.5 0 0 1 0 9H9" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>실행 취소</button></div>
     </div>
 
     <div class="card" id="planCard">
