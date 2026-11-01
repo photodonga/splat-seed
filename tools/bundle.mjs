@@ -14,31 +14,18 @@ const code = mods.map(p => `// ---- ${p}\n${strip(fs.readFileSync(p, 'utf8'))}`)
 let result = html.replace(m[0], () => `<script type="module">\n${code}\n</script>`);
 const fontTag = '<script src="personal-fonts.js" defer></script>';
 if (result.includes(fontTag)) result = result.replace(fontTag, () => `<script>\n${fs.readFileSync('personal-fonts.js', 'utf8')}\n</script>`);
-
-// Embed SVG files for the truly standalone/offline build.
-// The modular app references ./assets/*.svg; the distributable embeds every SVG.
-const ASSET_DIR = new URL('../assets/', import.meta.url);
-const embeddedAssets = {};
-function collectSvg(path = '') {
-  for (const ent of fs.readdirSync(new URL(path, ASSET_DIR), { withFileTypes:true }).sort((a,b) => a.name.localeCompare(b.name,'en'))) {
-    const relative = path + ent.name;
-    if (ent.isDirectory()) collectSvg(relative + '/');
-    else if (ent.isFile() && relative.endsWith('.svg')) {
-      const source = fs.readFileSync(new URL(relative, ASSET_DIR), 'utf8');
-      embeddedAssets[relative] = 'data:image/svg+xml,' + encodeURIComponent(source);
-    }
-  }
+// Embed checked original PNG bytes in the standalone release.
+const manifest=JSON.parse(fs.readFileSync('assets/game-manifest.json','utf8'));
+const embedded={};
+for(const {path:p} of manifest){
+ const bytes=fs.readFileSync('assets/game/'+p);
+ if(bytes.length<100||bytes[0]!==137||bytes[1]!==80||bytes[2]!==78||bytes[3]!==71)throw new Error('Invalid PNG '+p);
+ embedded[p]='data:image/png;base64,'+bytes.toString('base64');
 }
-collectSvg();
-if (!result.includes('const EMBEDDED_ASSETS = null;')) throw new Error('embedded SVG placeholder missing');
-result = result.replace('const EMBEDDED_ASSETS = null;', () => 'const EMBEDDED_ASSETS = Object.freeze(' + JSON.stringify(embeddedAssets) + ');');
-result = result.replace(/\.\/assets\/([a-zA-Z0-9_./-]+\.svg)/g, (match, name) => {
-  if (!embeddedAssets[name]) throw new Error('missing SVG asset ' + name);
-  return embeddedAssets[name];
-});
-if (/https?:\/\/(?:raw\.githubusercontent\.com|cdn\.wikimg\.net|fonts\.googleapis\.com)/.test(result)) {
-  throw new Error('remote imagery or webfont dependency in standalone build');
-}
+if(!result.includes('const EMBEDDED_GAME_ASSETS = null;'))throw new Error('No original-art placeholder');
+result=result.replace('const EMBEDDED_GAME_ASSETS = null;',()=> 'const EMBEDDED_GAME_ASSETS = Object.freeze('+JSON.stringify(embedded)+');');
+result=result.replace(/\.\/assets\/game\/([a-zA-Z0-9_./-]+\.png)/g,(match,p)=>{if(!embedded[p])throw new Error('Missing PNG '+p);return embedded[p]});
+if(/https?:\/\/(?:cdn\.wikimg\.net|raw\.githubusercontent\.com)/.test(result))throw new Error('Runtime external art');
 
 fs.mkdirSync(new URL('../dist/', import.meta.url), { recursive: true });
 fs.writeFileSync(out, result);

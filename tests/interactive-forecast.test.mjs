@@ -10,20 +10,17 @@ const pages = [
   ['dist/app-standalone.html', readFileSync(new URL('../dist/app-standalone.html', import.meta.url), 'utf8')],
 ];
 const expectedArt = [
-  'rewards/card-pack.svg',
-  'rewards/food-party.svg',
-  'rewards/food-boost.svg',
-  'rewards/food-small.svg',
-  'rewards/drink.svg',
-  'rewards/banner.svg',
-  'rewards/banner-gold.svg',
-  'rewards/title.svg',
-  'rewards/title-silver.svg',
-  'rewards/chip.svg',
-  'rewards/chips-10.svg',
-  'rewards/emote.svg',
-  'rewards/locker-sticker.svg',
-  'rewards/locker-figure.svg',
+  'catalog/IconCardPack_00.png',
+  'catalog/IconNameplate_02.png',
+  'catalog/IconNameplate_03.png',
+  'food/IconShopParty_00.png',
+  'food/IconShopFoodL.png',
+  'food/IconShopFood.png',
+  'food/GearPowerTicketBase.png',
+  'misc/SkillIconPiece_00%5Es.png',
+  'emote/BigJump00.png',
+  'zakka/Grf_Sti_Graffiti_00.png',
+  'zakka/Fig_Arcadegame.png',
 ];
 
 for (const [name, source] of pages) {
@@ -36,29 +33,17 @@ for (const [name, source] of pages) {
     assert.match(source, /\$\('previewDetail'\)\.hidden = false/);
     assert.match(source, /grid-template-columns:repeat\(10,minmax\(0,1fr\)\)/);
   });
-  test(name + ': original locker sticker gallery includes 15 local designs', () => {
+  test(name + ': locker sticker preview shows a verified multi-item gallery', () => {
     const samples = [
-      'sticker-01.svg',
-      'sticker-02.svg',
-      'sticker-03.svg',
-      'sticker-04.svg',
-      'sticker-05.svg',
-      'sticker-06.svg',
-      'sticker-07.svg',
-      'sticker-08.svg',
-      'sticker-09.svg',
-      'sticker-10.svg',
-      'sticker-11.svg',
-      'sticker-12.svg',
-      'sticker-13.svg',
-      'sticker-14.svg',
-      'sticker-15.svg',
+      'Grf_Sti_Character_28','Grf_Sti_Decoration_14','Grf_Sti_Graffiti_00','Grf_Sti_Graffiti_03','Grf_Sti_Graffiti_08',
+      'Emi_Sti_Decoration_31','Grf_Sti_Decoration_21','Grf_Sti_Graffiti_13','Grf_Sti_Graffiti_16','Grf_Sti_Graffiti_19',
+      'Emi_Sti_Decoration_18','Emi_Sti_Signboard_15','Grf_Sti_Graffiti_20','Grf_Sti_Graffiti_23','Grf_Sti_Graffiti_26',
     ];
     for (const id of samples) assert.ok(source.includes(id), 'missing sticker sample '+id);
     assert.match(source, /function renderStickerGallery\(\)/);
     assert.match(source, /const isSticker = chosen\.type === 'LockerSticker'/);
     assert.match(source, /\$\('stickerGallery'\)\.hidden = !isSticker/);
-    assert.match(source, /오리지널 스티커 일러스트 예시/);
+    assert.match(source, /스티커 종류 예시/);
     assert.match(source, /grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
   });
   test(name + ': reward icons never consume the text column', () => {
@@ -78,9 +63,10 @@ for (const [name, source] of pages) {
     assert.match(source, /previewIndex = 0; \/\/ transient display choice/);
     assert.match(source, /previewIndex = 0; save\(\); render\(\)/);
   });
-  test(name + ': original reward icons are mapped by predicted category', () => {
+  test(name + ': game sprite files are mapped by reward category', () => {
     for (const asset of expectedArt) assert.ok(source.includes(asset), 'missing '+asset);
     assert.match(source, /function updateRewardImage\(id, outcome\)/);
+    assert.match(source, /const EMBEDDED_GAME_ASSETS/);
     assert.match(source, /\$\('nextOpts'\)\.innerHTML = st\.groups\.map/);
     assert.ok(source.includes('${rewardIcon(g)}'));
     assert.ok(source.includes('${rewardIcon(it)}'));
