@@ -20,7 +20,7 @@ Images are linked directly (not bundled or redistributed) from `Leanny/splat3` u
 | `GearSkillChip` / `AllGearSkillChip` | `misc/SkillIconPiece_00^s.png` | Generic gear ability chunk, with amount in text |
 | `Emote` | `emote/BigJump00.png` | **Example** emote; exact emote is unknown |
 | `LockerFigure` | `zakka/Fig_Arcadegame.png` | **Example** figure; exact figure is unknown |
-| `LockerSticker` | no sprite | No unique ID from the engine; preserve capsule + category text rather than display a misleading specific sticker |
+| `LockerSticker` | `zakka/Grf_Sti_Graffiti_00.png` | **Representative only**: exact sticker ID is not produced by the current shell-out engine |
 
 Leanny's `js/Utility.js` confirms `IconCardPack_00`, the ticket icon families, `IconNameplate_02`/`03`, and `GearPowerTicketBase` as category graphics. Other item assets were checked for existence in the repository. Data from `engine/shellout.mjs` only predicts type/subtype; it **does not identify** an exact random locker sticker, figure, emote, banner, or specific ticket subtype. Do not present representative imagery as an exact reward.
 
