@@ -1,0 +1,9 @@
+# Never commit Nintendo Account credentials or nxapi data.
+.env
+.env.*
+nxapi-data/
+nxapi-nodejs/
+*.session
+*session_token*
+*session-token*
+secrets/
