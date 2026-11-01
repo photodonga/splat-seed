@@ -1,0 +1,1642 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#15121f">
+<meta name="robots" content="noindex">
+<title>SPLAT SEED</title>
+<style>
+/* One flow: load ID -> find position -> plan to gold -> one-tap daily tracking. Experimental page. */
+:root{
+  color-scheme:dark;
+  --ink:#15121f; --ink2:#221d31; --ink3:#2e2843; --line:#3b3454; --mute:#a59fc0; --paper:#f4f1ff;
+  --lime:#c6f432; --violet:#8b5cf6; --pink:#ff4f8b; --sun:#ffc229;
+  --g0:#ffc229; --g1:#d7dbe8; --g2:#cd8b52; --g3:#ff5468; --g4:#a774ff; --g5:#3fa9ff;
+  --font:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans CJK KR','Nunito',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+html,body{background:var(--ink)}
+body{color:var(--paper);font:600 15px/1.45 var(--font);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;-webkit-tap-highlight-color:transparent}
+button:disabled{opacity:.4;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--lime);outline-offset:2px}
+[hidden]{display:none!important}
+.app{max-width:480px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:4px}
+.logo{font-weight:900;font-size:22px;color:var(--lime);transform:rotate(-3deg);text-shadow:2px 2px 0 var(--violet);display:inline-block;letter-spacing:-.3px}
+.chip{font-size:11.5px;font-weight:800;border-radius:999px;padding:4px 10px;background:var(--ink3);color:var(--mute);white-space:nowrap}
+.chip.warn{background:#3a2410;color:#ffd9a3}.chip.ok{background:#25401a;color:var(--lime)}.chip.bad{background:#3a1222;color:#ffc4d3}
+.card{background:var(--ink2);border:1px solid var(--line);border-radius:18px;padding:14px}
+.h{font-size:12.5px;color:var(--mute);font-weight:800;margin-bottom:8px}
+.small{font-size:12px;color:var(--mute);line-height:1.55}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sp{flex:1}
+.btn{display:inline-block;text-align:center;border-radius:12px;padding:10px 14px;font-weight:900;font-size:14px;background:var(--ink3);border:1px solid var(--line)}
+.btn.pri{background:var(--lime);color:#141019;border-color:var(--lime)}
+.btn.wide{display:block;width:100%;padding:14px;font-size:15px;border-radius:14px}
+.btn.dan{border-color:#6b2a3b;color:#ffb3c4}
+input[type=text]{background:var(--ink3);border:1px solid var(--line);border-radius:10px;padding:10px;width:100%;min-width:0}
+select{background:var(--ink3);border:1px solid var(--line);border-radius:10px;padding:7px 8px}
+.warnbox{background:#3a2410;border:1px solid #7a4a17;color:#ffd9a3;border-radius:12px;padding:9px 12px;font-size:12px;line-height:1.5}
+.seg{display:flex;background:var(--ink3);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;padding:8px 6px;border-radius:9px;font-weight:800;color:var(--mute);white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--violet);color:#fff}
+.step{display:inline-flex;align-items:center;gap:6px}
+.step button{width:30px;height:30px;border-radius:8px;background:var(--ink3);border:1px solid var(--line);font-weight:900}
+.cap{width:26px;height:26px;border-radius:50%;box-shadow:inset -4px -4px 0 rgba(0,0,0,.25),inset 3px 3px 0 rgba(255,255,255,.35);flex:none;display:inline-block}
+.g0{background:var(--g0)}.g1{background:var(--g1)}.g2{background:var(--g2)}.g3{background:var(--g3)}.g4{background:var(--g4)}.g5{background:var(--g5)}
+.mix{background:conic-gradient(var(--stops))}
+/* setup */
+.drop{display:block;border:2px dashed #5b5180;border-radius:18px;padding:22px 14px;text-align:center;background:#1b1728;cursor:pointer}
+.drop.over{border-color:var(--lime)}
+.drop .ic{width:50px;height:50px;border-radius:15px;background:var(--violet);margin:0 auto 8px;display:grid;place-items:center;font-size:24px;font-weight:900}
+.drop b{display:block;font-size:16px;margin-bottom:4px}
+.err{color:#ffb3c4;font-size:12.5px;margin-top:6px}
+ol.how{padding-left:20px;font-size:13px;line-height:1.7;color:var(--mute)}
+details summary{cursor:pointer;color:var(--mute);font-size:13px;font-weight:800}
+/* locate */
+.big{font-size:52px;font-weight:900;letter-spacing:-2px;line-height:1}
+.big small{font-size:16px;letter-spacing:0;color:var(--mute);font-weight:800}
+.bar{height:8px;background:var(--ink3);border-radius:8px;overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;background:var(--violet);width:0}
+.fn{display:grid;grid-template-columns:62px 1fr 54px;gap:8px;align-items:center;font-size:12.5px;white-space:nowrap;margin-bottom:5px}
+.fn .tr{height:13px;background:var(--ink3);border-radius:7px;overflow:hidden}.fn .tr i{display:block;height:100%;background:var(--violet);border-radius:7px}
+.fn.capped .tr i{background:var(--sun)}.fn.zero .tr i{background:var(--pink)}
+.fn .n{text-align:right;font-weight:900}
+.sep{font-size:11.5px;color:var(--sun);border-top:1px dashed #6b5a2a;padding-top:4px;margin:4px 0}
+.opt{display:flex;align-items:center;gap:10px;background:var(--ink3);border:1px solid var(--line);border-radius:12px;padding:9px 11px;font-size:13.5px;font-weight:800;width:100%;text-align:left;margin-bottom:6px}
+.opt em{margin-left:auto;font-style:normal;font-size:11.5px;color:var(--lime);font-weight:900;white-space:nowrap}
+.pick{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.pick button{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--mute);background:var(--ink3);border:2px solid transparent;border-radius:10px;padding:7px 0}
+.pick button[aria-pressed="true"]{border-color:var(--lime);color:var(--paper)}
+.items{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.items button{background:var(--ink3);border:1px solid var(--line);border-radius:999px;padding:7px 11px;font-size:13px;font-weight:800}
+.items button.hint{border-color:var(--violet)}
+.hist{display:flex;flex-wrap:wrap;gap:5px}
+.hist span{display:inline-flex;align-items:center;gap:5px;background:var(--ink3);border-radius:999px;padding:3px 9px 3px 4px;font-size:12px}
+.hist span i{width:14px;height:14px;border-radius:50%}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lbl{font-size:12px;color:var(--mute);display:block;margin-bottom:4px}
+/* home */
+.hero{position:relative;text-align:center;padding:30px 0 16px}
+.splat{position:absolute;inset:0;margin:auto;width:300px;max-width:92%;height:200px}
+.hero .lab{position:relative;font-size:14px;font-weight:900;color:#2b3a08}
+.hero .num{position:relative;font-size:92px;font-weight:900;color:#141019;line-height:1;letter-spacing:-4px}
+.hero .num.d4{font-size:76px}.hero .num.d5{font-size:60px}
+.hero .unit{position:relative;font-size:15px;font-weight:900;color:#141019}
+.hero.none .num{font-size:40px;letter-spacing:-1px}
+.plan{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pl{background:var(--ink3);border-radius:14px;padding:10px 11px}
+.pl b{display:block;font-size:18px;font-weight:900}
+.pl span{font-size:11.5px;color:var(--mute);display:block}
+.pl i{font-style:normal;font-size:12px;color:var(--lime);font-weight:800}
+.tap{background:var(--lime);color:#141019;border-radius:18px;padding:14px;display:flex;align-items:center;gap:14px;width:100%;text-align:left}
+.tap .cap{width:50px;height:50px}
+.tap b{font-size:19px;font-weight:900;display:block}
+.tap span{font-size:12.5px;font-weight:800;opacity:.75}
+.strip{display:flex;gap:5px;justify-content:space-between;margin-top:12px}
+.strip .cap{width:24px;height:24px}
+.strip .now{outline:3px solid var(--lime);outline-offset:2px}
+.alert{background:#3a1222;border:1px solid #7a2a45;border-radius:14px;padding:12px;font-size:13px;color:#ffc4d3;line-height:1.5}
+.alert b{color:#fff}
+code{font-size:11px;word-break:break-all;color:var(--mute)}
+</style>
+</head>
+<body>
+<main class="app">
+  <div class="top"><span class="logo">SPLAT SEED</span><span class="chip" id="topChip"></span></div>
+
+  <!-- ===== 1. setup ===== -->
+  <section id="vSetup" hidden>
+    <div class="card">
+      <label class="drop" id="drop" for="idFile">
+        <div class="ic">⇩</div><b>geardata JSON 넣기</b>
+        <span class="small">s3si · nxapi · Leanny 백업 파일 모두 가능<br>파일은 이 브라우저 안에서만 읽습니다</span>
+      </label>
+      <input type="file" id="idFile" accept=".json,application/json" hidden>
+      <div class="h" style="margin-top:14px">또는 NPLN ID 직접 입력</div>
+      <div class="row" style="flex-wrap:nowrap"><input type="text" id="idText" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="u-로 시작하는 22자"><button class="btn" id="idUse" style="flex:none;white-space:nowrap">사용</button></div>
+      <p class="err" id="idErr"></p>
+      <label class="row small" style="margin-top:10px;flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" id="keepFirst" style="margin-top:3px"> 이 기기에 ID 기억하기 (끄면 위치 찾기를 다시 할 때 파일을 다시 넣어야 합니다)</label>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <details><summary>파일이 없다면 (한 번만, PC 필요)</summary>
+        <ol class="how" style="margin-top:8px">
+          <li>맥·윈도우에 Deno 설치</li>
+          <li>터미널에서 s3si.ts의 <code>scripts/export-geardata.ts</code> 실행 (커밋 고정 권장)</li>
+          <li>nxapi 데이터 전송 동의 → 닌텐도 공식 로그인 → <code>geardata_*.json</code> 생성</li>
+          <li>만든 파일을 위에 넣기</li>
+        </ol>
+        <p class="small" style="margin-top:6px">로그인 중 붙여 넣는 <code>npf…://auth</code> 링크와 세션 토큰은 계정 자격증명입니다. 누구에게도 보내지 마세요. 이 페이지는 로그인 정보를 받지 않습니다. s3si.ts 로그인은 ID 토큰 등 일부 데이터를 nxapi 서버로 보냅니다(동의 화면에 표시).</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- shared: mode + conditions -->
+  <section id="vMain" hidden>
+    <div class="seg" role="group" aria-label="뽑기 종류"><button id="mNormal">일반 뽑기</button><button id="mFest">페스티벌 뽑기</button></div>
+  </section>
+
+  <!-- ===== 2. locate ===== -->
+  <section id="vLocate" hidden style="display:flex;flex-direction:column;gap:12px">
+    <div class="card" id="locStatus">
+      <div class="h">남은 후보</div>
+      <div class="big" id="locBig">–</div>
+      <p class="small" id="locLine" style="margin-top:6px"></p>
+      <div class="bar" id="locBar" hidden><i></i></div>
+      <div class="row" style="margin-top:8px"><button class="btn" id="locCancel" hidden>검색 취소</button><button class="btn" id="locRetry" hidden>다시 검색</button><button class="btn" id="locWiden" hidden>더 넓게 찾기 (범위 ×4)</button></div>
+      <div id="locConfirm" hidden style="margin-top:12px">
+        <button class="btn pri wide" id="btnStartTrack">이 위치로 추적 시작</button>
+        <p class="small" style="margin-top:6px">검색 범위 안에서 남은 위치가 하나입니다. 범위 밖 위치나 엔진 오류 가능성은 남아 있으니, 추적하면서 예측과 실제를 계속 대조합니다.</p>
+      </div>
+    </div>
+    <div class="card" id="locFunnel" hidden><div class="h">줄어든 과정</div><div id="funnel"></div></div>
+    <div class="card" id="locNext" hidden><div class="h" id="locNextH">다음 결과에 따라</div><div id="nextOpts"></div><p class="small" id="locNextNote"></p></div>
+    <div class="card" id="locPick">
+      <div class="h" id="pickH">실제 뽑기 결과 입력</div>
+      <div class="pick" id="pick"></div>
+      <div class="items" id="items" hidden></div>
+      <p class="small" style="margin-top:8px">색만 골라도 됩니다. 아이템까지 고르면 더 빨리 좁혀집니다.</p>
+    </div>
+    <div class="card" id="locHist" hidden>
+      <div class="row"><div class="h" style="margin:0">입력한 기록</div><span class="sp"></span><button class="btn" id="locUndo">실행 취소</button></div>
+      <div class="hist" id="hist" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <details id="condBox"><summary>검색 조건: <span id="condSum"></span></summary>
+        <div class="grid2" style="margin-top:10px">
+          <div><span class="lbl">시즌</span><span class="step"><button data-k="season" data-d="-1">−</button><b id="cSeason"></b><button data-k="season" data-d="1">+</button></span></div>
+          <div><span class="lbl">검색 범위(난수 개수)</span><select id="cRange"></select></div>
+          <div><span class="lbl">미보유 황금 배너</span><span class="step"><button data-k="missingBanners" data-d="-1">−</button><b id="cMB"></b><button data-k="missingBanners" data-d="1">+</button></span></div>
+          <div><span class="lbl">미보유 은 칭호</span><span class="step"><button data-k="missingTitles" data-d="-1">−</button><b id="cMT"></b><button data-k="missingTitles" data-d="1">+</button></span></div>
+          <div><span class="lbl">후보 상한</span><select id="cCap"><option>500</option><option>2000</option><option>10000</option><option>50000</option></select></div>
+        </div>
+        <div class="row" style="margin-top:10px"><span class="small" id="condNote">바꾸면 처음부터 다시 검색합니다.</span><span class="sp"></span><button class="btn pri" id="condApply" disabled>적용</button></div>
+      </details>
+      <div class="row" style="margin-top:10px"><span class="sp"></span><button class="btn dan" id="locReset">이 뽑기 종류 기록 지우기</button></div>
+    </div>
+  </section>
+
+  <!-- ===== 3+4. home / tracking ===== -->
+  <section id="vTrack" hidden style="display:flex;flex-direction:column;gap:12px">
+    <div class="hero" id="hero">
+      <svg class="splat" viewBox="0 0 290 200" aria-hidden="true"><path fill="#c6f432" d="M145 12c22 0 30 18 48 16s34-14 46 2-6 28 6 40 40 6 38 30-30 22-34 38 18 36-4 46-34-10-52 2-14 14-48 12-30-20-54-14-36 22-52 6 6-26-4-40-36-10-34-34 30-22 30-38-22-26-4-40 32 4 48-4 16-22 16-22z"/></svg>
+      <div class="lab" id="heroLab">황금까지</div>
+      <div class="num" id="heroNum">–</div>
+      <div class="unit" id="heroUnit"></div>
+    </div>
+
+    <div class="alert" id="mismatch" hidden></div>
+
+    <div class="card" id="nowCard">
+      <div class="h">지금 뽑으면</div>
+      <button class="tap" id="tapBtn"><i class="cap" id="tapCap"></i><div><b id="tapName"></b><span>이게 나왔으면 탭 → 기록하고 다음으로</span></div></button>
+      <div class="strip" id="strip"></div>
+      <div class="small" style="margin-top:6px" id="stripNote"></div>
+    </div>
+
+    <div class="card" id="padCard">
+      <div class="h">다르게 나왔다면 실제 결과를 눌러 주세요</div>
+      <div class="pick" id="tPick"></div>
+      <div class="items" id="tItems" hidden></div>
+      <div class="row" style="margin-top:10px"><span class="small" id="streak"></span><span class="sp"></span><button class="btn" id="tUndo">↶ 실행 취소</button></div>
+    </div>
+
+    <div class="card" id="planCard">
+      <div class="row"><div class="h" style="margin:0">어떻게 뽑을까요?</div><span class="sp"></span><label class="small row" style="gap:5px"><input type="checkbox" id="discUsed"> 오늘 할인 뽑기 씀</label></div>
+      <div class="plan" style="margin-top:8px">
+        <div class="pl"><span>매일 첫 뽑기만</span><b id="p1d"></b><i id="p1g"></i></div>
+        <div class="pl"><span>오늘 몰아서</span><b>오늘</b><i id="pAg"></i></div>
+        <div class="pl"><span>하루 <button class="btn" id="kDown" style="padding:0 7px">−</button> <b id="kVal" style="display:inline;font-size:12px"></b> <button class="btn" id="kUp" style="padding:0 7px">+</button> 회</span><b id="pkd"></b><i id="pkg"></i></div>
+        <div class="pl"><span id="otherLab">다른 뽑기</span><b id="otherVal"></b><i id="otherSub"></i></div>
+      </div>
+      <p class="small" style="margin-top:8px">가격 가정: 하루 첫 뽑기 5,000 · 이후 30,000골드, 날짜는 09:00(한국시간)에 바뀜. 게임 화면에서 확인이 필요합니다.</p>
+    </div>
+
+    <div class="card">
+      <details><summary>보유·시즌·기록</summary>
+        <div class="grid2" style="margin-top:10px">
+          <div><span class="lbl">미보유 황금 배너</span><span class="step"><button data-t="mb" data-d="-1">−</button><b id="tMB"></b><button data-t="mb" data-d="1">+</button></span></div>
+          <div><span class="lbl">미보유 은 칭호</span><span class="step"><button data-t="mt" data-d="-1">−</button><b id="tMT"></b><button data-t="mt" data-d="1">+</button></span></div>
+        </div>
+        <p class="small" style="margin-top:8px" id="tSeasonLine"></p>
+        <div class="hist" id="tHist" style="margin-top:8px"></div>
+        <details style="margin-top:10px"><summary>개발자용 상태값</summary><code id="stateHex"></code></details>
+        <div class="row" style="margin-top:10px"><button class="btn" id="relocate">위치 다시 찾기</button><span class="sp"></span></div>
+      </details>
+    </div>
+  </section>
+
+  <section class="card" id="idCard" hidden>
+    <div class="row"><span class="small" id="idMask"></span><span class="sp"></span><button class="btn dan" id="idClear">ID 지우기</button></div>
+    <label class="row small" style="margin-top:8px;flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" id="idKeep" style="margin-top:3px"> 이 기기에 ID 기억하기</label>
+  </section>
+
+  <p class="warnbox"><b>미검증:</b> 계산은 공개 시드 도구(Leanny)와 같은 결과를 내지만, 실제 게임 기록과의 대조는 아직 진행 중입니다. 예측과 다르면 즉시 멈추고 알려 줍니다.</p>
+</main>
+
+<script type="module">
+// ---- engine/murmur3.mjs
+/**
+ * MurmurHash3 x86_32 (Austin Appleby, public domain algorithm), seed 0 by default.
+ * Independent implementation operating on bytes.
+ *
+ * The Shell-Out key strings are ASCII, so UTF-8 bytes == char codes here.
+ * Non-ASCII input is rejected to avoid silently diverging from other
+ * implementations that hash `charCodeAt(i) & 0xff`.
+ */
+const C1 = 0xcc9e2d51;
+const C2 = 0x1b873593;
+
+function rotl32(x, r) {
+  return ((x << r) | (x >>> (32 - r))) >>> 0;
+}
+
+function fmix32(h) {
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x85ebca6b);
+  h ^= h >>> 13;
+  h = Math.imul(h, 0xc2b2ae35);
+  h ^= h >>> 16;
+  return h >>> 0;
+}
+
+function asciiBytes(str) {
+  if (typeof str !== 'string') throw new TypeError('Expected a string');
+  const out = new Uint8Array(str.length);
+  for (let i = 0; i < str.length; i++) {
+    const c = str.charCodeAt(i);
+    if (c > 0x7f) throw new RangeError('Only ASCII keys are supported');
+    out[i] = c;
+  }
+  return out;
+}
+
+function murmur3x86_32(input, seed = 0) {
+  const data = typeof input === 'string' ? asciiBytes(input) : input;
+  if (!(data instanceof Uint8Array)) throw new TypeError('Expected string or Uint8Array');
+  const len = data.length;
+  const nblocks = len >>> 2;
+  let h = seed >>> 0;
+
+  for (let i = 0; i < nblocks; i++) {
+    const o = i * 4;
+    let k = (data[o] | (data[o + 1] << 8) | (data[o + 2] << 16) | (data[o + 3] << 24)) >>> 0;
+    k = Math.imul(k, C1);
+    k = rotl32(k, 15);
+    k = Math.imul(k, C2);
+    h ^= k;
+    h = rotl32(h, 13);
+    h = (Math.imul(h, 5) + 0xe6546b64) >>> 0;
+  }
+
+  const tail = nblocks * 4;
+  let k1 = 0;
+  switch (len & 3) {
+    case 3: k1 ^= data[tail + 2] << 16; // falls through
+    case 2: k1 ^= data[tail + 1] << 8; // falls through
+    case 1:
+      k1 ^= data[tail];
+      k1 = Math.imul(k1, C1);
+      k1 = rotl32(k1, 15);
+      k1 = Math.imul(k1, C2);
+      h ^= k1;
+  }
+
+  h ^= len;
+  return fmix32(h >>> 0);
+}
+
+// ---- engine/xorshift128.mjs
+/**
+ * Marsaglia xorshift128 (a=11, b=8, c=19), 4 x uint32 state.
+ * Independent implementation. Mutable, allocation-free stepping for speed.
+ */
+class XorShift128 {
+  constructor(x, y, z, w) {
+    this.x = x >>> 0;
+    this.y = y >>> 0;
+    this.z = z >>> 0;
+    this.w = w >>> 0;
+  }
+
+  static fromState(state) {
+    if (!Array.isArray(state) || state.length !== 4) throw new RangeError('State must be 4 uint32 words');
+    for (const v of state) {
+      if (!Number.isInteger(v) || v < 0 || v > 0xffffffff) throw new RangeError('State word out of range');
+    }
+    if (state.every(v => v === 0)) throw new RangeError('All-zero state is invalid for xorshift');
+    return new XorShift128(state[0], state[1], state[2], state[3]);
+  }
+
+  nextU32() {
+    const t = (this.x ^ (this.x << 11)) >>> 0;
+    this.x = this.y;
+    this.y = this.z;
+    this.z = this.w;
+    this.w = (this.w ^ (this.w >>> 19) ^ t ^ (t >>> 8)) >>> 0;
+    return this.w;
+  }
+
+  /**
+   * Float in [0, 100): top 23 bits of the next u32 as a float32 mantissa,
+   * i.e. exactly (u >>> 9) / 2^23, scaled by 100 in double precision.
+   * NOTE: the game presumably scales in float32; see README "float32 boundary".
+   */
+  nextPercent() {
+    return ((this.nextU32() >>> 9) / 8388608) * 100;
+  }
+
+  clone() {
+    return new XorShift128(this.x, this.y, this.z, this.w);
+  }
+
+  copyFrom(o) {
+    this.x = o.x; this.y = o.y; this.z = o.z; this.w = o.w;
+    return this;
+  }
+
+  state() {
+    return [this.x, this.y, this.z, this.w];
+  }
+
+  stateHex() {
+    return this.state().map(v => '0x' + v.toString(16).padStart(8, '0'));
+  }
+}
+
+function parseStateHex(words) {
+  if (!Array.isArray(words) || words.length !== 4) throw new RangeError('Need 4 hex words');
+  return words.map(w => {
+    const s = String(w).trim().replace(/^0x/i, '');
+    if (!/^[0-9a-f]{1,8}$/i.test(s)) throw new RangeError(`Invalid hex word: ${w}`);
+    return parseInt(s, 16) >>> 0;
+  });
+}
+
+// ---- engine/shellout.mjs
+/**
+ * SPLAT SEED — independent Shell-Out Machine (lobby capsule) engine.
+ *
+ * Model (see README "근거" for evidence and verification status):
+ *  - Stream RNG: xorshift128, one independent stream per machine
+ *    ("Lot" = regular, "LotFest" = Splatfest).
+ *  - Initial state word i = MurmurHash3_x86_32(`${nplnUserId}_${streamKey}_${i}`), i = 0..3.
+ *  - Each pull draws one percent value r in [0,100) and picks the first table row whose
+ *    running cumulative percentage exceeds r.
+ *  - Extra u32 draws per pull depend on the reward row (see EXTRA_DRAWS / pullOnce()).
+ *  - Seasonal jackpot rows ("Limited", gold/silver): if every current-season jackpot item of
+ *    that kind is already owned, the pull is replaced by row 2 (bronze, 10 ability chips) and
+ *    makes no extra draws; otherwise one discarded draw plus one pick draw, and the picked
+ *    item becomes owned.
+ *
+ * This file contains no third-party code.
+ */
+
+
+const GRADES = Object.freeze(['gold', 'silver', 'bronze', 'red', 'purple', 'blue']);
+const STREAM_KEYS = Object.freeze({ normal: 'Lot', fest: 'LotFest' });
+
+// Reward rows in in-game table order. [grade, percent, type, subType]
+// Source: lottery parameter table as shipped in public seed tools and matching the
+// published odds on Inkipedia. Order matters (cumulative selection).
+const TABLE_V110 = [
+  [0, 0.1, 'NamePlateBg', 'Limited'],
+  [1, 0.3, 'Byname', 'Limited'],
+  [2, 0.6, 'AllGearSkillChip', 'None'],
+  [3, 4, 'MiniGameCardPack', 'None'],
+  [3, 3, 'FoodTicket', 'FoodParty'],
+  [3, 6, 'NamePlateBg', 'None'],
+  [4, 10, 'GearSkillChip', 'None'],
+  [4, 7, 'FoodTicket', 'Food100'],
+  [4, 22, 'Byname', 'None'],
+  [5, 10, 'LockerSticker', 'None'],
+  [5, 10, 'LockerFigure', 'None'],
+  [5, 13, 'FoodTicket', 'Food50'],
+  [5, 14, 'DrinkTicket', 'None'],
+];
+const TABLE_V300 = [
+  [0, 0.1, 'NamePlateBg', 'Limited'],
+  [1, 0.3, 'Byname', 'Limited'],
+  [2, 0.6, 'AllGearSkillChip', 'None'],
+  [3, 4, 'MiniGameCardPack', 'None'],
+  [3, 3, 'FoodTicket', 'FoodParty'],
+  [3, 2, 'Emote', 'None'],
+  [3, 6, 'NamePlateBg', 'None'],
+  [4, 10, 'GearSkillChip', 'None'],
+  [4, 7, 'FoodTicket', 'Food100'],
+  [4, 22, 'Byname', 'None'],
+  [5, 9, 'LockerSticker', 'None'],
+  [5, 9, 'LockerFigure', 'None'],
+  [5, 13, 'FoodTicket', 'Food50'],
+  [5, 14, 'DrinkTicket', 'None'],
+];
+const SUBSTITUTE_ROW = 2;
+
+function buildTable(rows) {
+  let cum = 0;
+  return Object.freeze(rows.map(([grade, percent, type, subType], index) => {
+    cum += percent; // double accumulation, in table order
+    return Object.freeze({ index, grade, percent, type, subType, cumulative: cum });
+  }));
+}
+const TABLES = Object.freeze({ v110: buildTable(TABLE_V110), v300: buildTable(TABLE_V300) });
+
+/**
+ * Season numbering: 1 = first season (2022-09-01 UTC). Seasons start every 3 months (Mar/Jun/Sep/Dec 1st, 00:00 UTC).
+ * A season includes its own start instant (start <= t). The public tool counts start < t, so the two differ only at
+ * the exact start millisecond. The in-game reward-table switch time itself is unverified.
+ */
+function seasonAt(date = new Date()) {
+  const t = (date instanceof Date ? date : new Date(date)).getTime();
+  if (!Number.isFinite(t)) throw new RangeError('Invalid date');
+  // Number of season starts at or before t, counting from 2022-09-01.
+  let count = 0;
+  let year = 2022, month = 8; // Sep 2022 (0-based month)
+  while (Date.UTC(year, month, 1) <= t && count < 1000) {
+    count++;
+    month += 3;
+    if (month > 11) { month -= 12; year++; }
+  }
+  return count;
+}
+
+function tableForSeason(season) {
+  if (!Number.isInteger(season) || season < 0) throw new RangeError('Invalid season');
+  return season >= 3 ? TABLES.v300 : TABLES.v110;
+}
+
+/** Number of distinct jackpot items of one kind per season (1 for seasons 1-8, 2 from season 9). */
+function jackpotItemsPerKind(season) {
+  return season < 9 ? 1 : 2;
+}
+
+const NPLN_USER_ID_RE = /^u-[0-9a-z]{20}$/;
+
+function initialState(nplnUserId, mode = 'normal') {
+  const key = STREAM_KEYS[mode];
+  if (!key) throw new RangeError('mode must be "normal" or "fest"');
+  // Real NPLN user IDs look like "u-" + 20 lowercase letters/digits. The "u-" prefix is part of the
+  // hashed string (same as the public seed tool and nxapi's seed export), so it must not be stripped.
+  if (typeof nplnUserId !== 'string' || !NPLN_USER_ID_RE.test(nplnUserId)) {
+    throw new RangeError('NPLN user ID must look like "u-" followed by 20 lowercase letters/digits');
+  }
+  return [0, 1, 2, 3].map(i => murmur3x86_32(`${nplnUserId}_${key}_${i}`));
+}
+
+/**
+ * Pull context. `ownershipAware`:
+ *   true  — model the jackpot ownership substitution (needs missing counts).
+ *   false — "simple" mode: jackpot rows always draw 2 extra u32 and never substitute
+ *           (equivalent to the public tool's non-accuracy mode).
+ */
+function makeContext({ season, ownershipAware = true, missingBanners = null, missingTitles = null } = {}) {
+  if (!Number.isInteger(season) || season < 1) throw new RangeError('season required (>=1)');
+  const per = jackpotItemsPerKind(season);
+  const mb = missingBanners ?? per;
+  const mt = missingTitles ?? per;
+  for (const v of [mb, mt]) if (!Number.isInteger(v) || v < 0 || v > per) throw new RangeError(`missing count must be 0..${per}`);
+  return { season, table: tableForSeason(season), ownershipAware: !!ownershipAware, missingBanners: mb, missingTitles: mt };
+}
+
+function cloneContext(c) {
+  return { season: c.season, table: c.table, ownershipAware: c.ownershipAware, missingBanners: c.missingBanners, missingTitles: c.missingTitles };
+}
+
+function selectRow(table, r) {
+  for (let i = 0; i < table.length; i++) if (r < table[i].cumulative) return table[i];
+  // r is < 100 by construction and table sums to >= 100; unreachable unless table is malformed.
+  throw new Error('Reward table does not cover draw');
+}
+
+/**
+ * Performs one pull, mutating rng and ctx.
+ * Returns { grade, row, substituted, extraDraws, ability?, pick? }.
+ */
+function pullOnce(rng, ctx) {
+  const row = selectRow(ctx.table, rng.nextPercent());
+  if (row.subType === 'Limited') {
+    if (!ctx.ownershipAware) {
+      rng.nextU32();
+      rng.nextU32();
+      return { grade: row.grade, row, substituted: false, extraDraws: 2 };
+    }
+    const isBanner = row.type === 'NamePlateBg';
+    const missing = isBanner ? ctx.missingBanners : ctx.missingTitles;
+    if (missing === 0) {
+      const sub = ctx.table[SUBSTITUTE_ROW];
+      return { grade: sub.grade, row: sub, original: row, substituted: true, extraDraws: 0 };
+    }
+    rng.nextU32();
+    const pick = rng.nextU32() % missing;
+    if (isBanner) ctx.missingBanners--; else ctx.missingTitles--;
+    return { grade: row.grade, row, substituted: false, extraDraws: 2, pick };
+  }
+  if (row.type === 'FoodTicket') {
+    rng.nextU32();
+    return { grade: row.grade, row, substituted: false, extraDraws: 1 };
+  }
+  if (row.type === 'GearSkillChip' || row.type === 'DrinkTicket') {
+    const ability = rng.nextU32() % 14;
+    return { grade: row.grade, row, substituted: false, extraDraws: 1, ability };
+  }
+  return { grade: row.grade, row, substituted: false, extraDraws: 0 };
+}
+
+/** Simulate n pulls from a state. Does not mutate inputs. */
+function simulate(state, ctx, n) {
+  const rng = XorShift128.fromState(state);
+  const c = cloneContext(ctx);
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(pullOnce(rng, c));
+  return { pulls: out, state: rng.state(), ctx: c };
+}
+
+/**
+ * Direct reproduction from a KNOWN state immediately before the first observed pull.
+ * No position search is performed: pull i is predicted from that exact state.
+ * Returns per-pull predictions, the first mismatch index (or -1) and the state after the last pull.
+ */
+function reproduce(startStateBeforeFirstPull, ctx, observations) {
+  const obs = observations.map(normalizeObservation);
+  const rng = XorShift128.fromState(startStateBeforeFirstPull);
+  const c = cloneContext(ctx);
+  const pulls = [];
+  let firstMismatch = -1;
+  for (let i = 0; i < obs.length; i++) {
+    const r = pullOnce(rng, c);
+    pulls.push(r);
+    if (firstMismatch < 0 && !matches(r, obs[i])) firstMismatch = i;
+  }
+  return { pulls, firstMismatch, stateAfterLastPull: rng.state(), contextAfter: c };
+}
+
+/**
+ * Observation: { grade: 0..5 } (capsule color only) or additionally
+ * { type, subType } for the exact reward row (as shown after substitution).
+ */
+function normalizeObservation(o) {
+  if (typeof o === 'string') o = { grade: GRADES.indexOf(o) };
+  if (!o || !Number.isInteger(o.grade) || o.grade < 0 || o.grade > 5) throw new RangeError('Invalid observation grade');
+  const r = { grade: o.grade };
+  if (o.type != null) { r.type = String(o.type); r.subType = String(o.subType ?? 'None'); }
+  return r;
+}
+
+function matches(res, obs) {
+  if (res.grade !== obs.grade) return false;
+  if (obs.type !== undefined && (res.row.type !== obs.type || res.row.subType !== obs.subType)) return false;
+  return true;
+}
+
+/**
+ * Incremental exhaustive search over u32 offsets [0, maxOffset) of a stream.
+ * Each offset is tested by simulating all observations from that position.
+ * Call step(budget) repeatedly (e.g. from a Worker) until done.
+ */
+class OffsetSearch {
+  constructor({ startState, observations, context, maxOffset = 1 << 20, maxCandidates = 64 }) {
+    if (!Array.isArray(observations) || observations.length < 1) throw new RangeError('Need at least one observation');
+    if (!Number.isSafeInteger(maxOffset) || maxOffset < 1 || maxOffset > 2 ** 32) throw new RangeError('Invalid maxOffset');
+    this.obs = observations.map(normalizeObservation);
+    this.ctx = cloneContext(context);
+    this.base = XorShift128.fromState(startState);
+    this.scratch = this.base.clone();
+    this.offset = 0;
+    this.maxOffset = maxOffset;
+    this.maxCandidates = maxCandidates;
+    this.candidates = [];
+    this.truncated = false;
+    this._c = cloneContext(context);
+  }
+
+  get done() {
+    return this.offset >= this.maxOffset || this.truncated;
+  }
+
+  get progress() {
+    return Math.min(1, this.offset / this.maxOffset);
+  }
+
+  step(budget = 50000) {
+    const obs = this.obs, n = obs.length, c = this._c, ctx = this.ctx, s = this.scratch;
+    const end = Math.min(this.maxOffset, this.offset + budget);
+    for (; this.offset < end; this.offset++) {
+      s.copyFrom(this.base);
+      c.missingBanners = ctx.missingBanners;
+      c.missingTitles = ctx.missingTitles;
+      let ok = true;
+      for (let i = 0; i < n; i++) {
+        if (!matches(pullOnce(s, c), obs[i])) { ok = false; break; }
+      }
+      if (ok) {
+        this.candidates.push({
+          offset: this.offset,
+          stateBefore: this.base.state(),
+          stateAfter: s.state(),
+          contextAfter: cloneContext(c),
+        });
+        if (this.candidates.length >= this.maxCandidates) { this.truncated = true; this.offset++; break; }
+      }
+      this.base.nextU32();
+    }
+    return this.done;
+  }
+
+  runToEnd() {
+    while (!this.step(1 << 20));
+    return this.result();
+  }
+
+  result() {
+    return {
+      candidates: this.candidates,
+      searched: this.offset,
+      maxOffset: this.maxOffset,
+      exhaustive: this.offset >= this.maxOffset && !this.truncated,
+      truncated: this.truncated,
+      unique: this.offset >= this.maxOffset && !this.truncated && this.candidates.length === 1,
+    };
+  }
+}
+
+/** Filter existing candidates with additional observations (pulled after the previous ones). */
+function refineCandidates(candidates, newObservations) {
+  const obs = newObservations.map(normalizeObservation);
+  const out = [];
+  for (const cand of candidates) {
+    const rng = XorShift128.fromState(cand.stateAfter);
+    const c = cloneContext(cand.contextAfter);
+    let ok = true;
+    for (const o of obs) if (!matches(pullOnce(rng, c), o)) { ok = false; break; }
+    if (ok) out.push({ ...cand, stateAfter: rng.state(), contextAfter: cloneContext(c) });
+  }
+  return out;
+}
+
+/** 1-based number of pulls until the next gold capsule (after substitution), or null if > limit. */
+function pullsUntilGold(state, ctx, limit = 200000) {
+  const rng = XorShift128.fromState(state);
+  const c = cloneContext(ctx);
+  for (let i = 1; i <= limit; i++) if (pullOnce(rng, c).grade === 0) return i;
+  return null;
+}
+
+/** Expected false-match probability per offset for a sequence of colors (informational). */
+function gradeProbabilities(table) {
+  const p = [0, 0, 0, 0, 0, 0];
+  for (const r of table) p[r.grade] += r.percent / 100;
+  return p;
+}
+
+// ---- engine/npln-id.mjs
+/**
+ * Getting the player's NPLN user ID once, for personal use.
+ *
+ *  A. From a Leanny Seed Checker backup (or nxapi `util splatoon3-seed --json` output):
+ *     the ID is stored as base64(bytes(id) XOR (h & 0xff)) together with h = MurmurHash3(id).
+ *     Decoding is local; no network.
+ *  B. From a replay code, via the existing public replay-lookup API (used by Leanny).
+ *     That API is intended for Leanny's site; here it is used only for the owner's personal lookup.
+ *     The ID is also re-derived from the returned replay.id and must agree.
+ */
+
+
+const REPLAY_LOOKUP_URL = 'https://splatoon3-replay-lookup.fancy.org.uk/api/splatnet3/replay/';
+
+class NplnIdError extends Error {
+  constructor(kind, message) { super(message); this.kind = kind; }
+}
+
+function base64ToBytes(b64) {
+  if (typeof b64 !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(b64.trim())) throw new NplnIdError('bad_key', 'key is not base64');
+  const bin = atob(b64.trim());
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+/** key (base64) + h -> NPLN user ID. Throws unless the hash and the ID format both check out. */
+function decodeSeedKey(key, h) {
+  const hash = Number(h);
+  if (!Number.isInteger(hash) || hash < 0 || hash > 0xffffffff) throw new NplnIdError('bad_key', 'h must be a uint32');
+  const bytes = base64ToBytes(key);
+  let id = '';
+  for (const b of bytes) id += String.fromCharCode(b ^ (hash & 0xff));
+  if (!/^[\x20-\x7e]*$/.test(id) || murmur3x86_32(id) !== hash >>> 0) throw new NplnIdError('bad_key', 'key and h do not match');
+  if (!NPLN_USER_ID_RE.test(id)) throw new NplnIdError('bad_id', 'decoded value is not an NPLN user ID');
+  return id;
+}
+
+/**
+ * Accepts the text of: a Leanny backup ({ UserData: { UserKey, H } } or top-level { UserKey, H }),
+ * or nxapi `util splatoon3-seed --json` output ({ key, h }).
+ */
+function idFromSeedExport(text) {
+  let data;
+  try { data = JSON.parse(text); } catch { throw new NplnIdError('bad_file', 'not valid JSON'); }
+  if (!data || typeof data !== 'object') throw new NplnIdError('bad_file', 'not a JSON object');
+  const candidates = [
+    data.UserData && [data.UserData.UserKey, data.UserData.H],
+    [data.UserKey, data.H],
+    [data.key, data.h],
+  ].filter(c => c && typeof c[0] === 'string' && c[0] !== '' && c[1] != null);
+  if (!candidates.length) throw new NplnIdError('no_key', 'no seed key in this file (UserData.UserKey/H or key/h)');
+  return decodeSeedKey(candidates[0][0], candidates[0][1]);
+}
+
+function normalizeReplayCode(code) {
+  const c = String(code ?? '').toUpperCase().replace(/[\s-]/g, '');
+  if (!/^[A-Z0-9]{16}$/.test(c)) throw new NplnIdError('invalid_code', 'replay code must be 16 letters/digits');
+  return c;
+}
+
+/** Re-derive the ID from replay.id (base64 of "Replay-u-…:<CODE>"). */
+function idFromReplayId(replayId, code) {
+  let s;
+  try { s = atob(String(replayId)); } catch { return null; }
+  const m = s.match(/^Replay-(u-[0-9a-z]{20}):([0-9A-Z]{16})$/);
+  if (!m || (code && m[2] !== code)) return null;
+  return m[1];
+}
+
+/**
+ * Replay code -> NPLN user ID via the existing lookup API.
+ * Errors: invalid_code | network (offline, blocked, or cross-origin refused) | timeout |
+ *         not_found | server | bad_response
+ */
+async function lookupReplayCode(code, { fetchImpl = globalThis.fetch, timeoutMs = 20000, baseUrl = REPLAY_LOOKUP_URL } = {}) {
+  const c = normalizeReplayCode(code);
+  let res;
+  try {
+    res = await fetchImpl(baseUrl + c, { signal: AbortSignal.timeout(timeoutMs), headers: { Accept: 'application/json' } });
+  } catch (e) {
+    if (e && (e.name === 'TimeoutError' || e.name === 'AbortError')) throw new NplnIdError('timeout', 'lookup timed out');
+    throw new NplnIdError('network', 'request failed (offline, blocked, or cross-origin refused)');
+  }
+  let body = null;
+  try { body = await res.json(); } catch { /* handled below */ }
+  if (!res.ok) {
+    if (res.status === 404 || body?.error === 'not_found') throw new NplnIdError('not_found', 'replay not found');
+    if (res.status === 400 || body?.error === 'invalid_code') throw new NplnIdError('invalid_code', 'server rejected the code');
+    throw new NplnIdError('server', `lookup server error ${res.status}${body?.error_message ? `: ${body.error_message}` : ''}`);
+  }
+  if (!body || typeof body !== 'object') throw new NplnIdError('bad_response', 'response is not JSON');
+  const fromField = body.npln_user_id;
+  const fromReplay = body.replay ? idFromReplayId(body.replay.id, c) : null;
+  if (!NPLN_USER_ID_RE.test(String(fromField ?? ''))) throw new NplnIdError('bad_response', 'response has no valid npln_user_id');
+  if (fromReplay !== fromField) throw new NplnIdError('bad_response', 'npln_user_id does not match replay.id');
+  const player = body.replay?.historyDetail?.player;
+  return { id: fromField, playerName: player ? `${player.name}#${player.nameId}` : null };
+}
+
+// ---- engine/candidates.mjs
+/**
+ * Candidate tracking on top of the Shell-Out engine (no new search algorithm).
+ *
+ * A session holds the user's real pulls for one stream (normal or fest) plus the search
+ * conditions. Searching is done by OffsetSearch (engine/shellout.mjs); narrowing after a new
+ * pull uses refineCandidates() when — and only when — the previous search was exhaustive and
+ * not capped, because only then is the candidate set complete. Otherwise a full re-search with
+ * all pulls is required. Forecasts use simulate() per candidate.
+ *
+ * Wording rule: "1 candidate" means one position inside the searched range under the stated
+ * conditions. It is not a proof of the real game state, and the engine itself is not yet
+ * verified against the real game.
+ *
+ * Pure functions on plain objects. No DOM, no storage.
+ */
+
+const RANGE_PRESETS = Object.freeze([1 << 14, 1 << 16, 1 << 17, 1 << 18, 1 << 20, 1 << 22]);
+const DEFAULT_RANGE = 1 << 17;
+
+/**
+ * Realistic search range by date, same heuristic as the public seed tool:
+ * (days since 2022-09-01, local time) * 33 + 20 random numbers. A rule of thumb, not a game rule.
+ */
+function rangeForDate(date = new Date()) {
+  const days = Math.floor((new Date(date) - new Date(2022, 8, 1)) / (24 * 3600 * 1000));
+  return Math.max(1, days) * 33 + 20;
+}
+
+/** Average random numbers used per pull under a season's table (1 for the row + item draws). */
+function drawsPerPull(season, { missingBanners = 2, missingTitles = 2 } = {}) {
+  let extra = 0;
+  for (const row of tableForSeason(season)) {
+    const p = row.percent / 100;
+    if (row.subType === 'Limited') extra += p * ((row.type === 'NamePlateBg' ? missingBanners : missingTitles) > 0 ? 2 : 0);
+    else if (row.type === 'FoodTicket' || row.type === 'GearSkillChip' || row.type === 'DrinkTicket') extra += p;
+  }
+  return 1 + extra;
+}
+
+/** Rough number of pulls already made before a candidate position (offset in random numbers). */
+function estimatePulls(offset, season, own) {
+  return Math.round(offset / drawsPerPull(season, own));
+}
+const DEFAULT_MAX_CANDIDATES = 2000;
+const FORECAST_LEN = 10;
+
+/** Observation key used for grouping: grade plus item when the item is known. */
+function outcomeKey(o) {
+  return o.type == null ? String(o.grade) : `${o.grade}|${o.type}|${o.subType ?? 'None'}`;
+}
+
+/** Distinct items a grade can produce under the season's table (for the result picker). */
+function itemsForGrade(season, grade) {
+  const seen = new Map();
+  for (const row of tableForSeason(season)) {
+    if (row.grade !== grade) continue;
+    const k = `${row.type}|${row.subType}`;
+    if (!seen.has(k)) seen.set(k, { grade, type: row.type, subType: row.subType });
+  }
+  // Owned jackpot items are re-rolled as the bronze 10-chip pack, which therefore also appears as bronze.
+  return [...seen.values()];
+}
+
+function newSession({ mode = 'normal', season, missingBanners = null, missingTitles = null, maxOffset = DEFAULT_RANGE, maxCandidates = DEFAULT_MAX_CANDIDATES } = {}) {
+  const ctx = makeContext({ season, missingBanners, missingTitles }); // validates
+  if (mode !== 'normal' && mode !== 'fest') throw new RangeError('mode must be normal or fest');
+  validateRange(maxOffset, maxCandidates);
+  return {
+    v: 1, mode, season: ctx.season, missingBanners: ctx.missingBanners, missingTitles: ctx.missingTitles,
+    maxOffset, maxCandidates, observations: [], timeline: [], epoch: 0,
+  };
+}
+
+function validateRange(maxOffset, maxCandidates) {
+  if (!Number.isSafeInteger(maxOffset) || maxOffset < 1 || maxOffset > 2 ** 32) throw new RangeError('Invalid search range');
+  if (!Number.isSafeInteger(maxCandidates) || maxCandidates < 1 || maxCandidates > 100000) throw new RangeError('Invalid candidate cap');
+}
+
+function contextOf(session) {
+  return makeContext({ season: session.season, missingBanners: session.missingBanners, missingTitles: session.missingTitles });
+}
+
+/** Parameters for engine/search-worker.mjs or OffsetSearch. */
+function searchParams(session, nplnUserId) {
+  if (!session.observations.length) throw new RangeError('Need at least one pull to search');
+  return {
+    nplnUserId, mode: session.mode, observations: session.observations,
+    context: { season: session.season, missingBanners: session.missingBanners, missingTitles: session.missingTitles },
+    maxOffset: session.maxOffset, maxCandidates: session.maxCandidates,
+  };
+}
+
+/** Synchronous search (tests, small ranges). The page runs the same OffsetSearch in slices or in the worker. */
+function runSearch(session, nplnUserId) {
+  const p = searchParams(session, nplnUserId);
+  return new OffsetSearch({
+    startState: initialState(nplnUserId, p.mode), observations: p.observations, context: contextOf(session),
+    maxOffset: p.maxOffset, maxCandidates: p.maxCandidates,
+  }).runToEnd();
+}
+
+/** True when the result is a complete list of every matching position in the range. */
+function isComplete(result) {
+  return !!result && result.exhaustive && !result.truncated;
+}
+
+/**
+ * Status for display. `searching` = a search is running for the current pulls.
+ * kind: idle | searching | none | unique | several | capped | cancelled
+ */
+function status(session, result, { searching = false, progress = 0, cancelled = false } = {}) {
+  const base = { pulls: session.observations.length, range: session.maxOffset };
+  if (!session.observations.length) return { ...base, kind: 'idle' };
+  if (searching) return { ...base, kind: 'searching', progress, found: result?.candidates?.length ?? 0 };
+  if (cancelled || !result) return { ...base, kind: 'cancelled', found: result?.candidates?.length ?? 0, searched: result?.searched ?? 0 };
+  const n = result.candidates.length;
+  if (result.truncated) return { ...base, kind: 'capped', count: n, atLeast: true, searched: result.searched };
+  if (!result.exhaustive) return { ...base, kind: 'cancelled', found: n, searched: result.searched };
+  if (n === 0) return { ...base, kind: 'none', count: 0, searched: result.searched };
+  if (n === 1) return { ...base, kind: 'unique', count: 1, searched: result.searched };
+  return { ...base, kind: 'several', count: n, searched: result.searched };
+}
+
+function timelineEntry(session, result, kind) {
+  return {
+    kind, pulls: session.observations.length, epoch: session.epoch,
+    count: result.candidates.length, complete: isComplete(result), truncated: result.truncated,
+    searched: result.searched, maxOffset: session.maxOffset,
+  };
+}
+
+/** Record a finished search in the session timeline. kind: 'search' (first/after pull) | 'research' (conditions changed). */
+function withSearchResult(session, result, kind = 'search') {
+  const entry = timelineEntry(session, result, kind);
+  const last = session.timeline.at(-1);
+  // Re-running the same search (reload, retry) replaces the entry instead of adding a duplicate step.
+  if (last && last.pulls === entry.pulls && last.epoch === entry.epoch) {
+    return { ...session, timeline: [...session.timeline.slice(0, -1), { ...entry, kind: last.kind === 'research' ? 'research' : entry.kind, ...(last.before != null ? { before: last.before } : {}) }] };
+  }
+  return { ...session, timeline: [...session.timeline, entry] };
+}
+
+/**
+ * Add one real pull. Returns { session, result, needsSearch }.
+ * - previous result complete -> refineCandidates (exact), result updated, timeline 'refine'.
+ * - otherwise -> needsSearch: the caller must run a full search with all pulls.
+ */
+function addPull(session, result, observation) {
+  const obs = normalizeObservation(observation);
+  const next = { ...session, observations: [...session.observations, obs] };
+  if (isComplete(result)) {
+    const before = result.candidates.length;
+    const candidates = refineCandidates(result.candidates, [obs]);
+    const r = { ...result, candidates, unique: candidates.length === 1 };
+    const s = { ...next, timeline: [...next.timeline, { ...timelineEntry(next, r, 'refine'), before }] };
+    return { session: s, result: r, needsSearch: false };
+  }
+  return { session: next, result: null, needsSearch: true };
+}
+
+/** Remove the last pull. The caller restores the previous result from its undo stack or re-searches. */
+function removeLastPull(session) {
+  if (!session.observations.length) return session;
+  const observations = session.observations.slice(0, -1);
+  const timeline = session.timeline.filter(e => e.pulls <= observations.length);
+  return { ...session, observations, timeline };
+}
+
+/** Change conditions (range, cap, season, ownership). Starts a new epoch: old counts are not comparable. */
+function changeConditions(session, patch) {
+  const merged = { ...session, ...patch };
+  const ctx = makeContext({ season: merged.season, missingBanners: merged.missingBanners, missingTitles: merged.missingTitles });
+  validateRange(merged.maxOffset, merged.maxCandidates);
+  return { ...merged, season: ctx.season, missingBanners: ctx.missingBanners, missingTitles: ctx.missingTitles, epoch: session.epoch + 1 };
+}
+
+/**
+ * Forecast of the next n pulls over the current candidates (capped to `limit` candidates).
+ * For each step: groups of identical outcomes with candidate counts, and whether all agree.
+ * Shares are "k of the searched candidates", not game probabilities.
+ */
+function forecast(result, n = FORECAST_LEN, { limit = 2000 } = {}) {
+  if (!result || !result.candidates.length) return { steps: [], used: 0, total: result?.candidates?.length ?? 0 };
+  const cands = result.candidates.slice(0, limit);
+  const sims = cands.map(c => simulate(c.stateAfter, c.contextAfter, n).pulls);
+  const steps = [];
+  for (let i = 0; i < n; i++) {
+    const groups = new Map();
+    const colors = new Map();
+    for (const pulls of sims) {
+      const p = pulls[i];
+      const o = { grade: p.grade, type: p.row.type, subType: p.row.subType, substituted: p.substituted };
+      const k = outcomeKey(o);
+      const g = groups.get(k) ?? { ...o, count: 0 };
+      g.count++;
+      groups.set(k, g);
+      colors.set(p.grade, (colors.get(p.grade) ?? 0) + 1);
+    }
+    const list = [...groups.values()].sort((a, b) => b.count - a.count || a.grade - b.grade);
+    const colorList = [...colors.entries()].map(([grade, count]) => ({ grade, count })).sort((a, b) => b.count - a.count || a.grade - b.grade);
+    steps.push({ index: i, groups: list, colors: colorList, consensus: list.length === 1, colorConsensus: colorList.length === 1 });
+  }
+  return { steps, used: cands.length, total: result.candidates.length };
+}
+
+/** The observation implied by clicking the first forecast card, or null when candidates disagree. */
+function consensusFirst(fc) {
+  const s = fc.steps[0];
+  if (!s || !s.consensus) return null;
+  const g = s.groups[0];
+  return { grade: g.grade, type: g.type, subType: g.subType };
+}
+
+/** Persisted shape (no ID unless the caller adds it with consent; no states, no tokens). */
+function serializeSession(session) {
+  return {
+    v: 1, mode: session.mode, season: session.season, missingBanners: session.missingBanners, missingTitles: session.missingTitles,
+    maxOffset: session.maxOffset, maxCandidates: session.maxCandidates, observations: session.observations,
+    timeline: session.timeline, epoch: session.epoch,
+  };
+}
+
+function deserializeSession(obj) {
+  if (!obj || obj.v !== 1) throw new RangeError('Unknown session format');
+  const s = newSession(obj);
+  return {
+    ...s,
+    observations: (obj.observations ?? []).map(normalizeObservation),
+    timeline: Array.isArray(obj.timeline) ? obj.timeline : [],
+    epoch: Number.isInteger(obj.epoch) ? obj.epoch : 0,
+  };
+}
+
+
+// ---- engine/tracker.mjs
+/**
+ * Pull-by-pull tracker on top of the Shell-Out engine.
+ *
+ * The user pastes the state shown by the public seed tool (the state right BEFORE the next pull),
+ * then records each real pull. A recorded pull is accepted only if it equals the engine's prediction;
+ * otherwise the stream stops (state unchanged) until the user fixes ownership, undoes a mis-tap,
+ * or pastes a fresh state. Accepted pulls advance the state, so the tool never drifts silently.
+ *
+ * Pure functions on plain objects (JSON-serializable). No DOM.
+ */
+
+
+const PULL_COST = Object.freeze({ firstOfDay: 5000, regular: 30000 });
+const HISTORY_CAP = 2000;
+
+/** Accepts "0x1a | 0x2b | 0x3c | 0x4d", spaces/commas/newlines, with or without 0x. Exactly 4 words. */
+function parseStateText(text) {
+  const words = String(text ?? '').match(/(?:0x)?[0-9a-f]{1,8}/gi) ?? [];
+  if (words.length !== 4) throw new RangeError(`상태는 16진수 4개여야 합니다 (현재 ${words.length}개)`);
+  const state = parseStateHex(words);
+  if (state.every(v => v === 0)) throw new RangeError('0만 있는 상태는 사용할 수 없습니다');
+  return state;
+}
+
+function formatState(state) {
+  return state.map(v => '0x' + (v >>> 0).toString(16).padStart(8, '0')).join(' | ');
+}
+
+function ctxOf(s) {
+  return makeContext({ season: s.season, missingBanners: s.missingBanners, missingTitles: s.missingTitles });
+}
+
+function newStream({ state, season, missingBanners, missingTitles }) {
+  const ctx = makeContext({ season, missingBanners, missingTitles }); // validates
+  XorShift128.fromState(state); // validates
+  return {
+    v: 1, state: [...state], season: ctx.season, missingBanners: ctx.missingBanners, missingTitles: ctx.missingTitles,
+    history: [], streak: 0, stopped: null,
+  };
+}
+
+function predictions(s, n) {
+  return simulate(s.state, ctxOf(s), n).pulls;
+}
+
+/** 1-based number of pulls until the next capsule of `grade` (0 gold, 1 silver), or null within limit. */
+function untilGrade(s, grade, limit = 200000) {
+  const rng = XorShift128.fromState(s.state);
+  const ctx = ctxOf(s);
+  for (let i = 1; i <= limit; i++) if (pullOnce(rng, ctx).grade === grade) return i;
+  return null;
+}
+
+function untilGold(s, limit = 200000) {
+  return pullsUntilGold(s.state, ctxOf(s), limit);
+}
+
+function matchesObs(res, obs) {
+  if (res.grade !== obs.grade) return false;
+  if (obs.type !== undefined && (res.row.type !== obs.type || res.row.subType !== obs.subType)) return false;
+  return true;
+}
+
+/** Record one real pull. Returns { stream, match, predicted }. Never mutates the input. */
+function record(s, observation) {
+  if (s.stopped) throw new Error('stream is stopped; resolve the mismatch first');
+  const obs = normalizeObservation(observation);
+  const rng = XorShift128.fromState(s.state);
+  const ctx = ctxOf(s);
+  const predicted = pullOnce(rng, ctx);
+  const pred = { grade: predicted.grade, type: predicted.row.type, subType: predicted.row.subType, substituted: !!predicted.substituted };
+  if (!matchesObs(predicted, obs)) {
+    return { match: false, predicted: pred, stream: { ...s, stopped: { obs, predicted: pred, index: s.history.length } } };
+  }
+  const entry = {
+    grade: predicted.grade, type: predicted.row.type, subType: predicted.row.subType, itemGiven: obs.type !== undefined,
+    stateBefore: [...s.state], missingBefore: [s.missingBanners, s.missingTitles], at: Date.now(),
+  };
+  const history = [...s.history, entry].slice(-HISTORY_CAP);
+  return {
+    match: true, predicted: pred,
+    stream: { ...s, state: rng.state(), missingBanners: ctx.missingBanners, missingTitles: ctx.missingTitles, history, streak: s.streak + 1, stopped: null },
+  };
+}
+
+/** Undo: clears a pending mismatch, otherwise reverts the last accepted pull. */
+function undo(s) {
+  if (s.stopped) return { ...s, stopped: null };
+  const last = s.history.at(-1);
+  if (!last) return s;
+  return {
+    ...s, state: [...last.stateBefore], missingBanners: last.missingBefore[0], missingTitles: last.missingBefore[1],
+    history: s.history.slice(0, -1), streak: Math.max(0, s.streak - 1), stopped: null,
+  };
+}
+
+/** Change ownership for the state before the next pull; re-checks a pending mismatch with it. */
+function setOwnership(s, missingBanners, missingTitles) {
+  const per = jackpotItemsPerKind(s.season);
+  for (const v of [missingBanners, missingTitles]) if (!Number.isInteger(v) || v < 0 || v > per) throw new RangeError(`0..${per}`);
+  const next = { ...s, missingBanners, missingTitles, stopped: null };
+  if (!s.stopped) return { stream: next, resolved: null };
+  const r = record(next, s.stopped.obs);
+  return r.match ? { stream: r.stream, resolved: true } : { stream: { ...r.stream }, resolved: false };
+}
+
+/** Replace the state (fresh paste). Keeps history for display, resets the streak. */
+function replaceState(s, state) {
+  XorShift128.fromState(state);
+  return { ...s, state: [...state], stopped: null, streak: 0 };
+}
+
+/** New season: new reward table and new jackpot items (all missing). */
+function changeSeason(s, season) {
+  const per = jackpotItemsPerKind(season);
+  makeContext({ season, missingBanners: per, missingTitles: per });
+  return { ...s, season, missingBanners: per, missingTitles: per, stopped: null };
+}
+
+/**
+ * Cash plan for n pulls. firstOfDay pulls cost 5,000G (one per day, resets 00:00 UTC), others 30,000G.
+ * discountUsedToday: whether today's discounted pull was already used.
+ */
+function cashPlan(n, { discountUsedToday = false } = {}) {
+  if (!Number.isInteger(n) || n < 1) return null;
+  const allToday = discountUsedToday ? n * PULL_COST.regular : PULL_COST.firstOfDay + (n - 1) * PULL_COST.regular;
+  // Daily plan: one discounted pull per day for n days; starts tomorrow if today's discount is used.
+  return { daily: { days: n, startsTomorrow: !!discountUsedToday, gold: n * PULL_COST.firstOfDay }, allToday };
+}
+
+function serialize(s) { return JSON.stringify(s); }
+
+function deserialize(text) {
+  const o = typeof text === 'string' ? JSON.parse(text) : text;
+  if (!o || o.v !== 1) throw new Error('unsupported tracker data');
+  const s = newStream({ state: o.state, season: o.season, missingBanners: o.missingBanners, missingTitles: o.missingTitles });
+  const history = Array.isArray(o.history) ? o.history.filter(h => h && Number.isInteger(h.grade) && Array.isArray(h.stateBefore) && h.stateBefore.length === 4) : [];
+  return { ...s, history, streak: Number.isInteger(o.streak) ? o.streak : 0, stopped: o.stopped ?? null };
+}
+
+
+// ---- engine/plan.mjs
+/**
+ * Turning "N pulls left" into days and gold.
+ *
+ * Costs come from engine/tracker.mjs PULL_COST (first pull of the day discounted, the rest
+ * regular; the day resets at 00:00 UTC = 09:00 KST). The prices themselves are an assumption
+ * to confirm in game; the page says so.
+ */
+
+const DAY_MS = 24 * 3600 * 1000;
+
+/** Start of the UTC day containing `date`, as a Date. */
+function utcDayStart(date) {
+  const d = new Date(date);
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+}
+
+/**
+ * Plan for `n` pulls doing `perDay` pulls a day (the first of each day discounted).
+ * If today's discount is already used, today's pulls (if any) are all regular — we then start tomorrow
+ * so every day keeps its discounted pull. Returns { n, perDay, days, gold, start, finish } where start/finish
+ * are the UTC day-starts of the first and last pulling day.
+ */
+function planPerDay(n, perDay, { discountUsedToday = false, now = new Date() } = {}) {
+  if (!Number.isInteger(n) || n < 1) return null;
+  if (!Number.isInteger(perDay) || perDay < 1) throw new RangeError('perDay must be >= 1');
+  const days = Math.ceil(n / perDay);
+  const discounted = days; // one per pulling day
+  const gold = discounted * PULL_COST.firstOfDay + (n - discounted) * PULL_COST.regular;
+  const start = new Date(utcDayStart(now).getTime() + (discountUsedToday ? DAY_MS : 0));
+  const finish = new Date(start.getTime() + (days - 1) * DAY_MS);
+  return { n, perDay, days, gold, start, finish };
+}
+
+/** All n pulls right now. */
+function planAllNow(n, { discountUsedToday = false } = {}) {
+  if (!Number.isInteger(n) || n < 1) return null;
+  const gold = discountUsedToday ? n * PULL_COST.regular : PULL_COST.firstOfDay + (n - 1) * PULL_COST.regular;
+  return { n, gold };
+}
+
+// ---- app.html
+
+
+
+
+// no import aliases: tools/bundle.mjs strips imports and inlines modules by their own names
+
+
+const KEY = 'splat-seed-app-v1';
+const GN = ['황금', '은', '동', '빨강', '보라', '파랑'];
+const NM = { 'MiniGameCardPack|None': '카드 팩', 'FoodTicket|FoodParty': '파티 음식', 'Emote|None': '이모트', 'NamePlateBg|None': '배너', 'GearSkillChip|None': '기어 파워 조각', 'FoodTicket|Food100': '100% 업 식권', 'Byname|None': '칭호', 'LockerSticker|None': '로커 스티커', 'LockerFigure|None': '로커 피규어', 'FoodTicket|Food50': '50% 업 식권', 'DrinkTicket|None': '음료 티켓', 'AllGearSkillChip|None': '기어 파워 조각 ×10', 'NamePlateBg|Limited': '시즌 황금 배너', 'Byname|Limited': '시즌 은 칭호' };
+const itemName = o => o.type == null ? '' : (NM[`${o.type}|${o.subType ?? 'None'}`] ?? o.type);
+const label = o => `${GN[o.grade]}${o.type ? ' · ' + itemName(o) : ''}`;
+const $ = id => document.getElementById(id);
+const fmt = n => n.toLocaleString('ko-KR');
+const dateKo = d => `${d.getMonth() + 1}월 ${d.getDate()}일`;
+const gold = n => n >= 10000 ? `${(n / 10000).toLocaleString('ko-KR', { maximumFractionDigits: 1 })}만 골드` : `${fmt(n)} 골드`;
+
+/* ---------- state ---------- */
+const app = {
+  id: null, keepId: false, mode: 'normal', discUsed: false, perDay: 5,
+  m: { normal: null, fest: null },             // persisted per mode: { phase, cand, stream }
+  rt: { normal: blankRt(), fest: blankRt() },   // runtime per mode (search results, undo)
+  draft: null, picker: { grade: null, hints: null }, tPicker: { grade: null },
+};
+function blankRt() { return { result: null, searching: false, progress: 0, cancelled: false, undo: [], job: null, found: 0, error: null }; }
+function freshMode(mode) {
+  return { phase: 'locate', cand: newSession({ mode, season: seasonAt(new Date()), maxOffset: rangeForDate(), maxCandidates: 2000 }), stream: null };
+}
+function load() {
+  let o = null;
+  try { o = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch {}
+  for (const mode of ['normal', 'fest']) {
+    const src = o?.modes?.[mode];
+    try {
+      app.m[mode] = {
+        phase: src?.phase === 'track' ? 'track' : 'locate',
+        cand: src?.cand ? deserializeSession(src.cand) : freshMode(mode).cand,
+        stream: src?.stream ? deserialize(src.stream) : null,
+      };
+      if (app.m[mode].phase === 'track' && !app.m[mode].stream) app.m[mode].phase = 'locate';
+      if (app.m[mode].cand.maxOffset === 131072) app.m[mode].cand = changeConditions(app.m[mode].cand, { maxOffset: rangeForDate() }); // old default -> date-based
+    } catch { app.m[mode] = freshMode(mode); }
+  }
+  if (o?.mode === 'fest') app.mode = 'fest';
+  app.keepId = !!o?.keepId;
+  app.perDay = Number.isInteger(o?.perDay) && o.perDay >= 2 ? o.perDay : 5;
+  if (app.keepId && typeof o?.id === 'string' && NPLN_USER_ID_RE.test(o.id)) app.id = o.id;
+  if (o?.setupDone) app.setupDone = true;
+}
+function save() {
+  const o = { v: 1, mode: app.mode, keepId: app.keepId, perDay: app.perDay, setupDone: !!app.setupDone, modes: {} };
+  for (const mode of ['normal', 'fest']) {
+    const x = app.m[mode];
+    o.modes[mode] = { phase: x.phase, cand: serializeSession(x.cand), stream: x.stream ? JSON.parse(serialize(x.stream)) : null };
+  }
+  if (app.keepId && app.id) o.id = app.id;
+  try { localStorage.setItem(KEY, JSON.stringify(o)); } catch {}
+}
+load();
+const M = () => app.m[app.mode];
+const R = () => app.rt[app.mode];
+
+/* ---------- search (worker when served, main-thread slices otherwise) ---------- */
+let worker = null, workerBroken = false, jobSeq = 0, pendingWorkerJob = null;
+function getWorker() {
+  if (workerBroken) return null;
+  if (worker) return worker;
+  try {
+    worker = new Worker(new URL('./engine/search-worker.mjs', import.meta.url), { type: 'module' });
+    worker.onerror = () => { workerBroken = true; worker = null; const j = pendingWorkerJob; pendingWorkerJob = null; if (j) runMain(j); };
+    return worker;
+  } catch { workerBroken = true; return null; }
+}
+function startSearch(kind = 'search') {
+  const mode = app.mode, s = M().cand, rt = R();
+  if (!app.id || !s.observations.length) return;
+  cancelSearch(true);
+  const job = { id: ++jobSeq, mode, kind, params: searchParams(s, app.id) };
+  Object.assign(rt, { job, searching: true, progress: 0, cancelled: false, result: null, error: null, found: 0 });
+  render();
+  const w = getWorker();
+  if (!w) return runMain(job);
+  pendingWorkerJob = job;
+  w.onmessage = ({ data }) => {
+    const r = app.rt[job.mode];
+    if (!r.job || data.id !== r.job.id) return;
+    pendingWorkerJob = null;
+    if (data.type === 'progress') { r.progress = data.progress; r.found = data.found; renderLocateStatus(); }
+    else if (data.type === 'done') finish(job, data.result);
+    else if (data.type === 'error') fail(job, data.message);
+  };
+  w.postMessage({ type: 'start', id: job.id, params: job.params });
+}
+function runMain(job) {
+  const p = job.params;
+  let search;
+  try { search = new OffsetSearch({ startState: initialState(p.nplnUserId, p.mode), observations: p.observations, context: makeContext(p.context), maxOffset: p.maxOffset, maxCandidates: p.maxCandidates }); }
+  catch (e) { return fail(job, e.message); }
+  job.main = true;
+  const tick = () => {
+    const r = app.rt[job.mode];
+    if (r.job !== job) return;
+    const t0 = performance.now();
+    while (!search.done && performance.now() - t0 < 25) search.step(4096);
+    if (search.done) return finish(job, search.result());
+    r.progress = search.progress; r.found = search.candidates.length; renderLocateStatus();
+    setTimeout(tick, 0);
+  };
+  tick();
+}
+function finish(job, result) {
+  const r = app.rt[job.mode];
+  if (r.job !== job) return;
+  Object.assign(r, { job: null, searching: false, result, progress: 1 });
+  app.m[job.mode].cand = withSearchResult(app.m[job.mode].cand, result, job.kind);
+  save(); render();
+}
+function fail(job, msg) {
+  const r = app.rt[job.mode];
+  if (r.job !== job) return;
+  Object.assign(r, { job: null, searching: false, cancelled: true, error: msg });
+  render();
+}
+function cancelSearch(silent) {
+  const r = R();
+  if (!r.job) return;
+  if (worker && !r.job.main) worker.postMessage({ type: 'cancel' });
+  Object.assign(r, { job: null, searching: false, cancelled: true });
+  if (!silent) render();
+}
+
+/* ---------- locate actions ---------- */
+function locRecord(obs) {
+  const r = R();
+  r.undo.push({ cand: M().cand, result: r.result }); if (r.undo.length > 60) r.undo.shift();
+  const out = addPull(M().cand, r.result, obs);
+  M().cand = out.session;
+  app.picker = { grade: null, hints: null };
+  if (out.needsSearch) { save(); startSearch('search'); }
+  else { r.result = out.result; save(); render(); }
+}
+function locUndo() {
+  const r = R();
+  cancelSearch(true);
+  const snap = r.undo.pop();
+  if (snap) { M().cand = snap.cand; r.result = snap.result; r.cancelled = false; save(); return render(); }
+  if (!M().cand.observations.length) return;
+  M().cand = removeLastPull(M().cand); save();
+  if (M().cand.observations.length) startSearch('search'); else { r.result = null; render(); }
+}
+function startTracking() {
+  const r = R(), c = r.result?.candidates?.[0];
+  if (!c || r.result.candidates.length !== 1) return;
+  const s = M().cand;
+  M().stream = newStream({ state: c.stateAfter, season: s.season, missingBanners: c.contextAfter.missingBanners, missingTitles: c.contextAfter.missingTitles });
+  M().phase = 'track';
+  save(); render(); window.scrollTo({ top: 0 });
+}
+
+/* ---------- tracking actions ---------- */
+function trRecord(obs) {
+  const x = M();
+  if (x.stream.stopped) return;
+  const res = record(x.stream, obs);
+  x.stream = res.stream;
+  app.tPicker = { grade: null };
+  save(); render();
+}
+function trUndo() { M().stream = undo(M().stream); save(); render(); }
+
+/* ---------- rendering ---------- */
+const dot = (g, extra = '') => `<i class="cap g${g}${extra}" aria-hidden="true"></i>`;
+function mixDot(colors, total) {
+  if (colors.length === 1) return dot(colors[0].grade);
+  let acc = 0;
+  const stops = colors.map(c => { const a = acc / total * 360; acc += c.count; return `var(--g${c.grade}) ${a}deg ${acc / total * 360}deg`; }).join(',');
+  return `<i class="cap mix" style="--stops:${stops}" aria-hidden="true"></i>`;
+}
+function setupNeeded() { return !app.id && !app.setupDone && app.m.normal.phase !== 'track' && app.m.fest.phase !== 'track'; }
+
+function render() {
+  const setup = setupNeeded();
+  $('vSetup').hidden = !setup;
+  $('vMain').hidden = setup;
+  const x = M();
+  $('vLocate').hidden = setup || x.phase !== 'locate';
+  $('vTrack').hidden = setup || x.phase !== 'track';
+  $('idCard').hidden = setup;
+  $('mNormal').setAttribute('aria-pressed', String(app.mode === 'normal'));
+  $('mFest').setAttribute('aria-pressed', String(app.mode === 'fest'));
+  $('idMask').textContent = app.id ? `NPLN ID 불러옴 · u-${'•'.repeat(16)}${app.id.slice(-2)}` : 'ID 없음 (추적은 가능, 위치 찾기는 ID 필요)';
+  $('idKeep').checked = app.keepId; $('idKeep').disabled = !app.id;
+  $('idClear').textContent = app.id ? 'ID 지우기' : 'ID 넣기';
+  if (setup) { $('topChip').textContent = '처음 설정'; $('topChip').className = 'chip'; return; }
+  if (x.phase === 'locate') renderLocate(); else renderTrack();
+}
+
+function renderLocateStatus() {
+  const s = M().cand, r = R();
+  const st = status(s, r.result, { searching: r.searching, progress: r.progress, cancelled: r.cancelled });
+  const big = $('locBig'), line = $('locLine');
+  $('locBar').hidden = st.kind !== 'searching';
+  $('locBar').firstElementChild.style.width = `${Math.round((st.progress ?? 0) * 100)}%`;
+  $('locCancel').hidden = st.kind !== 'searching';
+  $('locRetry').hidden = !(st.kind === 'cancelled' && app.id && s.observations.length);
+  $('locConfirm').hidden = st.kind !== 'unique';
+  const chip = $('topChip');
+  chip.className = 'chip warn'; chip.textContent = '위치 찾는 중';
+  const rangeTxt = `난수 0~${fmt(s.maxOffset - 1)}`;
+  if (!app.id) { big.innerHTML = '–'; line.textContent = '위치를 찾으려면 아래에서 ID를 넣어 주세요.'; }
+  else if (st.kind === 'idle') { big.innerHTML = '–'; line.textContent = '실제로 뽑은 결과를 하나 입력하면 검색을 시작합니다.'; }
+  else if (st.kind === 'searching') { big.innerHTML = `검색 중 <small>${Math.round(st.progress * 100)}%</small>`; line.textContent = `지금까지 ${fmt(r.found)}개 · ${rangeTxt}`; }
+  else if (st.kind === 'cancelled') { big.innerHTML = '중단됨'; line.textContent = r.error ? `오류: ${r.error}` : '검색이 끝나지 않아 후보 수를 알 수 없습니다.'; }
+  else if (st.kind === 'capped') { big.innerHTML = `${fmt(st.count)}<small> 개 이상</small>`; line.textContent = `후보가 상한(${fmt(s.maxCandidates)})을 넘었습니다. 결과를 더 입력하면 다시 검색합니다.`; }
+  else if (st.kind === 'none') { big.innerHTML = '0<small> 개</small>'; line.textContent = '입력과 맞는 위치가 범위 안에 없습니다. 입력 실수(되돌리기), 뽑기 종류, 보유 개수, 검색 범위를 확인하세요. 모두 맞다면 엔진이 틀렸다는 신호입니다.'; chip.className = 'chip bad'; chip.textContent = '맞는 위치 없음'; }
+  else if (st.kind === 'unique') { big.innerHTML = '1<small> 개 · 범위 안</small>'; line.textContent = `${rangeTxt} 안에서 위치가 하나로 좁혀졌습니다.`; chip.className = 'chip ok'; chip.textContent = '위치 확정'; }
+  else { big.innerHTML = `${fmt(st.count)}<small> 개</small>`; line.textContent = `${rangeTxt} 전체 검색 · 입력 ${s.observations.length}개`; }
+  const cands = r.result && !r.searching && !r.result.truncated ? r.result.candidates : [];
+  if (cands.length >= 1 && cands.length <= 5) {
+    line.textContent += ` · 후보 위치: ${cands.map(c => `약 ${fmt(estimatePulls(c.offset, s.season, s))}번째`).join(', ')} 뽑기부터`;
+  }
+  $('locWiden').hidden = st.kind !== 'none';
+}
+
+function renderLocate() {
+  const s = M().cand, r = R();
+  renderLocateStatus();
+  // funnel
+  const tl = s.timeline;
+  $('locFunnel').hidden = !tl.length;
+  if (tl.length) {
+    const max = Math.max(...tl.map(e => e.count), 2);
+    let html = '', ep = tl[0].epoch;
+    for (const e of tl) {
+      if (e.epoch !== ep) { html += `<div class="sep">조건 변경 → 재탐색. 위와 단순 비교할 수 없습니다.</div>`; ep = e.epoch; }
+      const w = e.count <= 0 ? 2 : Math.max(4, Math.log(e.count + 1) / Math.log(max + 1) * 100);
+      html += `<div class="fn ${e.truncated ? 'capped' : ''} ${e.count === 0 ? 'zero' : ''}"><span>${e.pulls}번 입력</span><span class="tr"><i style="width:${w}%"></i></span><span class="n">${fmt(e.count)}${e.truncated ? '+' : ''}</span></div>`;
+    }
+    $('funnel').innerHTML = html;
+  }
+  // next outcomes
+  const fc = r.result && !r.searching && r.result.candidates.length > 1 ? forecast(r.result, 1, { limit: 2000 }) : null;
+  $('locNext').hidden = !fc;
+  if (fc) {
+    const st = fc.steps[0], total = fc.used;
+    $('locNextH').textContent = r.result.truncated ? `다음 결과 분포 (상한 걸린 후보 ${fmt(total)}개 기준)` : '다음 결과에 따라 남는 후보';
+    $('nextOpts').innerHTML = st.groups.slice(0, 6).map((g, i) => `<button class="opt" data-i="${i}">${dot(g.grade)}${label(g)}<em>${r.result.truncated ? `${g.count}개` : g.count === 1 ? '→ 확정' : `→ ${g.count}개`}</em></button>`).join('')
+      + (st.groups.length > 6 ? `<p class="small">외 ${st.groups.length - 6}가지</p>` : '');
+    $('locNextNote').textContent = r.result.truncated ? '상한 때문에 일부 후보만 본 분포입니다.' : '눌러서 바로 기록할 수 있습니다. 목록에 없는 결과면 아래에서 직접 고르세요. 비율은 출현 확률이 아닙니다.';
+    $('nextOpts').onclick = e => { const b = e.target.closest('button[data-i]'); if (!b) return; const g = st.groups[Number(b.dataset.i)]; locRecord({ grade: g.grade, type: g.type, subType: g.subType }); };
+  }
+  // picker
+  const canPick = !!app.id && !r.searching;
+  $('locPick').hidden = !canPick;
+  $('pickH').textContent = s.observations.length ? `${s.observations.length + 1}번째 실제 결과 직접 입력` : '첫 실제 결과 입력';
+  renderPicker($('pick'), $('items'), app.picker, s.season, o => locRecord(o), fc?.steps[0]?.groups);
+  // history
+  $('locHist').hidden = !s.observations.length;
+  $('hist').innerHTML = s.observations.map((o, i) => `<span><i class="g${o.grade}"></i>${i + 1}. ${label(o)}</span>`).join('');
+  // conditions
+  const d = app.draft ?? s;
+  $('cSeason').textContent = d.season; $('cMB').textContent = d.missingBanners; $('cMT').textContent = d.missingTitles;
+  const opts = [...new Set([rangeForDate(), d.maxOffset, ...RANGE_PRESETS])].sort((a, b) => a - b);
+  $('cRange').innerHTML = opts.map(v => `<option value="${v}" ${v === d.maxOffset ? 'selected' : ''}>${fmt(v)}${v === rangeForDate() ? ' (기본·날짜 기준)' : ''}</option>`).join('');
+  $('cCap').value = String(d.maxCandidates);
+  $('condSum').textContent = `시즌 ${s.season} · 미보유 ${s.missingBanners}/${s.missingTitles} · 범위 ${fmt(s.maxOffset)}`;
+  $('condApply').disabled = !draftChanged();
+}
+
+function renderPicker(gridEl, itemsEl, p, season, onPick, hints) {
+  gridEl.innerHTML = GN.map((n, g) => `<button data-g="${g}" aria-pressed="${p.grade === g}">${dot(g)}${n}</button>`).join('');
+  gridEl.onclick = e => { const b = e.target.closest('button[data-g]'); if (!b) return; p.grade = Number(b.dataset.g); renderPicker(gridEl, itemsEl, p, season, onPick, hints); };
+  if (p.grade == null) { itemsEl.hidden = true; return; }
+  itemsEl.hidden = false;
+  const list = itemsForGrade(season, p.grade);
+  if (p.grade === 2 && !list.some(x => x.type === 'AllGearSkillChip')) list.push({ grade: 2, type: 'AllGearSkillChip', subType: 'None' });
+  const hk = new Set((hints ?? []).map(outcomeKey));
+  itemsEl.innerHTML = `<button data-item="-1">색만 기록</button>` + list.map((it, i) => `<button data-item="${i}" class="${hk.has(outcomeKey(it)) ? 'hint' : ''}">${itemName(it)}</button>`).join('');
+  itemsEl.onclick = e => { const b = e.target.closest('button[data-item]'); if (!b) return; const i = Number(b.dataset.item); onPick(i < 0 ? { grade: p.grade } : list[i]); };
+}
+
+function renderTrack() {
+  const x = M(), s = x.stream;
+  const chip = $('topChip');
+  if (s.stopped) { chip.className = 'chip bad'; chip.textContent = '예측과 다름 · 멈춤'; }
+  else { chip.className = 'chip ok'; chip.textContent = s.streak ? `예측대로 ${s.streak}연속` : '추적 중'; }
+  // hero: gold, or silver when no gold item is missing
+  const missingGold = s.missingBanners > 0;
+  const n = s.stopped || !missingGold ? null : untilGrade(s, 0, 200000);
+  const hero = $('hero'), num = $('heroNum');
+  hero.className = 'hero';
+  $('heroLab').textContent = '황금 배너까지';
+  hero.hidden = !!s.stopped;
+  $('planCard').hidden = !!s.stopped;
+  if (!s.stopped && !missingGold) { hero.classList.add('none'); num.className = 'num'; num.textContent = '모두 보유'; $('heroUnit').textContent = '이번 시즌 황금 배너를 다 모았습니다'; }
+  else if (s.stopped) { hero.classList.add('none'); num.className = 'num'; num.textContent = '멈춤'; $('heroUnit').textContent = '아래에서 확인해 주세요'; }
+  else if (n == null) { hero.classList.add('none'); num.textContent = '20만+'; $('heroUnit').textContent = '회 안에 없음'; }
+  else { const d = String(n).length; num.className = `num ${d >= 5 ? 'd5' : d === 4 ? 'd4' : ''}`; num.textContent = fmt(n); $('heroUnit').textContent = `회 남음 · ${fmt(n)}번째 뽑기`; }
+  // mismatch
+  const mm = $('mismatch');
+  mm.hidden = !s.stopped;
+  if (s.stopped) {
+    mm.innerHTML = `<b>예측: ${label(s.stopped.predicted)} · 입력: ${label(s.stopped.obs)}</b><br>잘못 누른 거면 <b>실행 취소</b>, 이번 시즌 황금·은 보유가 바뀌었으면 아래 <b>보유</b>를 고치세요(자동으로 다시 맞춰 봄). 둘 다 아니면 <b>위치 다시 찾기</b>로 몇 번 더 뽑아 위치를 찾습니다. 모두 맞게 입력했는데도 다르면 엔진이 틀린 것이니 알려 주세요.
+      <div class="row" style="margin-top:10px"><button class="btn" data-a="undo">실행 취소</button><button class="btn" data-a="relocate">위치 다시 찾기</button></div>`;
+    mm.onclick = e => { const b = e.target.closest('button[data-a]'); if (!b) return; if (b.dataset.a === 'undo') trUndo(); else $('relocate').click(); };
+  }
+  // now + strip
+  const preds = s.stopped ? [] : predictions(s, 10);
+  $('nowCard').hidden = !!s.stopped;
+  if (preds.length) {
+    const p0 = preds[0];
+    $('tapCap').className = `cap g${p0.grade}`;
+    $('tapName').textContent = label({ grade: p0.grade, type: p0.row.type, subType: p0.row.subType });
+    $('strip').innerHTML = preds.map((p, i) => `<i class="cap g${p.grade}${i === 0 ? ' now' : ''}" title="${label({ grade: p.grade, type: p.row.type, subType: p.row.subType })}"></i>`).join('');
+    $('stripNote').textContent = `다음 10개 · ${preds.map(p => GN[p.grade][0]).join(' ')}`;
+  }
+  renderPicker($('tPick'), $('tItems'), app.tPicker, s.season, o => trRecord(o), null);
+  $('tPick').querySelectorAll('button').forEach(b => b.disabled = !!s.stopped);
+  $('streak').textContent = `기록 ${fmt(s.history.length)}개`;
+  // plans
+  const target = n;
+  $('discUsed').checked = app.discUsed;
+  $('kVal').textContent = app.perDay;
+  if (target) {
+    const a = planPerDay(target, 1, { discountUsedToday: app.discUsed }), b = planAllNow(target, { discountUsedToday: app.discUsed }), k = planPerDay(target, app.perDay, { discountUsedToday: app.discUsed });
+    $('p1d').textContent = dateKo(a.finish); $('p1g').textContent = `${fmt(a.days)}일 · ${gold(a.gold)}`;
+    $('pAg').textContent = `${gold(b.gold)}`;
+    $('pkd').textContent = dateKo(k.finish); $('pkg').textContent = `${fmt(k.days)}일 · ${gold(k.gold)}`;
+  } else { for (const id of ['p1d', 'p1g', 'pAg', 'pkd', 'pkg']) $(id).textContent = '–'; }
+  const other = app.mode === 'normal' ? 'fest' : 'normal', ox = app.m[other];
+  $('otherLab').textContent = other === 'fest' ? '페스티벌 뽑기' : '일반 뽑기';
+  if (ox.phase === 'track' && ox.stream && !ox.stream.stopped) { const on = untilGrade(ox.stream, 0, 200000); $('otherVal').textContent = on ? `${fmt(on)}회` : '–'; $('otherSub').textContent = '황금까지'; }
+  else { $('otherVal').textContent = '위치 미확정'; $('otherSub').textContent = '탭을 바꿔 찾기'; }
+  // settings
+  $('tMB').textContent = s.missingBanners; $('tMT').textContent = s.missingTitles;
+  $('tSeasonLine').textContent = `시즌 ${s.season} 기준 · 지금 시즌 ${seasonAt(new Date())}${seasonAt(new Date()) !== s.season ? ' → 시즌이 바뀌었습니다. 새 시즌 한정 아이템으로 바꾸려면 위치 다시 찾기 또는 아래 시즌 갱신' : ''}`;
+  $('tHist').innerHTML = s.history.slice(-30).map(h => `<span><i class="g${h.grade}"></i>${label(h)}</span>`).join('');
+  $('stateHex').textContent = formatState(s.state);
+}
+
+/* ---------- conditions draft (locate) ---------- */
+function draft() { const s = M().cand; return app.draft ?? (app.draft = { season: s.season, missingBanners: s.missingBanners, missingTitles: s.missingTitles, maxOffset: s.maxOffset, maxCandidates: s.maxCandidates }); }
+function draftChanged() { const d = app.draft, s = M().cand; return !!d && ['season', 'missingBanners', 'missingTitles', 'maxOffset', 'maxCandidates'].some(k => d[k] !== s[k]); }
+
+/* ---------- events ---------- */
+function setId(id) {
+  app.id = id; app.setupDone = true; $('idErr').textContent = '';
+  if ($('keepFirst').checked) app.keepId = true;
+  for (const m of ['normal', 'fest']) app.rt[m] = blankRt();
+  save(); render();
+  if (M().phase === 'locate' && M().cand.observations.length) startSearch('search');
+}
+async function readFile(f) {
+  try { setId(idFromSeedExport(await f.text())); }
+  catch (err) { $('idErr').textContent = `읽기 실패: ${err.message}`; }
+}
+$('idFile').onchange = e => { const f = e.target.files[0]; if (f) readFile(f); e.target.value = ''; };
+const drop = $('drop');
+drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+drop.ondragleave = () => drop.classList.remove('over');
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) readFile(f); };
+$('idUse').onclick = () => {
+  const v = $('idText').value.trim();
+  if (!NPLN_USER_ID_RE.test(v)) { $('idErr').textContent = 'u- 다음에 소문자·숫자 20자 형식이어야 합니다.'; return; }
+  $('idText').value = ''; setId(v);
+};
+$('idClear').onclick = () => {
+  cancelSearch(true);
+  if (app.id) { app.id = null; app.keepId = false; for (const m of ['normal', 'fest']) app.rt[m] = blankRt(); }
+  app.setupDone = false; save(); render();
+};
+$('idKeep').onchange = e => { app.keepId = e.target.checked; save(); };
+function switchMode(mode) {
+  if (app.mode === mode) return;
+  cancelSearch(true);
+  app.mode = mode; app.draft = null; app.picker = { grade: null, hints: null }; app.tPicker = { grade: null };
+  save(); render();
+  if (app.id && M().phase === 'locate' && M().cand.observations.length && !R().result) startSearch('search');
+}
+$('mNormal').onclick = () => switchMode('normal');
+$('mFest').onclick = () => switchMode('fest');
+$('locUndo').onclick = locUndo;
+$('locCancel').onclick = () => cancelSearch(false);
+$('locRetry').onclick = () => startSearch('search');
+$('locWiden').onclick = () => {
+  const s = M().cand;
+  try { M().cand = changeConditions(s, { maxOffset: Math.min(2 ** 32, s.maxOffset * 4) }); } catch { return; }
+  R().undo = []; R().result = null; save(); startSearch('research');
+};
+$('btnStartTrack').onclick = startTracking;
+let resetArm = 0;
+$('locReset').onclick = () => {
+  if (Date.now() - resetArm > 4000) { resetArm = Date.now(); $('locReset').textContent = '한 번 더 누르면 지움'; setTimeout(() => { $('locReset').textContent = '이 뽑기 종류 기록 지우기'; }, 4000); return; }
+  cancelSearch(true); app.m[app.mode] = freshMode(app.mode); app.rt[app.mode] = blankRt(); save(); render();
+};
+document.querySelectorAll('#condBox .step button').forEach(b => b.onclick = () => {
+  const d = draft(), k = b.dataset.k, delta = Number(b.dataset.d);
+  if (k === 'season') { d.season = Math.max(1, d.season + delta); const per = jackpotItemsPerKind(d.season); d.missingBanners = Math.min(d.missingBanners, per); d.missingTitles = Math.min(d.missingTitles, per); }
+  else d[k] = Math.max(0, Math.min(jackpotItemsPerKind(d.season), d[k] + delta));
+  render();
+});
+$('cRange').onchange = e => { draft().maxOffset = Number(e.target.value); render(); };
+$('cCap').onchange = e => { draft().maxCandidates = Number(e.target.value); render(); };
+$('condApply').onclick = () => {
+  try { M().cand = changeConditions(M().cand, app.draft); } catch (e) { $('condNote').textContent = e.message; return; }
+  app.draft = null; R().undo = []; R().result = null; save();
+  if (M().cand.observations.length && app.id) startSearch('research'); else render();
+};
+$('tapBtn').onclick = () => { const p = predictions(M().stream, 1)[0]; trRecord({ grade: p.grade, type: p.row.type, subType: p.row.subType }); };
+$('tUndo').onclick = trUndo;
+document.querySelectorAll('#vTrack .step button').forEach(b => b.onclick = () => {
+  const s = M().stream, per = jackpotItemsPerKind(s.season), d = Number(b.dataset.d);
+  const mb = b.dataset.t === 'mb' ? Math.max(0, Math.min(per, s.missingBanners + d)) : s.missingBanners;
+  const mt = b.dataset.t === 'mt' ? Math.max(0, Math.min(per, s.missingTitles + d)) : s.missingTitles;
+  M().stream = setOwnership(s, mb, mt).stream; save(); render();
+});
+$('relocate').onclick = () => {
+  const s = M().stream;
+  const cand = newSession({ mode: app.mode, season: s.season, missingBanners: s.missingBanners, missingTitles: s.missingTitles, maxOffset: M().cand.maxOffset, maxCandidates: M().cand.maxCandidates });
+  app.m[app.mode] = { phase: 'locate', cand, stream: null }; app.rt[app.mode] = blankRt(); save(); render();
+};
+$('discUsed').onchange = e => { app.discUsed = e.target.checked; render(); };
+$('kDown').onclick = () => { app.perDay = Math.max(2, app.perDay - 1); save(); render(); };
+$('kUp').onclick = () => { app.perDay = Math.min(50, app.perDay + 1); save(); render(); };
+
+render();
+if (app.id && M().phase === 'locate' && M().cand.observations.length) startSearch('search');
+
+</script>
+</body>
+</html>

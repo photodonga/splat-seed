@@ -223,3 +223,14 @@ test('re-running the same search (reload/retry) does not add a duplicate timelin
   s = withSearchResult(s, runSearch(s, ID));
   assert.equal(s.timeline.length, 1);
 });
+
+test('date-based range follows the public tool heuristic; pull estimate is offset / draws per pull', async () => {
+  const { rangeForDate, drawsPerPull, estimatePulls } = await import('../engine/candidates.mjs');
+  const d = new Date(2026, 9, 31, 23, 0);
+  const days = Math.floor((d - new Date(2022, 8, 1)) / 86400000);
+  assert.equal(rangeForDate(d), days * 33 + 20);
+  const dpp = drawsPerPull(17);
+  assert.ok(dpp > 1.4 && dpp < 1.5, `draws per pull ${dpp}`);
+  assert.equal(estimatePulls(0, 17), 0);
+  assert.equal(estimatePulls(Math.round(dpp * 600), 17), 600);
+});
