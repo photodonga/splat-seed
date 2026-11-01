@@ -1,5 +1,6 @@
 // Downloads actual original game PNGs listed in assets/game-manifest.json.
-// Source files are not modified or converted; verify PNG signature after each download.
+// Source files are not modified here; verify PNG signature after each download.
+// Afterwards run tools/shrink-game-art.py to scale capsule/food art down to display size.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
