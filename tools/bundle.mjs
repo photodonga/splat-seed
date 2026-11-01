@@ -20,7 +20,7 @@ if (result.includes(fontTag)) result = result.replace(fontTag, () => `<script>\n
 const ASSET_DIR = new URL('../assets/', import.meta.url);
 const embeddedAssets = {};
 function collectSvg(path = '') {
-  for (const ent of fs.readdirSync(new URL(path, ASSET_DIR), { withFileTypes:true })) {
+  for (const ent of fs.readdirSync(new URL(path, ASSET_DIR), { withFileTypes:true }).sort((a,b) => a.name.localeCompare(b.name,'en'))) {
     const relative = path + ent.name;
     if (ent.isDirectory()) collectSvg(relative + '/');
     else if (ent.isFile() && relative.endsWith('.svg')) {
