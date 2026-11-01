@@ -1,46 +1,11 @@
-# Interactive 10-pull forecast and Leanny icon mapping
+# SPLAT SEED — local artwork and prediction preview
 
-This change makes the ten predicted capsules inside `app.html` and `dist/app-standalone.html` tappable. A tap **only changes the selected preview**: it never records a pull, advances the RNG, changes localStorage, or mutates an engine state. Real-world results are still entered via the separate `지금 뽑으면`/manual controls.
+The game-inspired graphics are **original SVG illustrations made for SPLAT SEED**, not copies of Nintendo/Leanny icons. There are 42 committed assets under `assets/`: six regular capsules, six Splatfest capsules, 14 reward-category icons, 15 decorative sticker sketches, and one logo.
 
-Each button contains the predicted capsule color and ordinal number (1–10). The selected result presents a capsule icon, reward category, and a representative image when available. Mobile uses a 10-column grid without page-level horizontal overflow.
+The modular app (`app.html`) loads these SVGs exclusively from relative `./assets/` paths. The single-file distribution (`dist/app-standalone.html`) embeds the same SVG source as data URLs at bundle time, so the images need no CDN or image-server connection. The app also no longer requests Google Fonts.
 
-## Source asset mapping
+The 15 decorative sticker designs are **not** actual Splatoon locker sticker art, a catalog, or exact winnings. The engine only identifies reward category (e.g. `LockerSticker`); it does not identify individual stickers, figurines, titles, or ticket subtype IDs. A forecast selection only changes the read-only detail panel, never advances or saves the game RNG.
 
-Images are linked directly (not bundled or redistributed) from `Leanny/splat3` under https://github.com/Leanny/splat3/tree/main/images.
+Icon slots and responsive text columns are kept separate to prevent overlapping labels on small mobile screens. `node --test tests/*.test.mjs` checks local assets, CSS mode parity, standalone bundle equality, and core engine behavior.
 
-| Engine reward | Source art path | Notes |
-|---|---|---|
-| `MiniGameCardPack` | `catalog/IconCardPack_00.png` | Actual card-pack type icon |
-| `FoodTicket|FoodParty` | `food/IconShopParty_00.png` | **Representative only**: money party type; exact money/EXP version not known |
-| `FoodTicket|Food100` | `food/IconShopFoodL.png` | **Representative only**: money 100% type; exact boost not known |
-| `FoodTicket|Food50` | `food/IconShopFood.png` | **Representative only**: money 50% type; exact boost not known |
-| `DrinkTicket` | `food/GearPowerTicketBase.png` | Generic gear drink ticket base |
-| `NamePlateBg` | `catalog/IconNameplate_02.png` | Random/representative banner art, not a specific earned banner |
-| `Byname` | `catalog/IconNameplate_03.png` | Representative title art |
-| `GearSkillChip` / `AllGearSkillChip` | `misc/SkillIconPiece_00^s.png` | Generic gear ability chunk, with amount in text |
-| `Emote` | `emote/BigJump00.png` | **Example** emote; exact emote is unknown |
-| `LockerFigure` | `zakka/Fig_Arcadegame.png` | **Example** figure; exact figure is unknown |
-| `LockerSticker` | `zakka/Grf_Sti_Graffiti_00.png` | **Representative only**: exact sticker ID is not produced by the current shell-out engine |
-
-## Locker sticker preview gallery
-
-The UI shows 15 verified example images when the selected forecast category is `LockerSticker`. The examples are drawn from Leanny's `LockerGoodsStickerInfo` acquisition groups: Shop, Catalog, and Uroko (scale exchange). The source dataset has 417 records across those three locker acquisition groups; 416 have matching images in `images/zakka/`. The remaining 472 `Other` records are excluded from the locker gallery because they are not in those locker acquisition groups. This gallery is a visual sample, **not a complete checklist and not a prediction of the exact sticker awarded**. The engine still predicts only the `LockerSticker` reward category.
-
-The 15 preview samples are checked against the current Leanny dataset and image tree in the test. Their labels are kept as internal IDs in `title` attributes; the UI only shows acquisition source and season.
-
-## Reward icon layout
-
-Reward result rows use fixed capsule/art columns and a `minmax(0,1fr)` text column. Item names can wrap within their own column; result counts remain in a separate non-wrapping column. Picker/history labels and the current-result button also have `min-width:0` text wrappers so images cannot overlap text on narrow mobile screens.
-
-Leanny's `js/Utility.js` confirms `IconCardPack_00`, the ticket icon families, `IconNameplate_02`/`03`, and `GearPowerTicketBase` as category graphics. Other item assets were checked for existence in the repository. Data from `engine/shellout.mjs` only predicts type/subtype; it **does not identify** an exact random locker sticker, figure, emote, banner, or specific ticket subtype. Do not present representative imagery as an exact reward.
-
-## Rights, availability and fallbacks
-
-The artwork and game marks remain the property of Nintendo and the respective rights holders. A public GitHub file or source link does not necessarily convey redistribution or reuse permission. Images are requested from GitHub's raw CDN; no Nintendo artwork or proprietary font bytes are stored in this repository. A missing/blocked image hides gracefully, while the capsule and Korean item name remain.
-
-## Tests
-
-- `tests/interactive-forecast.test.mjs` checks preview interaction source, non-mutating handler, category assets, mobile grid, and reproducible single-file generation.
-- Use `node --test tests/*.test.mjs` for automated checks.
-- Real-game validation remains separate and requires sufficient held-out records; three owner-observed matches are a smoke test, not full engine certification.
-- Physical iPhone Safari should still be used to visually confirm the 10-column grid, reward examples, and separate one-tap record action.
+No Nintendo game art or third-party image binaries are copied in this repo. SPLAT SEED is unofficial. Real-game verification still requires independent held-out observations; user-reported three matches are a smoke test, not full engine validation.

@@ -1,39 +1,32 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 
 const SOURCE = readFileSync(new URL('../app.html', import.meta.url), 'utf8');
 const STANDALONE = readFileSync(new URL('../dist/app-standalone.html', import.meta.url), 'utf8');
-const colorNames = ['Gold','Silver','Bronze','Red','Purple','Blue'];
+const grades = ['gold','silver','bronze','red','purple','blue'];
 
-function gameCSS(html) {
-  return html.split('/* SPLAT_GAME_ART_V1')[1]?.split('</style>')[0];
-}
-
-for (const [name, html] of [['modular', SOURCE], ['standalone', STANDALONE]]) {
-  test(name + ': all normal and Splatfest colors use explicit matching artwork', () => {
-    assert.ok(gameCSS(html), 'game UI stylesheet not present');
-    for (const color of colorNames) {
-      const regular = 'S3_Shell-Out_' + color + '_Capsule.png';
-      const fest = 'S3_Shell-Out_' + color + '_Capsule_Splatfest.png';
-      assert.ok(html.includes(regular), 'missing normal ' + color);
-      assert.ok(html.includes(fest), 'missing Splatfest ' + color);
-    }
-    assert.equal((gameCSS(html).match(/cdn.wikimg.net/g) || []).length, 12);
+for (const [name,html] of [['modular',SOURCE], ['standalone',STANDALONE]]) {
+  test(name + ': every capsule mode has an original local SVG', () => {
+    assert.match(html, /SPLAT_GAME_ART_V1/);
+    for (const mode of ['normal','fest']) for (const grade of grades)
+      assert.ok(html.includes('capsules/'+mode+'-'+grade+'.svg'), mode+' '+grade);
+    assert.doesNotMatch(html, /cdn\.wikimg\.net|raw\.githubusercontent\.com|fonts\.googleapis\.com/);
   });
-  test(name + ': style follows active mode and keeps fallback capsule', () => {
+  test(name + ': switching mode changes capsule asset set', () => {
     assert.match(html, /document\.body\.dataset\.splatMode = app\.mode/);
     assert.match(html, /data-splat-mode="normal"/);
     assert.match(html, /var\(--art,none\)/);
     assert.match(html, /\$\('mFest'\)\.onclick = \(\) => switchMode\('fest'\)/);
   });
-  test(name + ': original tracking and backup hooks remain', () => {
+  test(name + ': tracking and saved data remain unchanged', () => {
     assert.match(html, /const KEY = 'splat-seed-app-v1'/);
     assert.match(html, /function trRecord\(obs\)/);
     assert.match(html, /function renderPicker\(/);
     assert.match(html, /function save\(\)/);
   });
 }
-test('modular and standalone have identical styling', () => {
-  assert.equal(gameCSS(SOURCE), gameCSS(STANDALONE));
+test('source mode art references corresponding SVGs on disk', () => {
+  for(const mode of ['normal','fest']) for(const grade of grades)
+    assert.ok(existsSync(new URL('../assets/capsules/'+mode+'-'+grade+'.svg',import.meta.url)));
 });
