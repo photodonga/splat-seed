@@ -1441,7 +1441,7 @@ const KEY = 'splat-seed-app-v1';
 const HERO_PALETTE = Object.freeze(['#C8F230','#39DFFF','#FF438B','#FF9D28','#B58AFF','#FFEF48']);
 const HERO_COLOR_KEY = 'splat-seed-hero-color-v1';
 let heroColorIndex = -1;
-try { const stored = Number(localStorage.getItem(HERO_COLOR_KEY)); if (Number.isInteger(stored) && stored >= 0 && stored < HERO_PALETTE.length) heroColorIndex = stored; } catch {}
+try { const savedColor = localStorage.getItem(HERO_COLOR_KEY); const stored = savedColor === null ? NaN : Number(savedColor); if (Number.isInteger(stored) && stored >= 0 && stored < HERO_PALETTE.length) heroColorIndex = stored; } catch {}
 function chooseHeroColor(change = false) {
   if (heroColorIndex < 0 || change) {
     const prev = heroColorIndex;
@@ -1449,7 +1449,6 @@ function chooseHeroColor(change = false) {
     heroColorIndex = available[Math.floor(Math.random() * available.length)];
     try { localStorage.setItem(HERO_COLOR_KEY, String(heroColorIndex)); } catch {}
   }
-  document.documentElement.style.setProperty('--unused-hero-color', HERO_PALETTE[heroColorIndex]);
   const hero = document.getElementById('hero');
   if (hero) hero.style.setProperty('--hero-neon', HERO_PALETTE[heroColorIndex]);
 }
