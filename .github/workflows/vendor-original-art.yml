@@ -1,0 +1,30 @@
+name: Vendor original game PNGs into SPLAT SEED
+on:
+  push:
+    branches: [fix/vendor-actual-game-art-20261101]
+permissions:
+  contents: write
+jobs:
+  vendor-and-bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/vendor-actual-game-art-20261101
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download original unmodified source PNGs
+        run: node tools/vendor-game-art.mjs
+      - name: Embed original PNG bytes in standalone HTML
+        run: node tools/bundle.mjs app.html dist/app-standalone.html engine/murmur3.mjs engine/xorshift128.mjs engine/shellout.mjs engine/npln-id.mjs engine/candidates.mjs engine/tracker.mjs engine/plan.mjs
+      - name: Commit PNGs and offline HTML
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/game dist/app-standalone.html
+          if ! git diff --cached --quiet; then
+            git commit -m "assets: store original game PNGs and offline standalone"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
