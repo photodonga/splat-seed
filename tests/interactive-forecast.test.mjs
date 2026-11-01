@@ -19,6 +19,7 @@ const expectedArt = [
   'food/GearPowerTicketBase.png',
   'misc/SkillIconPiece_00%5Es.png',
   'emote/BigJump00.png',
+  'zakka/Grf_Sti_Graffiti_00.png',
   'zakka/Fig_Arcadegame.png',
 ];
 
