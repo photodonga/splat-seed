@@ -245,6 +245,27 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("./assets/game/capsules/fest-blue
   .pick button{min-height:58px}
 }
 
+/* Target plan card (2026-11-01) */
+.tgt-pick{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin-top:10px}
+.tgt-pick button{min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 5px;border-radius:11px;border:2px solid #665477;background:#392c4c;color:#e9def5;font-size:11px;font-weight:800;touch-action:manipulation}
+.tgt-pick button .cap{width:22px;height:22px}
+.tgt-pick button[aria-pressed=true]{border-color:#ffd52e;background:#54416d;color:#fff4c2;box-shadow:0 0 0 2px #ffd52e33}
+.tgt-items button[aria-pressed=true]{background:#ffd52e;border-color:#fff1a1;color:#1a1520}
+.tgt-head{display:flex;align-items:center;gap:9px;margin-top:12px;padding:10px 12px;border-radius:13px;background:#21192e;border:2px dashed #ffd52e88}
+.tgt-head .cap{width:30px;height:30px}.tgt-head .reward-image{width:28px;height:28px}
+.tgt-head b{display:block;font-size:15px;line-height:1.25;color:#fff4c2}
+.tgt-head small{display:block;font-size:11.5px;color:#d5c5e7;margin-top:2px}
+.tgt-more{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:5px}
+.tgt-more[hidden]{display:none}
+.tgt-more li{display:grid;grid-template-columns:auto auto 1fr;align-items:baseline;gap:8px;padding:7px 11px;border-radius:11px;background:#2a2139;font-size:12px;color:#d5c5e7}
+.tgt-more .nth{font-size:11px;color:#ffd52e;font-weight:900}
+.tgt-more b{font-size:14px;color:#fff4e6}
+.tgt-more li>span:last-child{text-align:right}
+.strip .future-btn{position:relative}
+.strip .future-btn.is-target{background:#4a3a1e;color:#fff1a1}
+.strip .future-btn.is-target:after{content:"★";position:absolute;top:-7px;right:-4px;width:15px;height:15px;border-radius:50%;background:#ffd52e;color:#1a1520;font-size:10px;line-height:15px;text-align:center;box-shadow:1px 1px 0 #0e0a14}
+@media(max-width:370px){.tgt-pick button span{font-size:10px}.tgt-more li{grid-template-columns:auto 1fr;}.tgt-more li>span:last-child{grid-column:1/-1;text-align:left}}
+
 </style>
 </head>
 <body data-splat-mode="normal">
@@ -349,13 +370,17 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("./assets/game/capsules/fest-blue
     </div>
 
     <div class="card" id="planCard">
-      <div class="row"><div class="h" style="margin:0">어떻게 뽑을까요?</div><span class="sp"></span><label class="small row" style="gap:5px"><input type="checkbox" id="discUsed"> 오늘 할인 뽑기 씀</label></div>
+      <div class="row"><div class="h" style="margin:0">목표</div><span class="sp"></span><label class="small row" style="gap:5px"><input type="checkbox" id="discUsed"> 오늘 할인 뽑기 씀</label></div>
+      <div class="tgt-pick" id="tgtPick" role="group" aria-label="목표 캡슐 색"></div>
+      <div class="items tgt-items" id="tgtItems" role="group" aria-label="목표 보상 종류"></div>
+      <div class="tgt-head" id="tgtHead" aria-live="polite"></div>
       <div class="plan" style="margin-top:8px">
         <div class="pl"><span>매일 첫 뽑기만</span><b id="p1d"></b><i id="p1g"></i></div>
         <div class="pl"><span>오늘 몰아서</span><b>오늘</b><i id="pAg"></i></div>
         <div class="pl"><span>하루 <button class="btn" id="kDown" style="padding:0 7px">−</button> <b id="kVal" style="display:inline;font-size:12px"></b> <button class="btn" id="kUp" style="padding:0 7px">+</button> 회</span><b id="pkd"></b><i id="pkg"></i></div>
         <div class="pl"><span id="otherLab">다른 뽑기</span><b id="otherVal"></b><i id="otherSub"></i></div>
       </div>
+      <ol class="tgt-more" id="tgtMore" hidden></ol>
       <p class="small" style="margin-top:8px">가격 가정: 하루 첫 뽑기 5,000 · 이후 30,000골드, 날짜는 09:00(한국시간)에 바뀜. 게임 화면에서 확인이 필요합니다.</p>
     </div>
 
@@ -390,7 +415,7 @@ import {
 import { OffsetSearch, makeContext, initialState, seasonAt, jackpotItemsPerKind, NPLN_USER_ID_RE } from './engine/shellout.mjs';
 import { idFromSeedExport } from './engine/npln-id.mjs';
 // no import aliases: tools/bundle.mjs strips imports and inlines modules by their own names
-import { newStream, predictions, untilGrade, record, undo, setOwnership, formatState, serialize, deserialize } from './engine/tracker.mjs';
+import { newStream, predictions, untilGrade, findOutcomes, record, undo, setOwnership, formatState, serialize, deserialize } from './engine/tracker.mjs';
 import { planPerDay, planAllNow } from './engine/plan.mjs';
 
 const KEY = 'splat-seed-app-v1';
@@ -461,7 +486,7 @@ const gold = n => n >= 10000 ? `${(n / 10000).toLocaleString('ko-KR', { maximumF
 
 /* ---------- state ---------- */
 const app = {
-  id: null, keepId: false, mode: 'normal', discUsed: false, perDay: 5,
+  id: null, keepId: false, mode: 'normal', discUsed: false, perDay: 5, target: { grade: 0 },
   m: { normal: null, fest: null },             // persisted per mode: { phase, cand, stream }
   rt: { normal: blankRt(), fest: blankRt() },   // runtime per mode (search results, undo)
   draft: null, picker: { grade: null, hints: null }, tPicker: { grade: null },
@@ -488,11 +513,12 @@ function load() {
   if (o?.mode === 'fest') app.mode = 'fest';
   app.keepId = !!o?.keepId;
   app.perDay = Number.isInteger(o?.perDay) && o.perDay >= 2 ? o.perDay : 5;
+  if (Number.isInteger(o?.target?.grade) && o.target.grade >= 0 && o.target.grade < 6) app.target = { grade: o.target.grade, ...(typeof o.target.type === 'string' ? { type: o.target.type, subType: String(o.target.subType ?? 'None') } : {}) };
   if (app.keepId && typeof o?.id === 'string' && NPLN_USER_ID_RE.test(o.id)) app.id = o.id;
   if (o?.setupDone) app.setupDone = true;
 }
 function save() {
-  const o = { v: 1, mode: app.mode, keepId: app.keepId, perDay: app.perDay, setupDone: !!app.setupDone, modes: {} };
+  const o = { v: 1, mode: app.mode, keepId: app.keepId, perDay: app.perDay, target: app.target, setupDone: !!app.setupDone, modes: {} };
   for (const mode of ['normal', 'fest']) {
     const x = app.m[mode];
     o.modes[mode] = { phase: x.phase, cand: serializeSession(x.cand), stream: x.stream ? JSON.parse(serialize(x.stream)) : null };
@@ -723,23 +749,54 @@ function renderPicker(gridEl, itemsEl, p, season, onPick, hints) {
   itemsEl.onclick = e => { const b = e.target.closest('button[data-item]'); if (!b) return; const i = Number(b.dataset.item); onPick(i < 0 ? { grade: p.grade } : list[i]); };
 }
 
+const TARGET_LIMIT = 200000;
+const targetLabel = t => t.type ? `${GN[t.grade]} · ${itemName(t)}` : (t.grade === 0 ? '황금 캡슐' : `${GN[t.grade]} 캡슐`);
+function targetItems(season, grade) {
+  const list = itemsForGrade(season, grade);
+  if (grade === 2 && !list.some(x => x.type === 'AllGearSkillChip')) list.push({ grade: 2, type: 'AllGearSkillChip', subType: 'None' });
+  return list;
+}
+/** The saved target, falling back to colour-only when its reward is not in this season's table. */
+function validTarget(season) {
+  const t = app.target;
+  if (t.type == null) return { grade: t.grade };
+  return targetItems(season, t.grade).some(x => x.type === t.type && (x.subType ?? 'None') === t.subType) ? t : { grade: t.grade };
+}
+function renderTargetPicker(season, tg) {
+  const pick = $('tgtPick'), items = $('tgtItems');
+  pick.innerHTML = GN.map((nm, g) => `<button type="button" data-g="${g}" aria-pressed="${tg.grade === g}" aria-label="${nm}">${dot(g)}<span>${nm}</span></button>`).join('');
+  const list = targetItems(season, tg.grade);
+  items.innerHTML = `<button type="button" data-item="-1" aria-pressed="${tg.type == null}"><span class="item-label">아무거나</span></button>` +
+    list.map((it, i) => `<button type="button" data-item="${i}" aria-pressed="${tg.type === it.type && tg.subType === (it.subType ?? 'None')}">${rewardIcon(it)}<span class="item-label">${itemName(it)}</span></button>`).join('');
+  pick.onclick = e => { const b = e.target.closest('button[data-g]'); if (!b) return; app.target = { grade: Number(b.dataset.g) }; save(); render(); };
+  items.onclick = e => {
+    const b = e.target.closest('button[data-item]'); if (!b) return;
+    const i = Number(b.dataset.item);
+    app.target = i < 0 ? { grade: tg.grade } : { grade: tg.grade, type: list[i].type, subType: list[i].subType ?? 'None' };
+    save(); render();
+  };
+}
+
 function renderTrack() {
   const x = M(), s = x.stream;
   const chip = $('topChip');
   if (s.stopped) { chip.className = 'chip bad'; chip.textContent = '예측과 다름 · 멈춤'; }
   else { chip.className = 'chip ok'; chip.textContent = s.streak ? `예측대로 ${s.streak}연속` : '추적 중'; }
-  // hero: gold, or silver when no gold item is missing
-  const missingGold = s.missingBanners > 0;
-  const n = s.stopped || !missingGold ? null : untilGrade(s, 0, 200000);
+  // hero: distance to the chosen target (default: gold capsule)
+  const tg = validTarget(s.season);
+  const isGold = tg.grade === 0 && tg.type == null;
+  const allGoldOwned = isGold && s.missingBanners === 0;
+  const hits = s.stopped || allGoldOwned ? [] : findOutcomes(s, tg, { count: 3, limit: TARGET_LIMIT });
+  const n = hits[0] ?? null;
   const hero = $('hero'), num = $('heroNum');
   hero.className = 'hero';
-  $('heroLab').textContent = '황금 배너까지';
+  $('heroLab').textContent = isGold ? '황금 배너까지' : `${targetLabel(tg)}까지`;
   hero.hidden = !!s.stopped;
   $('planCard').hidden = !!s.stopped;
-  if (!s.stopped && !missingGold) { hero.classList.add('none'); num.className = 'num'; num.textContent = '모두 보유'; $('heroUnit').textContent = '이번 시즌 황금 배너를 다 모았습니다'; }
+  if (allGoldOwned) { hero.classList.add('none'); num.className = 'num'; num.textContent = '모두 보유'; $('heroUnit').textContent = '이번 시즌 황금 배너를 다 모았습니다'; }
   else if (s.stopped) { hero.classList.add('none'); num.className = 'num'; num.textContent = '멈춤'; $('heroUnit').textContent = '아래에서 확인해 주세요'; }
-  else if (n == null) { hero.classList.add('none'); num.textContent = '20만+'; $('heroUnit').textContent = '회 안에 없음'; }
-  else { const d = String(n).length; num.className = `num ${d >= 5 ? 'd5' : d === 4 ? 'd4' : ''}`; num.textContent = fmt(n); $('heroUnit').textContent = `회 남음 · ${fmt(n)}번째 뽑기`; }
+  else if (n == null) { hero.classList.add('none'); num.className = 'num'; num.textContent = '없음'; $('heroUnit').textContent = `${fmt(TARGET_LIMIT)}회 안에 나오지 않습니다`; }
+  else { const d = String(n).length; num.className = `num ${d >= 5 ? 'd5' : d === 4 ? 'd4' : ''}`; num.textContent = fmt(n); $('heroUnit').textContent = n === 1 ? '바로 다음 뽑기!' : `회 남음 · ${fmt(n)}번째 뽑기`; }
   // mismatch
   const mm = $('mismatch');
   mm.hidden = !s.stopped;
@@ -760,7 +817,8 @@ function renderTrack() {
     previewIndex = Math.max(0, Math.min(previewIndex, preds.length - 1));
     $('strip').innerHTML = preds.map((p, i) => {
       const outcome = { grade: p.grade, type: p.row.type, subType: p.row.subType };
-      return `<button class="future-btn" type="button" data-preview="${i}" aria-pressed="${i === previewIndex}" aria-label="${i + 1}번째 뽑기 예상: ${label(outcome)}">${dot(p.grade)}<span class="future-number">${i + 1}</span></button>`;
+      const hit = hits.includes(i + 1);
+      return `<button class="future-btn${hit ? ' is-target' : ''}" type="button" data-preview="${i}" aria-pressed="${i === previewIndex}" aria-label="${i + 1}번째 뽑기 예상: ${label(outcome)}${hit ? ' · 목표' : ''}">${dot(p.grade)}<span class="future-number">${i + 1}</span></button>`;
     }).join('');
     $('strip').onclick = e => {
       const button = e.target.closest('button[data-preview]');
@@ -785,7 +843,9 @@ function renderTrack() {
   renderPicker($('tPick'), $('tItems'), app.tPicker, s.season, o => trRecord(o), null);
   $('tPick').querySelectorAll('button').forEach(b => b.disabled = !!s.stopped);
   $('streak').textContent = `기록 ${fmt(s.history.length)}개`;
-  // plans
+  // plans: target picker, nearest occurrence plans, then the next ones
+  renderTargetPicker(s.season, tg);
+  $('tgtHead').innerHTML = `${dot(tg.grade)}${tg.type ? rewardIcon(tg) : ''}<div><b>${targetLabel(tg)}</b><small>${allGoldOwned ? '이번 시즌 황금 배너를 다 모았습니다' : n == null ? `${fmt(TARGET_LIMIT)}회 안에 없음` : `다음은 ${fmt(n)}번째 뽑기`}</small></div>`;
   const target = n;
   $('discUsed').checked = app.discUsed;
   $('kVal').textContent = app.perDay;
@@ -795,6 +855,12 @@ function renderTrack() {
     $('pAg').textContent = `${gold(b.gold)}`;
     $('pkd').textContent = dateKo(k.finish); $('pkg').textContent = `${fmt(k.days)}일 · ${gold(k.gold)}`;
   } else { for (const id of ['p1d', 'p1g', 'pAg', 'pkd', 'pkg']) $(id).textContent = '–'; }
+  const more = hits.slice(1);
+  $('tgtMore').hidden = !more.length;
+  $('tgtMore').innerHTML = more.map((m, i) => {
+    const a = planPerDay(m, 1, { discountUsedToday: app.discUsed }), b = planAllNow(m, { discountUsedToday: app.discUsed });
+    return `<li><span class="nth">${i + 2}개째</span><b>${fmt(m)}번째</b><span>하루 1회 ${fmt(a.days)}일 · 몰아서 ${gold(b.gold)}</span></li>`;
+  }).join('');
   const other = app.mode === 'normal' ? 'fest' : 'normal', ox = app.m[other];
   $('otherLab').textContent = other === 'fest' ? '페스티벌 뽑기' : '일반 뽑기';
   if (ox.phase === 'track' && ox.stream && !ox.stream.stopped) { const on = untilGrade(ox.stream, 0, 200000); $('otherVal').textContent = on ? `${fmt(on)}회` : '–'; $('otherSub').textContent = '황금까지'; }

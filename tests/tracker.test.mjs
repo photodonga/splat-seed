@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { initialState, makeContext, simulate } from '../engine/shellout.mjs';
 import {
-  parseStateText, formatState, newStream, predictions, untilGold, record, undo, setOwnership,
+  parseStateText, formatState, newStream, predictions, untilGold, untilGrade, findOutcomes, record, undo, setOwnership,
   replaceState, changeSeason, cashPlan, serialize, deserialize,
 } from '../engine/tracker.mjs';
 
@@ -117,4 +117,18 @@ test('serialize / deserialize round trip', () => {
   const back = deserialize(serialize(s));
   assert.deepEqual(back, s);
   assert.throws(() => deserialize('{"v":2}'));
+});
+
+test('findOutcomes lists the next positions of a colour or colour+reward target, matching predictions', () => {
+  const st = setup();
+  const s = newStream(st);
+  const p = predictions(s, 300);
+  const want = (fn) => p.map((x, i) => fn(x) ? i + 1 : 0).filter(Boolean).slice(0, 3);
+  const t = { grade: p[3].grade, type: p[3].row.type, subType: p[3].row.subType };
+  assert.deepEqual(findOutcomes(s, t, { limit: 300 }), want(x => x.grade === t.grade && x.row.type === t.type && x.row.subType === t.subType));
+  assert.deepEqual(findOutcomes(s, { grade: 1 }, { limit: 300 }), want(x => x.grade === 1));
+  assert.equal(findOutcomes(s, { grade: 0 }, { count: 1 })[0] ?? null, untilGrade(s, 0));
+  assert.deepEqual(findOutcomes(s, { grade: 3 }, { count: 5, limit: 2 }).every(n => n <= 2), true);
+  assert.deepEqual(s.state, st.state); // no mutation
+  assert.throws(() => findOutcomes(s, {}));
 });

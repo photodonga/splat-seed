@@ -52,6 +52,24 @@ export function untilGrade(s, grade, limit = 200000) {
   return null;
 }
 
+/**
+ * 1-based positions of the next `count` pulls matching `target` ({ grade, type?, subType? }) within `limit` pulls.
+ * Without `type`, any reward of that grade matches. Never mutates the stream.
+ */
+export function findOutcomes(s, target, { count = 3, limit = 200000 } = {}) {
+  if (!target || !Number.isInteger(target.grade)) throw new TypeError('target.grade required');
+  const rng = XorShift128.fromState(s.state);
+  const ctx = ctxOf(s);
+  const out = [];
+  for (let i = 1; i <= limit && out.length < count; i++) {
+    const r = pullOnce(rng, ctx);
+    if (r.grade !== target.grade) continue;
+    if (target.type != null && (r.row.type !== target.type || r.row.subType !== (target.subType ?? 'None'))) continue;
+    out.push(i);
+  }
+  return out;
+}
+
 export function untilGold(s, limit = 200000) {
   return pullsUntilGold(s.state, ctxOf(s), limit);
 }
