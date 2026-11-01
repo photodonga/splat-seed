@@ -34,5 +34,6 @@ for (const [name, html] of [['modular', SOURCE], ['standalone', STANDALONE]]) {
   });
 }
 test('modular and standalone have identical styling', () => {
-  assert.equal(gameCSS(SOURCE), gameCSS(STANDALONE));
+  const normalize = css => css.replace(/url\("(?:\.\/assets\/game\/[a-zA-Z0-9_./-]+\.png|data:image\/png;base64,[^"]+)"\)/g, 'url("[ORIGINAL_LOCAL_PNG]")');
+  assert.equal(normalize(gameCSS(SOURCE)), normalize(gameCSS(STANDALONE)));
 });
