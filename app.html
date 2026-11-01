@@ -284,21 +284,13 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("./assets/game/capsules/fest-blue
 @media(max-width:370px){.tgt-pick button span{font-size:10px}}
 
 
-/* Actual Splatoon 3 Splashtag banner: Leanny/splat3 Npl_Catalog_Season06_Lv01.png.
-   External original image; preserve previous CSS paint as a network-failure fallback. */
-.hero{
-  background-image:linear-gradient(90deg,rgba(12,8,25,.65),rgba(12,8,25,.53)),url("./assets/game/images/npl/Npl_Catalog_Season06_Lv01.png");
-  background-repeat:no-repeat;
-  background-position:center;
-  background-size:cover;
-  border-radius:22px;
-  transform:none;
-  min-height:220px;
-}
+
+/* SPLAT SEED: vivid rotating ink color, no artwork or texture. */
+.hero{background:var(--hero-ink,#C8F230)!important;background-image:none!important;border:3px solid #171122;border-radius:22px;box-shadow:6px 8px 0 #080611;transform:none;min-height:220px}
 .hero .splat{display:none}
-.hero .lab{color:#f8f4ff;background:rgba(12,9,23,.85);border-color:#f1e9ff;box-shadow:3px 4px 0 #090614}
-.hero .num{color:#fffdf5;text-shadow:4px 5px 0 #100b19,0 0 15px rgba(0,0,0,.6)}
-.hero .unit{color:#fffdf5;text-shadow:2px 2px 0 #100b19}
+.hero .lab{color:#fffdf5;background:#21172b;border:2px solid #f8f4ff;box-shadow:3px 4px 0 #090614}
+.hero .num{color:#21172b;text-shadow:3px 4px 0 rgba(255,255,255,.48)}
+.hero .unit{color:#21172b;text-shadow:1px 1px 0 rgba(255,255,255,.38)}
 
 </style>
 </head>
@@ -457,6 +449,13 @@ import { newStream, predictions, untilGrade, findOutcomes, record, undo, setOwne
 import { planPerDay, planAllNow } from './engine/plan.mjs';
 
 const KEY = 'splat-seed-app-v1';
+const HERO_INKS = ['#C8F230', '#39DFFF', '#FF438B', '#FF9D28', '#B58AFF', '#FFEF48'];
+let heroInk = HERO_INKS[0];
+function nextHeroInk() {
+  const choices = HERO_INKS.filter(color => color !== heroInk);
+  heroInk = choices[Math.floor(Math.random() * choices.length)];
+}
+
 const GN = ['황금', '은', '동', '빨강', '보라', '파랑'];
 const NM = { 'MiniGameCardPack|None': '카드 팩', 'FoodTicket|FoodParty': '파티 음식', 'Emote|None': '이모트', 'NamePlateBg|None': '배너', 'GearSkillChip|None': '기어 파워 조각', 'FoodTicket|Food100': '100% 업 식권', 'Byname|None': '칭호', 'LockerSticker|None': '로커 스티커', 'LockerFigure|None': '로커 피규어', 'FoodTicket|Food50': '50% 업 식권', 'DrinkTicket|None': '음료 티켓', 'AllGearSkillChip|None': '기어 파워 조각 ×10', 'NamePlateBg|Limited': '시즌 황금 배너', 'Byname|Limited': '시즌 은 칭호' };
 const itemName = o => o.type == null ? '' : (NM[`${o.type}|${o.subType ?? 'None'}`] ?? o.type);
@@ -539,6 +538,7 @@ function freshMode(mode) {
 function load() {
   let o = null;
   try { o = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch {}
+  heroInk = HERO_INKS.includes(o?.heroInk) ? o.heroInk : HERO_INKS[Math.floor(Math.random() * HERO_INKS.length)];
   for (const mode of ['normal', 'fest']) {
     const src = o?.modes?.[mode];
     try {
@@ -559,7 +559,7 @@ function load() {
   if (o?.setupDone) app.setupDone = true;
 }
 function save() {
-  const o = { v: 1, mode: app.mode, keepId: app.keepId, perDay: app.perDay, target: app.target, setupDone: !!app.setupDone, modes: {} };
+  const o = { v: 1, mode: app.mode, keepId: app.keepId, perDay: app.perDay, target: app.target, setupDone: !!app.setupDone, heroInk, modes: {} };
   for (const mode of ['normal', 'fest']) {
     const x = app.m[mode];
     o.modes[mode] = { phase: x.phase, cand: serializeSession(x.cand), stream: x.stream ? JSON.parse(serialize(x.stream)) : null };
@@ -675,6 +675,7 @@ function trRecord(obs) {
   const res = record(x.stream, obs);
   x.stream = res.stream;
   app.tPicker = { grade: null }; previewIndex = 0;
+  if (!res.stream.stopped) nextHeroInk();
   save(); render();
 }
 function trUndo() { M().stream = undo(M().stream); previewIndex = 0; save(); render(); }
@@ -830,6 +831,7 @@ function renderTrack() {
   const hits = s.stopped || allGoldOwned ? [] : findOutcomes(s, tg, { count: 3, limit: TARGET_LIMIT });
   const n = hits[0] ?? null;
   const hero = $('hero'), num = $('heroNum');
+  hero.style.setProperty('--hero-ink', heroInk);
   hero.className = 'hero';
   $('heroLab').textContent = isGold ? '황금 배너까지' : `${targetLabel(tg)}까지`;
   hero.hidden = !!s.stopped;
