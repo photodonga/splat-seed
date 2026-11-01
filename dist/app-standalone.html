@@ -1643,7 +1643,7 @@ function renderTrack() {
       const button = e.target.closest('button[data-preview]');
       if (!button) return;
       previewIndex = Number(button.dataset.preview);
-      renderTrack(); // preview only: do not call record(), trRecord(), or save()
+      renderTrack(); // Preview selection is ephemeral and never changes the stream
     };
     const selected = preds[previewIndex];
     const chosen = { grade: selected.grade, type: selected.row.type, subType: selected.row.subType };
