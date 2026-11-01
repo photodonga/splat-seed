@@ -260,6 +260,12 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("./assets/game/capsules/fest-blue
 .tgt-reset{background:#392c4c;color:#fff1a1;border:2px solid #806a98}
 .tgt-reset[hidden],.tgt-panel[hidden]{display:none}
 .tgt-panel{margin-top:2px}
+.plan-sum{display:flex;align-items:baseline;gap:8px;list-style:none}
+.plan-sum::-webkit-details-marker{display:none}
+.plan-sum:before{content:"▸";color:#ffd52e;font-size:12px;transition:transform .15s}
+#planBox[open]>.plan-sum:before{transform:rotate(90deg)}
+.plan-sum-h{font-size:14px;font-weight:900;color:var(--lime)}
+#planSum{font-size:13px;color:#fff4c2;font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tgt-sum b,.tgt-sum small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pl b .yr{display:block;font-size:11px;line-height:1.2;color:#d5c5e7;font-weight:800}
 .tgt-head .cap{width:30px;height:30px}.tgt-head .reward-image{width:28px;height:28px}
@@ -381,7 +387,8 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("./assets/game/capsules/fest-blue
     </div>
 
     <div class="card" id="planCard">
-      <div class="row"><div class="h" style="margin:0">목표</div><span class="sp"></span><label class="small row" style="gap:5px"><input type="checkbox" id="discUsed"> 오늘 할인 뽑기 씀</label></div>
+      <details id="planBox"><summary class="plan-sum"><span class="plan-sum-h">목표</span><span id="planSum"></span></summary>
+      <div class="row" style="margin-top:10px"><span class="sp"></span><label class="small row" style="gap:5px"><input type="checkbox" id="discUsed"> 오늘 할인 뽑기 씀</label></div>
       <div class="tgt-head"><div class="tgt-sum" id="tgtHead" aria-live="polite"></div><button type="button" class="tgt-reset" id="tgtReset" hidden aria-label="목표를 황금으로 되돌리기">↺ 황금</button><button type="button" class="tgt-toggle" id="tgtToggle" aria-expanded="false" aria-controls="tgtPanel">바꾸기 <span aria-hidden="true">▾</span></button></div>
       <div class="tgt-panel" id="tgtPanel" hidden>
         <div class="tgt-pick" id="tgtPick" role="group" aria-label="목표 캡슐 색"></div>
@@ -395,6 +402,7 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("./assets/game/capsules/fest-blue
       </div>
       <ol class="tgt-more" id="tgtMore" hidden></ol>
       <p class="small" style="margin-top:8px">가격 가정: 하루 첫 뽑기 5,000 · 이후 30,000골드, 날짜는 09:00(한국시간)에 바뀜. 게임 화면에서 확인이 필요합니다.</p>
+      </details>
     </div>
 
     <div class="card">
@@ -861,6 +869,7 @@ function renderTrack() {
   $('streak').textContent = `기록 ${fmt(s.history.length)}개`;
   // plans: target picker, nearest occurrence plans, then the next ones
   renderTargetPicker(s.season, tg);
+  $('planSum').textContent = allGoldOwned ? `${targetLabel(tg)} · 모두 보유` : n == null ? `${targetLabel(tg)} · 없음` : `${targetLabel(tg)} · ${fmt(n)}번째`;
   $('tgtPanel').hidden = !app.tgtOpen; $('tgtToggle').setAttribute('aria-expanded', String(app.tgtOpen)); $('tgtToggle').classList.toggle('open', app.tgtOpen);
   $('tgtReset').hidden = isGold;
   $('tgtHead').innerHTML = `${dot(tg.grade)}${tg.type ? rewardIcon(tg) : ''}<div><b>${targetLabel(tg)}</b><small>${allGoldOwned ? '이번 시즌 황금 배너를 다 모았습니다' : n == null ? `${fmt(TARGET_LIMIT)}회 안에 없음` : `다음 ${fmt(n)}번째`}</small></div>`;
