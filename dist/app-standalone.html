@@ -180,6 +180,55 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("https://cdn.wikimg.net/en/splato
 .tap .reward-image{width:36px;height:36px}
 @media(max-width:370px){.strip{gap:1px}.strip .future-btn{padding:5px 0}.strip .future-btn .cap{width:18px;height:18px}.future-detail{padding:9px;gap:7px}.future-detail .reward-image{width:49px;height:49px}}
 
+
+/* REWARD_LAYOUT_V2: fixed icon slots and flexible text columns prevent overlap. */
+.opt{display:grid;grid-template-columns:24px 28px minmax(0,1fr) auto;align-items:center;gap:7px;min-width:0;padding:8px 9px;overflow:hidden}
+.opt>.cap{width:24px;height:24px;flex:0 0 24px}
+.opt .opt-art{width:28px;height:28px;display:flex;align-items:center;justify-content:center;min-width:0}
+.opt .reward-image{width:26px;height:26px}
+.opt .opt-label{display:block;min-width:0;line-height:1.3;overflow-wrap:anywhere;word-break:keep-all}
+.opt em{margin:0 0 0 2px;white-space:nowrap;align-self:center;font-size:11px}
+.items{min-width:0}
+.items button{display:inline-flex;align-items:center;justify-content:flex-start;gap:6px;max-width:100%;min-width:0;white-space:normal;text-align:left;line-height:1.25}
+.items .reward-image{width:22px;height:22px}
+.items .item-label{display:block;min-width:0;overflow-wrap:anywhere;word-break:keep-all}
+.hist{min-width:0}
+.hist span{display:inline-flex;align-items:center;gap:5px;max-width:100%;min-width:0}
+.hist span .cap{width:20px;height:20px;flex:0 0 20px}
+.hist .reward-image{width:20px;height:20px}
+.hist .hist-label{display:block;min-width:0;overflow-wrap:anywhere;word-break:keep-all}
+.tap{min-width:0;gap:10px;align-items:center}
+.tap .cap{width:52px;height:52px;flex:0 0 52px}
+.tap .reward-image{width:38px;height:38px;flex:0 0 38px}
+.tap-copy{flex:1 1 auto;min-width:0}
+.tap-copy b{display:block;min-width:0;font-size:clamp(16px,4.5vw,20px);line-height:1.2;overflow-wrap:anywhere;word-break:keep-all}
+.tap-copy span{display:block;min-width:0;font-size:12px;line-height:1.3;overflow-wrap:anywhere;word-break:keep-all}
+.reward-image{display:block;object-fit:contain;max-width:100%;flex:0 0 auto}
+.reward-image[hidden]{display:none!important}
+.future-detail{flex-wrap:wrap}
+.future-detail .reward-image{width:56px;height:56px;flex:0 0 56px}
+.sticker-gallery{flex:1 0 100%;min-width:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:5px}
+.sticker-gallery[hidden]{display:none!important}
+.sticker-gallery-head{grid-column:1/-1;display:flex;align-items:baseline;justify-content:space-between;gap:8px;min-width:0}
+.sticker-gallery-head strong{font-size:12px;line-height:1.3}
+.sticker-gallery-head small{font-size:10px;color:#d5c5e7;text-align:right}
+.sticker-gallery-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;padding:5px 2px;background:#392c4c;border:1px solid #665477;border-radius:9px}
+.sticker-gallery-item img{display:block;width:clamp(30px,9vw,44px);height:clamp(30px,9vw,44px);max-width:100%;object-fit:contain}
+.sticker-gallery-item small{font-size:9px;line-height:1.1;color:#e4d9f1;text-align:center;white-space:nowrap}
+@media(max-width:370px){
+  .opt{grid-template-columns:21px 24px minmax(0,1fr) auto;gap:5px;padding:7px 7px}
+  .opt>.cap{width:21px;height:21px;flex-basis:21px}
+  .opt .opt-art{width:24px;height:24px}
+  .opt .reward-image{width:22px;height:22px}
+  .opt em{font-size:10px}
+  .tap{gap:7px;padding:11px}
+  .tap .cap{width:44px;height:44px;flex-basis:44px}
+  .tap .reward-image{width:32px;height:32px;flex-basis:32px}
+  .hist span{padding:4px 6px 4px 4px}
+  .sticker-gallery{gap:4px}
+  .sticker-gallery-item{padding:4px 1px}
+}
+
 </style>
 </head>
 <body data-splat-mode="normal">
@@ -270,9 +319,9 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("https://cdn.wikimg.net/en/splato
 
     <div class="card" id="nowCard">
       <div class="h">지금 뽑으면</div>
-      <button class="tap" id="tapBtn"><i class="cap" id="tapCap"></i><img id="tapItemIcon" class="reward-image" alt="" hidden><div><b id="tapName"></b><span>이게 나왔으면 탭 → 기록하고 다음으로</span></div></button>
+      <button class="tap" id="tapBtn"><i class="cap" id="tapCap"></i><img id="tapItemIcon" class="reward-image" alt="" hidden><div class="tap-copy"><b id="tapName"></b><span>이게 나왔으면 탭 → 기록하고 다음으로</span></div></button>
       <div class="strip" id="strip" role="group" aria-label="다음 10회 예측 선택"></div>
-      <div class="future-detail" id="previewDetail" aria-live="polite" hidden><i class="cap" id="previewCap" aria-hidden="true"></i><img id="previewItemIcon" class="reward-image" alt="" hidden><div class="future-info"><small id="previewStep"></small><strong id="previewName"></strong><small id="previewHint">예측 보기 전용 · 실제 기록은 위의 버튼으로만 진행합니다.</small></div></div>
+      <div class="future-detail" id="previewDetail" aria-live="polite" hidden><i class="cap" id="previewCap" aria-hidden="true"></i><img id="previewItemIcon" class="reward-image" alt="" hidden><div class="future-info"><small id="previewStep"></small><strong id="previewName"></strong><small id="previewHint">예측 보기 전용 · 실제 기록은 위의 버튼으로만 진행합니다.</small></div><div class="sticker-gallery" id="stickerGallery" hidden aria-label="로커 스티커 예시 갤러리"></div></div>
       <div class="small" style="margin-top:6px" id="stripNote"></div>
     </div>
 
@@ -1331,6 +1380,31 @@ function updateRewardImage(id, outcome) {
   el.hidden = !path;
   if (path) { el.onerror = () => { el.hidden = true; }; el.src = REWARD_ART_BASE + path; }
 }
+const LOCKER_STICKER_SAMPLES = Object.freeze([
+  { id: 'Grf_Sti_Character_28', source: 'Shop', season: 1 },
+  { id: 'Grf_Sti_Decoration_14', source: 'Shop', season: 1 },
+  { id: 'Grf_Sti_Graffiti_00', source: 'Shop', season: 1 },
+  { id: 'Grf_Sti_Graffiti_03', source: 'Shop', season: 1 },
+  { id: 'Grf_Sti_Graffiti_08', source: 'Shop', season: 1 },
+  { id: 'Emi_Sti_Decoration_31', source: 'Catalog', season: 5 },
+  { id: 'Grf_Sti_Decoration_21', source: 'Catalog', season: 3 },
+  { id: 'Grf_Sti_Graffiti_13', source: 'Catalog', season: 1 },
+  { id: 'Grf_Sti_Graffiti_16', source: 'Catalog', season: 1 },
+  { id: 'Grf_Sti_Graffiti_19', source: 'Catalog', season: 1 },
+  { id: 'Emi_Sti_Decoration_18', source: 'Uroko', season: 1 },
+  { id: 'Emi_Sti_Signboard_15', source: 'Uroko', season: 7 },
+  { id: 'Grf_Sti_Graffiti_20', source: 'Uroko', season: 1 },
+  { id: 'Grf_Sti_Graffiti_23', source: 'Uroko', season: 7 },
+  { id: 'Grf_Sti_Graffiti_26', source: 'Uroko', season: 3 },
+]);
+const STICKER_SOURCE_NAME = { Shop: '상점', Catalog: '카탈로그', Uroko: '비늘 교환' };
+function renderStickerGallery() {
+  const el = $('stickerGallery');
+  if (el.dataset.ready === 'true') return;
+  el.innerHTML = '<div class="sticker-gallery-head"><strong>로커 스티커 예시 15종</strong><small>실제 당첨 스티커 특정 불가 · 종류 예시</small></div>' +
+    LOCKER_STICKER_SAMPLES.map(st => `<div class="sticker-gallery-item" title="${st.id}"><img src="${REWARD_ART_BASE}zakka/${st.id}.png" alt="" loading="lazy" decoding="async" onerror="this.hidden=true"><small>${STICKER_SOURCE_NAME[st.source]} · S${st.season}</small></div>`).join('');
+  el.dataset.ready = 'true';
+}
 let previewIndex = 0; // transient display choice: never persisted, never advances RNG
 const $ = id => document.getElementById(id);
 const fmt = n => n.toLocaleString('ko-KR');
@@ -1567,7 +1641,7 @@ function renderLocate() {
   if (fc) {
     const st = fc.steps[0], total = fc.used;
     $('locNextH').textContent = r.result.truncated ? `다음 결과 분포 (상한 걸린 후보 ${fmt(total)}개 기준)` : '다음 결과에 따라 남는 후보';
-    $('nextOpts').innerHTML = st.groups.map((g, i) => `<button class="opt" data-i="${i}">${dot(g.grade)}${rewardIcon(g)}${label(g)}<em>${r.result.truncated ? `${g.count}개` : g.count === 1 ? '→ 확정' : `→ ${g.count}개`}</em></button>`).join('');
+    $('nextOpts').innerHTML = st.groups.map((g, i) => `<button class="opt" data-i="${i}">${dot(g.grade)}<span class="opt-art">${rewardIcon(g)}</span><span class="opt-label">${label(g)}</span><em>${r.result.truncated ? `${g.count}개` : g.count === 1 ? '→ 확정' : `→ ${g.count}개`}</em></button>`).join('');
     $('locNextNote').textContent = r.result.truncated ? '상한 때문에 일부 후보만 본 분포입니다.' : '눌러서 바로 기록할 수 있습니다. 목록에 없는 결과면 아래에서 직접 고르세요. 비율은 출현 확률이 아닙니다.';
     $('nextOpts').onclick = e => { const b = e.target.closest('button[data-i]'); if (!b) return; const g = st.groups[Number(b.dataset.i)]; locRecord({ grade: g.grade, type: g.type, subType: g.subType }); };
   }
@@ -1578,7 +1652,7 @@ function renderLocate() {
   renderPicker($('pick'), $('items'), app.picker, s.season, o => locRecord(o), fc?.steps[0]?.groups);
   // history
   $('locHist').hidden = !s.observations.length;
-  $('hist').innerHTML = s.observations.map((o, i) => `<span>${dot(o.grade)}${rewardIcon(o)}${i + 1}. ${label(o)}</span>`).join('');
+  $('hist').innerHTML = s.observations.map((o, i) => `<span>${dot(o.grade)}${rewardIcon(o)}<span class="hist-label">${i + 1}. ${label(o)}</span></span>`).join('');
   // conditions
   const d = app.draft ?? s;
   $('cSeason').textContent = d.season; $('cMB').textContent = d.missingBanners; $('cMT').textContent = d.missingTitles;
@@ -1597,7 +1671,7 @@ function renderPicker(gridEl, itemsEl, p, season, onPick, hints) {
   const list = itemsForGrade(season, p.grade);
   if (p.grade === 2 && !list.some(x => x.type === 'AllGearSkillChip')) list.push({ grade: 2, type: 'AllGearSkillChip', subType: 'None' });
   const hk = new Set((hints ?? []).map(outcomeKey));
-  itemsEl.innerHTML = `<button data-item="-1">색만 기록</button>` + list.map((it, i) => `<button data-item="${i}" class="${hk.has(outcomeKey(it)) ? 'hint' : ''}">${rewardIcon(it)}${itemName(it)}</button>`).join('');
+  itemsEl.innerHTML = `<button data-item="-1"><span class="item-label">색만 기록</span></button>` + list.map((it, i) => `<button data-item="${i}" class="${hk.has(outcomeKey(it)) ? 'hint' : ''}">${rewardIcon(it)}<span class="item-label">${itemName(it)}</span></button>`).join('');
   itemsEl.onclick = e => { const b = e.target.closest('button[data-item]'); if (!b) return; const i = Number(b.dataset.item); onPick(i < 0 ? { grade: p.grade } : list[i]); };
 }
 
@@ -1653,6 +1727,11 @@ function renderTrack() {
     $('previewStep').textContent = `현재 위치에서 ${previewIndex + 1}번째 예상 결과`;
     $('previewName').textContent = label(chosen);
     updateRewardImage('previewItemIcon', chosen);
+    const isSticker = chosen.type === 'LockerSticker';
+    $('previewItemIcon').hidden = isSticker || !rewardPath(chosen);
+    $('stickerGallery').hidden = !isSticker;
+    if (isSticker) renderStickerGallery();
+    $('previewHint').textContent = isSticker ? '아래는 실제 당첨 예측이 아닌 스티커 종류 예시입니다.' : '예측 보기 전용 · 실제 기록은 위의 버튼으로만 진행합니다.';
     $('stripNote').textContent = '숫자가 있는 캡슐을 누르면 해당 순서의 예상 보상을 볼 수 있습니다. 아이템 그림은 종류별 대표 이미지입니다.';
   }
   renderPicker($('tPick'), $('tItems'), app.tPicker, s.season, o => trRecord(o), null);
