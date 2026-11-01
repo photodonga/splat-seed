@@ -142,7 +142,7 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("https://cdn.wikimg.net/en/splato
 .pick button{min-width:0;min-height:83px;padding:9px 1px 6px;background:linear-gradient(#45385c,#30263f);border:2px solid #6f5c88;border-radius:14px;color:#fff3ee;box-shadow:1px 2px 0 #0e0b15;touch-action:manipulation;font-size:12px}
 .pick button .cap{width:clamp(30px,9vw,46px);height:clamp(30px,9vw,46px)}
 .pick button[aria-pressed=true]{border-color:#d3ff3e;background:#54416d;box-shadow:0 0 0 2px #d2fb3a33}
-.opt{background:#392e4a;border:2px solid #665477;border-radius:13px;min-height:52px}.opt .cap{width:31px;height:31px}.opt em{color:#d2ff48}
+.opt{background:#392e4a;border:2px solid #665477;border-radius:13px;min-height:52px}.opt .cap{width:31px;height:31px}.opt em{color:#d2ff48}#nextOpts{min-width:0}.opt{min-width:0;overflow-wrap:anywhere}
 .hist{gap:7px}.hist span{background:#3d3053;border:1px solid #604d76;border-radius:10px;padding:4px 7px 4px 5px}.hist span .cap{width:23px;height:23px}
 .drop{background:radial-gradient(circle at 50% 20%,#4e3671,#231a32 84%);border:3px dashed #d3ff45;border-radius:22px;padding:30px 12px}
 .drop .ic{background:#b384ff;color:#171024;border:2px solid #edcdff;transform:rotate(-8deg);box-shadow:3px 4px 0 #0f081b}.drop b{color:#f8eaff;font-size:18px}
@@ -1518,8 +1518,7 @@ function renderLocate() {
   if (fc) {
     const st = fc.steps[0], total = fc.used;
     $('locNextH').textContent = r.result.truncated ? `다음 결과 분포 (상한 걸린 후보 ${fmt(total)}개 기준)` : '다음 결과에 따라 남는 후보';
-    $('nextOpts').innerHTML = st.groups.slice(0, 6).map((g, i) => `<button class="opt" data-i="${i}">${dot(g.grade)}${label(g)}<em>${r.result.truncated ? `${g.count}개` : g.count === 1 ? '→ 확정' : `→ ${g.count}개`}</em></button>`).join('')
-      + (st.groups.length > 6 ? `<p class="small">외 ${st.groups.length - 6}가지</p>` : '');
+    $('nextOpts').innerHTML = st.groups.map((g, i) => `<button class="opt" data-i="${i}">${dot(g.grade)}${label(g)}<em>${r.result.truncated ? `${g.count}개` : g.count === 1 ? '→ 확정' : `→ ${g.count}개`}</em></button>`).join('');
     $('locNextNote').textContent = r.result.truncated ? '상한 때문에 일부 후보만 본 분포입니다.' : '눌러서 바로 기록할 수 있습니다. 목록에 없는 결과면 아래에서 직접 고르세요. 비율은 출현 확률이 아닙니다.';
     $('nextOpts').onclick = e => { const b = e.target.closest('button[data-i]'); if (!b) return; const g = st.groups[Number(b.dataset.i)]; locRecord({ grade: g.grade, type: g.type, subType: g.subType }); };
   }
