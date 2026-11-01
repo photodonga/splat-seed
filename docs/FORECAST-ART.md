@@ -22,6 +22,16 @@ Images are linked directly (not bundled or redistributed) from `Leanny/splat3` u
 | `LockerFigure` | `zakka/Fig_Arcadegame.png` | **Example** figure; exact figure is unknown |
 | `LockerSticker` | `zakka/Grf_Sti_Graffiti_00.png` | **Representative only**: exact sticker ID is not produced by the current shell-out engine |
 
+## Locker sticker preview gallery
+
+The UI shows 15 verified example images when the selected forecast category is `LockerSticker`. The examples are drawn from Leanny's `LockerGoodsStickerInfo` acquisition groups: Shop, Catalog, and Uroko (scale exchange). The source dataset has 417 records across those three locker acquisition groups; 416 have matching images in `images/zakka/`. The remaining 472 `Other` records are excluded from the locker gallery because they are not in those locker acquisition groups. This gallery is a visual sample, **not a complete checklist and not a prediction of the exact sticker awarded**. The engine still predicts only the `LockerSticker` reward category.
+
+The 15 preview samples are checked against the current Leanny dataset and image tree in the test. Their labels are kept as internal IDs in `title` attributes; the UI only shows acquisition source and season.
+
+## Reward icon layout
+
+Reward result rows use fixed capsule/art columns and a `minmax(0,1fr)` text column. Item names can wrap within their own column; result counts remain in a separate non-wrapping column. Picker/history labels and the current-result button also have `min-width:0` text wrappers so images cannot overlap text on narrow mobile screens.
+
 Leanny's `js/Utility.js` confirms `IconCardPack_00`, the ticket icon families, `IconNameplate_02`/`03`, and `GearPowerTicketBase` as category graphics. Other item assets were checked for existence in the repository. Data from `engine/shellout.mjs` only predicts type/subtype; it **does not identify** an exact random locker sticker, figure, emote, banner, or specific ticket subtype. Do not present representative imagery as an exact reward.
 
 ## Rights, availability and fallbacks
