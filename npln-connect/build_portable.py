@@ -9,6 +9,7 @@ still require real-world verification. macOS artifact is unsigned/notarized.
 from __future__ import annotations
 
 import os
+import importlib.util
 from pathlib import Path
 import platform
 import shutil
@@ -36,7 +37,7 @@ def build() -> Path:
     version = subprocess.check_output(["node", "--version"], text=True).strip()
     if not version.startswith("v22."):
         raise SystemExit("Node 22 required; found " + version)
-    if not shutil.which("pyinstaller"):
+    if importlib.util.find_spec("PyInstaller") is None:
         raise SystemExit("Install PyInstaller 6.16.0 on the build computer first.")
 
     npm = "npm.cmd" if os.name == "nt" else "npm"
