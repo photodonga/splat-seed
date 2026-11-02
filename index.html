@@ -335,6 +335,16 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("./assets/game/capsules/fest-blue
       </label>
       <input type="file" id="idFile" accept=".json,application/json" hidden>
       <div class="h" style="margin-top:14px">또는 NPLN ID 직접 입력</div>
+      <details style="margin-bottom:10px">
+        <summary>NPLN ID를 모르나요? · NPLN CONNECT 안내</summary>
+        <p class="small" style="margin-top:8px">Windows·macOS용 NPLN CONNECT는 nxapi로 본인 ID를 확인해 복사하는 보조 프로그램입니다. 현재는 개발용 시제품이며, 설치 없는 배포 파일은 아직 제공되지 않습니다.</p>
+        <ol class="how" style="margin-top:7px">
+          <li>컴퓨터에서 nxapi를 준비하고 NPLN CONNECT를 실행합니다.</li>
+          <li>Nintendo Account 로그인 후 NPLN ID 확인을 누릅니다.</li>
+          <li>ID 복사를 누르고 아래 입력 칸에 붙여넣습니다.</li>
+        </ol>
+        <p class="small" style="margin-top:7px"><a href="https://github.com/photodonga/splat-seed/tree/feature/npln-connect-portable/npln-connect" target="_blank" rel="noopener noreferrer" style="color:var(--lime)">NPLN CONNECT 개발용 소스·안내 보기</a> · 로그인 비밀번호와 인증 토큰은 이 웹페이지에 입력하지 마세요.</p>
+      </details>
       <div class="row" style="flex-wrap:nowrap"><input type="text" id="idText" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="u-로 시작하는 22자"><button class="btn" id="idUse" style="flex:none;white-space:nowrap">사용</button></div>
       <p class="err" id="idErr"></p>
       <label class="row small" style="margin-top:10px;flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" id="keepFirst" style="margin-top:3px"> 이 기기에 ID 기억하기 (끄면 위치 찾기를 다시 할 때 파일을 다시 넣어야 합니다)</label>
