@@ -157,7 +157,7 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("data:image/png;base64,iVBORw0KGg
 .pl{border:1px solid #735c8c;background:#392c4c;min-height:87px}.pl b{color:#fff4e6}.pl i{color:#daff4f}
 .items button{background:#48345d;border:1px solid #806a98}.items button.hint{border-color:#d6ff42}
 .warnbox{background:#3a2a17;border:2px solid #947124;border-radius:12px;color:#ffeca5}.alert{background:#542238;border:2px solid #d05b7b}
-.credits{font-size:11px;color:#b6abc7;line-height:1.6;text-align:center;padding:5px 8px 0}.credits a{color:#e0ff6a;text-underline-offset:3px}
+.credits{display:flex;flex-direction:column;align-items:center;gap:3px;width:100%;font-size:11px;color:#b6abc7;line-height:1.5;text-align:center;padding:8px 6px 0;overflow-wrap:anywhere}.credits span{display:block;max-width:100%}.credits a{color:#e0ff6a;text-underline-offset:3px}
 @media(max-width:370px){.app{padding-left:11px;padding-right:11px}.card{padding:11px}.pick button{font-size:11px;min-height:70px}.top{gap:5px}.masthead{padding-left:44px}.masthead:before{width:36px;height:36px}.chip{font-size:10px;padding:4px 5px}}
 @media(prefers-reduced-motion:reduce){.btn{transition:none}}
 /* Future ten-tap preview: non-mutating, keyboard and touch accessible. */
@@ -461,8 +461,11 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("data:image/png;base64,iVBORw0KGg
     <label class="row small" style="margin-top:8px;flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" id="idKeep" style="margin-top:3px"> 이 기기에 ID 기억하기</label>
   </section>
 
-  <p class="warnbox"><b>미검증:</b> 계산은 공개 시드 도구(Leanny)와 같은 결과를 내지만, 실제 게임 기록과의 대조는 아직 진행 중입니다. 예측과 다르면 즉시 멈추고 알려 줍니다.</p>
-  <p class="credits">비공식 팬 제작 도구 · Nintendo와 무관합니다. 게임 이미지 © Nintendo · 출처 Inkipedia·Leanny</p>
+  <footer class="credits" aria-label="출처 및 저작권">
+    <span>비공식 팬 제작 도구 · Nintendo와 무관합니다.</span>
+    <span>게임 이미지 © Nintendo</span>
+    <span>자료 출처 · Inkipedia · Leanny</span>
+  </footer>
 </main>
 
 <script type="module">
