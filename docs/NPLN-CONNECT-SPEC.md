@@ -9,8 +9,8 @@ Distribution: portable packages; no system-wide installation
 ## Implementation status (2026-11-02)
 
 This design has an experimental implementation at
-\`npln-connect/npln_connect.py\` and native build tooling at
-\`npln-connect/build_portable.py\`.
+`npln-connect/npln_connect.py` and native build tooling at
+`npln-connect/build_portable.py`.
 
 - **Chosen implementation:** Python 3.12 / Tkinter + PyInstaller, with a
   bundled Node.js 22 runtime and **published nxapi 1.6.1** package.
@@ -24,7 +24,7 @@ This design has an experimental implementation at
 - **nxapi data processing:** nxapi uses remote authentication helper services
   for certain Nintendo-issued tokens. The original local-only description
   was too strong; see upstream documentation.
-- **Critical gate:** The exact output of \`nxapi splatnet3 user\` and the
+- **Critical gate:** The exact output of `nxapi splatnet3 user` and the
   viability of its login interaction through piped stdio are still unverified
   against an authenticated account.
 - **Distribution:** nxapi uses AGPL-3.0-or-later; a public binary release
@@ -44,7 +44,7 @@ No automatic browser-to-helper bridge is in scope for v1.
 ## User flow
 
 1. Download the package matching the user's OS.
-2. Run it directly (Windows: portable \`.exe\`; macOS: \`.app\` in a ZIP).
+2. Run it directly (Windows: portable `.exe`; macOS: `.app` in a ZIP).
 3. Click **Nintendo Account 로그인**. The helper launches nxapi's supported interactive authentication flow.
 4. After authentication, click **NPLN ID 확인**.
 5. The helper invokes the supported nxapi SplatNet 3 user command and extracts the NPLN ID from the returned user data.
@@ -55,13 +55,13 @@ No automatic browser-to-helper bridge is in scope for v1.
 
 Use documented nxapi commands rather than scraping SplatNet 3 pages or using the third-party replay-lookup service:
 
-- Authentication: \`nxapi nso auth\`
-- Read authenticated SplatNet 3 user: \`nxapi splatnet3 user\`
+- Authentication: `nxapi nso auth`
+- Read authenticated SplatNet 3 user: `nxapi splatnet3 user`
 
 The nxapi CLI documentation describes both commands:
 https://github.com/samuelthomas2774/nxapi/blob/main/docs/cli.md
 
-The SPLAT SEED engine expects the exact NPLN ID format \`u-\` plus 20 lowercase alphanumeric characters. Preserve the \`u-\` prefix; do not normalize it away.
+The SPLAT SEED engine expects the exact NPLN ID format `u-` plus 20 lowercase alphanumeric characters. Preserve the `u-` prefix; do not normalize it away.
 
 **Do not assume the CLI's human-readable output field name.** Before implementing extraction, capture and fixture-test the actual output from a currently working nxapi version on Windows and macOS. Prefer a documented JSON output mode if the command supports it; otherwise parse a narrowly scoped, version-tested output format and fail closed when it changes.
 
@@ -92,12 +92,12 @@ A portable build still needs OS-specific distribution handling. macOS signing/no
 
 Single compact window:
 
-1. Header: NPLN CONNECT / \`SPLAT SEED companion\`
-2. Status: \`nxapi 준비 확인\` / \`Nintendo Account 연결 필요\` / \`연결됨\`
-3. Primary action: \`Nintendo Account 로그인\`
-4. Secondary action: \`NPLN ID 확인\`
-5. Result panel: masked or visible ID field, \`복사\` button
-6. Help: \`SPLAT SEED로 돌아가 ID 붙여넣기\`
+1. Header: NPLN CONNECT / `SPLAT SEED companion`
+2. Status: `nxapi 준비 확인` / `Nintendo Account 연결 필요` / `연결됨`
+3. Primary action: `Nintendo Account 로그인`
+4. Secondary action: `NPLN ID 확인`
+5. Result panel: masked or visible ID field, `복사` button
+6. Help: `SPLAT SEED로 돌아가 ID 붙여넣기`
 7. Diagnostics: nxapi version, app version, last operation result; never show secrets
 
 Errors must be actionable and plain-language: nxapi missing/corrupt, login cancelled, NSO/SplatNet 3 access unavailable, network/service error, unexpected output format, invalid ID format.
@@ -106,8 +106,8 @@ Errors must be actionable and plain-language: nxapi missing/corrupt, login cance
 
 Keep the current static web app and its existing ID input/storage behavior. Add a concise help panel beside the manual ID input:
 
-- \`NPLN ID가 없나요?\`
-- \`NPLN CONNECT 사용 방법\`
+- `NPLN ID가 없나요?`
+- `NPLN CONNECT 사용 방법`
 - Download links for Windows and macOS packages (add only after release artifacts exist)
 - Steps: launch helper → sign in → copy ID → paste here
 
@@ -117,7 +117,7 @@ Do not add a localhost HTTP server, custom browser protocol, browser extension, 
 
 - A clean Windows test machine with no Node.js/npm/nxapi installed can run the portable package and obtain the current account's NPLN ID.
 - A clean macOS test machine with no Node.js/npm/nxapi installed can do the same.
-- Both builds preserve the \`u-\` prefix and pass the SPLAT SEED input validator.
+- Both builds preserve the `u-` prefix and pass the SPLAT SEED input validator.
 - No credential/token is written to app logs or sent to the SPLAT SEED website.
 - Copy works; paste into SPLAT SEED succeeds; the seed setup flow continues without changing the engine or saved-state schema.
 - Authentication cancellation, offline mode, service failure, and unexpected nxapi output fail safely with a useful message.
@@ -133,7 +133,7 @@ Do not add a localhost HTTP server, custom browser protocol, browser extension, 
 
 ## Open implementation checks
 
-1. Capture real \`nxapi splatnet3 user\` output and confirm the exact NPLN ID property/format.
+1. Capture real `nxapi splatnet3 user` output and confirm the exact NPLN ID property/format.
 2. Verify whether the installed nxapi CLI offers a stable JSON mode for this command.
 3. Confirm nxapi redistribution license and package contents.
 4. Confirm supported Node runtime and native dependencies for Windows/macOS.
