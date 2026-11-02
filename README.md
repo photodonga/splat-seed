@@ -1,21 +1,14 @@
-# SPLAT SEED — Shell-Out Tracker (prototype)
+# SPLAT SEED — Splatoon 3 Shell-Out Tracker
 
-Static single-file HTML tracker for Splatoon 3 Shell-Out Machine. Upload `index.html` to the root of a GitHub repository and enable GitHub Pages (Settings → Pages → Deploy from branch → main / root).
+**공식 주소는 [SPLAT SEED](https://photodonga.github.io/splat-seed/) 하나입니다.** GitHub Pages는 `main/index.html`을 엽니다. `index.html`은 최신 `app.html`과 동일하며, 다른 실험 페이지는 공식 진입점이 아닙니다.
 
-## Available now
-- Korean responsive, game-inspired interface with original CSS capsule icons
-- Track 6 capsule colors; separate normal and Splatfest histories
-- Import a future *color sequence* manually (comma/space-separated)
-- Display distance to next gold in the imported sequence and cash estimates
-- Advance forecasts one pull at a time; localStorage persistence, JSON backup/restore
+- 보라색 UI와 원탭 기록, 위치 탐색, 다음 10개, 랜덤 네온 단색 카운터를 제공합니다.
+- 직접 정리한 `assets/brand/splat-seed.svg` 벡터 로고 사용. `dist/app-standalone.html`에는 로고와 기존 게임 PNG들이 내장되어 오프라인에서 보입니다.
+- 브라우저에 저장된 기록은 유지됩니다. 로고 및 공식 접속 경로 정리는 계산 엔진/저장 키를 변경하지 않습니다.
+- 전체 실제 게임 검증은 아직 완료되지 않았고, `game-validation`은 실제 fixture 부족으로 실패할 수 있습니다.
+- 새로운 변경에서는 `app.html`과 `index.html`을 동일하게 갱신해야 하며, 테스트로 동기화를 확인합니다.
 
-## Not yet implemented (important)
-- No reverse RNG seed recovery
-- No generation of predicted capsules from hexadecimal seed
-- No item/reward-level identification for seed recovery
-- No game asset redistribution
-
-Never treat an imported sequence as a mathematically verified prediction unless it was obtained from a separately validated tool.
+> 비공식 팬 도구입니다. Splatoon과 게임 그래픽의 권리는 각 권리자에게 있습니다.
 
 ---
 

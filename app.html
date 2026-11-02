@@ -291,11 +291,19 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("./assets/game/capsules/fest-blue
 .hero .num{color:#17101d;text-shadow:3px 4px 0 rgba(255,255,255,.34)}
 .hero .unit{color:#17101d;text-shadow:none}
 
+
+/* Official brand mark: edited Bézier paths, independent of fonts and network. */
+.masthead{padding-left:0;gap:1px;min-width:0}
+.masthead:before{display:none}
+.logo.brand-logo{display:block;width:clamp(148px,43vw,226px);height:auto;max-width:100%;transform:none;filter:none}
+.top{min-height:0;align-items:center;padding-bottom:9px}
+.top-kicker{font-size:9px;letter-spacing:.12em}
+
 </style>
 </head>
 <body data-splat-mode="normal">
 <main class="app">
-  <div class="top"><div class="masthead"><span class="top-kicker">SHELL-OUT MACHINE · FAN TOOL</span><span class="logo">SPLAT SEED</span></div><span class="chip" id="topChip"></span></div>
+  <div class="top"><div class="masthead"><span class="top-kicker">SHELL-OUT MACHINE · FAN TOOL</span><img class="logo brand-logo" src="./assets/brand/splat-seed.svg" alt="SPLAT SEED" width="230" height="114"></div><span class="chip" id="topChip"></span></div>
 
   <!-- ===== 1. setup ===== -->
   <section id="vSetup" hidden>
