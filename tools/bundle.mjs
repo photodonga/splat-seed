@@ -25,6 +25,11 @@ for(const {path:p} of manifest){
 if(!result.includes('const EMBEDDED_GAME_ASSETS = null;'))throw new Error('No original-art placeholder');
 result=result.replace('const EMBEDDED_GAME_ASSETS = null;',()=> 'const EMBEDDED_GAME_ASSETS = Object.freeze('+JSON.stringify(embedded)+');');
 result=result.replace(/\.\/assets\/game\/([a-zA-Z0-9_./-]+\.png)/g,(match,p)=>{if(!embedded[p])throw new Error('Missing PNG '+p);return embedded[p]});
+// Embed official vector logo for a network-free standalone build.
+const brandRef='./assets/brand/splat-seed.svg';
+if (!result.includes(brandRef)) throw new Error('Brand SVG missing from app HTML');
+const brandSvg=fs.readFileSync('assets/brand/splat-seed.svg','utf8');
+result=result.replaceAll(brandRef, 'data:image/svg+xml,'+encodeURIComponent(brandSvg));
 if(/https?:\/\/(?:cdn\.wikimg\.net|raw\.githubusercontent\.com)/.test(result))throw new Error('Runtime external art');
 
 fs.mkdirSync(new URL('../dist/', import.meta.url), { recursive: true });
