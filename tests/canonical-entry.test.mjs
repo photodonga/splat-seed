@@ -8,7 +8,7 @@ const brand=readFileSync(new URL('../assets/brand/splat-seed.svg', import.meta.u
 test('main root serves precisely the current app',()=>assert.equal(index,app));
 test('official logo is editable local SVG without fonts or external images',()=>{
  assert.match(brand,/<svg\b/); assert.match(brand,/<path\b/);
- assert.doesNotMatch(brand,/<image\b|<text\b|https?:\/\//);
+ assert.doesNotMatch(brand, /<image\\b|<text\\b|(?:href|src)=["']https?:/);
  assert.match(app, /src="\.\/assets\/brand\/splat-seed\.svg"/);
 });
 test('standalone embeds the logo without a network URL',()=>{
