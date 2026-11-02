@@ -299,11 +299,32 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("./assets/game/capsules/fest-blue
 .top{min-height:0;align-items:center;padding-bottom:9px}
 .top-kicker{font-size:9px;letter-spacing:.12em}
 
+
+/* Portable checkpoint import/export */
+.portable-backup{padding:11px 13px}
+.portable-backup summary{cursor:pointer;font-size:13px;font-weight:900;color:#f5ffdc;list-style-position:inside}
+.portable-hint{font-size:11px;color:var(--mute);font-weight:600;margin-left:5px}
+.portable-backup .btn{min-width:0;flex:1;white-space:nowrap;padding:10px 7px}
+.portable-backup input[type=checkbox]{accent-color:var(--lime);width:16px;height:16px}
+
 </style>
 </head>
 <body data-splat-mode="normal">
 <main class="app">
   <div class="top"><div class="masthead"><span class="top-kicker">SHELL-OUT MACHINE · FAN TOOL</span><img class="logo brand-logo" src="./assets/brand/splat-seed.svg" alt="SPLAT SEED" width="230" height="114"></div><span class="chip" id="topChip"></span></div>
+
+  <!-- Device-to-device checkpoint backup: available in both setup and tracking views. -->
+  <details class="card portable-backup" id="portableBackup">
+    <summary>진행 기록 저장 · 불러오기 <span class="portable-hint">기기 변경 / 이어하기</span></summary>
+    <p class="small" style="margin:10px 0">찾은 위치와 다음 뽑기 상태, 일반·페스티벌 기록을 파일로 옮깁니다. 복원하면 현재 기기의 진행 기록을 모두 교체합니다.</p>
+    <label class="row small" style="margin:0 0 10px;gap:6px"><input type="checkbox" id="backupWithId"> 닌텐도 사용자 ID도 파일에 포함 <span style="opacity:.8">(선택)</span></label>
+    <div class="row">
+      <button type="button" class="btn pri" id="backupExport">백업 저장</button>
+      <button type="button" class="btn" id="backupImport">파일 불러오기</button>
+      <input type="file" id="backupInput" accept=".json,application/json" hidden>
+    </div>
+    <p class="small" id="backupNotice" role="status" aria-live="polite" style="margin-top:9px">별도 서버 전송 없이 이 기기에서만 처리합니다. 파일은 다른 사람과 공유하지 마세요.</p>
+  </details>
 
   <!-- ===== 1. setup ===== -->
   <section id="vSetup" hidden>
@@ -574,14 +595,56 @@ function load() {
   if (app.keepId && typeof o?.id === 'string' && NPLN_USER_ID_RE.test(o.id)) app.id = o.id;
   if (o?.setupDone) app.setupDone = true;
 }
-function save() {
-  const o = { v: 1, mode: app.mode, keepId: app.keepId, perDay: app.perDay, target: app.target, setupDone: !!app.setupDone, modes: {} };
+/* PORTABLE_BACKUP: serialize the current checkpoint (AFTER the last recorded pull). */
+function checkpoint(includeId = app.keepId && !!app.id) {
+  const o = { v: 1, mode: app.mode, keepId: !!(includeId && app.id), perDay: app.perDay,
+    target: app.target, setupDone: !!app.setupDone, modes: {} };
   for (const mode of ['normal', 'fest']) {
     const x = app.m[mode];
-    o.modes[mode] = { phase: x.phase, cand: serializeSession(x.cand), stream: x.stream ? JSON.parse(serialize(x.stream)) : null };
+    o.modes[mode] = { phase: x.phase, cand: serializeSession(x.cand),
+      stream: x.stream ? JSON.parse(serialize(x.stream)) : null };
   }
-  if (app.keepId && app.id) o.id = app.id;
-  try { localStorage.setItem(KEY, JSON.stringify(o)); } catch {}
+  // Explicit opt-in is required when exporting; never export a seed token or raw geardata.
+  if (includeId && app.id) o.id = app.id;
+  return o;
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(checkpoint())); return true; }
+  catch { return false; }
+}
+/* Validate both modes BEFORE overwriting anything. Untrusted files never execute code. */
+function parsePortableBackup(raw) {
+  if (typeof raw !== 'string' || raw.length > 5_000_000) throw new Error('백업 파일이 너무 큽니다 (최대 5MB).');
+  const file = JSON.parse(raw);
+  if (!file || file.format !== 'splat-seed-checkpoint' || file.version !== 1)
+    throw new Error('SPLAT SEED에서 저장한 백업 JSON 파일만 불러올 수 있습니다.');
+  const data = file.data;
+  if (!data || data.v !== 1 || !data.modes || !['normal','fest'].includes(data.mode))
+    throw new Error('백업에 필요한 진행 정보가 없습니다.');
+  const modes = {};
+  for (const mode of ['normal', 'fest']) {
+    const item = data.modes[mode];
+    if (!item || !['locate', 'track'].includes(item.phase) || !item.cand)
+      throw new Error(mode + ' 진행 정보가 손상됐습니다.');
+    const cand = deserializeSession(item.cand);
+    if (cand.mode !== mode || cand.observations.length > 20000)
+      throw new Error(mode + ' 뽑기 기록이 올바르지 않습니다.');
+    const stream = item.stream == null ? null : deserialize(item.stream);
+    if (item.phase === 'track' && !stream) throw new Error(mode + ' 추적 위치가 없습니다.');
+    modes[mode] = { phase: item.phase, cand, stream };
+  }
+  let target = { grade: 0 };
+  if (data.target != null) {
+    const t = data.target;
+    if (!Number.isInteger(t.grade) || t.grade < 0 || t.grade > 5)
+      throw new Error('백업 목표가 올바르지 않습니다.');
+    target = { grade: t.grade, ...(typeof t.type === 'string'
+      ? { type: t.type, subType: String(t.subType ?? 'None') } : {}) };
+  }
+  const id = typeof data.id === 'string' && NPLN_USER_ID_RE.test(data.id) ? data.id : null;
+  return { modes, mode: data.mode, id, keepId: !!id, target,
+    perDay: Number.isInteger(data.perDay) && data.perDay >= 2 && data.perDay <= 50 ? data.perDay : 5,
+    setupDone: !!data.setupDone || !!id || modes.normal.phase === 'track' || modes.fest.phase === 'track' };
 }
 load();
 const M = () => app.m[app.mode];
@@ -1020,6 +1083,71 @@ $('tgtReset').onclick = () => { app.target = { grade: 0 }; app.tgtOpen = false; 
 $('discUsed').onchange = e => { app.discUsed = e.target.checked; render(); };
 $('kDown').onclick = () => { app.perDay = Math.max(2, app.perDay - 1); save(); render(); };
 $('kUp').onclick = () => { app.perDay = Math.min(50, app.perDay + 1); save(); render(); };
+
+
+/* PORTABLE_BACKUP_UI: backup JSON is separate from the Nintendo geardata importer. */
+const showBackupNotice = message => { $('backupNotice').textContent = message; };
+$('backupExport').onclick = async () => {
+  const includeId = $('backupWithId').checked && !!app.id;
+  if ($('backupWithId').checked && !app.id) {
+    showBackupNotice('사용자 ID가 없으므로 ID 없이 진행 기록만 저장합니다.');
+  }
+  const payload = { format: 'splat-seed-checkpoint', version: 1,
+    exportedAt: new Date().toISOString(), data: checkpoint(includeId) };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const filename = 'splat-seed-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  try {
+    // iPhone/iPad: share sheet lets the user save to Files; desktop downloads normally.
+    if (typeof File === 'function' && typeof navigator.share === 'function' &&
+        typeof navigator.canShare === 'function') {
+      const file = new File([blob], filename, { type: 'application/json' });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'SPLAT SEED 백업' });
+        showBackupNotice('공유 시트에서 저장한 파일을 다른 기기로 옮겨 불러오세요.');
+        return;
+      }
+    }
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url; anchor.download = filename;
+    document.body.append(anchor); anchor.click(); anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 15000);
+    showBackupNotice('백업 다운로드를 시작했습니다. 파일 앱 또는 다운로드 폴더를 확인하세요.');
+  } catch (err) {
+    showBackupNotice(err?.name === 'AbortError' ? '파일 저장을 취소했습니다.' : '백업 저장 실패: ' + err.message);
+  }
+};
+$('backupImport').onclick = () => $('backupInput').click();
+$('backupInput').onchange = async e => {
+  const file = e.target.files?.[0];
+  e.target.value = '';
+  if (!file) return;
+  try {
+    if (file.size > 5_000_000) throw new Error('파일이 너무 큽니다 (최대 5MB).');
+    const restored = parsePortableBackup(await file.text());
+    const summary = ['normal', 'fest'].map(mode => restored.modes[mode].phase === 'track'
+      ? (mode === 'normal' ? '일반' : '페스티벌') + ' 추적 위치 복원'
+      : (mode === 'normal' ? '일반' : '페스티벌') + ' 찾기 기록 복원').join(' / ');
+    if (!confirm(summary + '\n\n현재 기기의 일반·페스티벌 진행 기록을 모두 덮어쓸까요?')) {
+      showBackupNotice('불러오기를 취소했습니다. 기존 기록은 그대로입니다.'); return;
+    }
+    cancelSearch(true);
+    app.m = restored.modes; app.rt = { normal: blankRt(), fest: blankRt() };
+    app.mode = restored.mode; app.id = restored.id; app.keepId = restored.keepId;
+    app.target = restored.target; app.perDay = restored.perDay; app.setupDone = restored.setupDone;
+    app.draft = null; app.picker = { grade: null, hints: null }; app.tPicker = { grade: null };
+    app.tgtOpen = false; previewIndex = 0;
+    const saved = save();
+    render();
+    $('backupWithId').checked = false;
+    showBackupNotice(saved
+      ? '복원 완료! 마지막으로 기록한 뽑기 다음 위치부터 이어집니다.'
+      : '복원은 됐지만 기기 저장 공간 문제로 자동 저장에 실패했습니다. 새로고침 전 백업하세요.');
+    if (app.id && M().phase === 'locate' && M().cand.observations.length) startSearch('search');
+  } catch (err) {
+    showBackupNotice('불러오기 실패: ' + (err?.message || '백업 형식 오류') + ' 기존 기록은 그대로입니다.');
+  }
+};
 
 render();
 if (app.id && M().phase === 'locate' && M().cand.observations.length) startSearch('search');
