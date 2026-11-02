@@ -7,3 +7,13 @@ nxapi-nodejs/
 *session_token*
 *session-token*
 secrets/
+
+# NPLN CONNECT temporary bundled dependencies and native build outputs
+npln-connect/runtime/
+npln-connect/__pycache__/
+npln-connect/tests/__pycache__/
+npln-connect/scripts/__pycache__/
+*.pyc
+build/
+dist/
+*.spec
