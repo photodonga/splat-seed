@@ -5,6 +5,34 @@ Target: SPLAT SEED companion utility
 Platforms: Windows 10/11 x64, macOS Apple Silicon + Intel (separate builds initially)  
 Distribution: portable packages; no system-wide installation
 
+
+## Implementation status (2026-11-02)
+
+This design has an experimental implementation at
+\`npln-connect/npln_connect.py\` and native build tooling at
+\`npln-connect/build_portable.py\`.
+
+- **Chosen implementation:** Python 3.12 / Tkinter + PyInstaller, with a
+  bundled Node.js 22 runtime and **published nxapi 1.6.1** package.
+  This replaces the earlier Tauri proposal for this prototype.
+- **Login UX:** Local nxapi CLI is spawned with piped stdin/stdout, so no
+  terminal window is intended. Nintendo's HTTPS login URL is opened by a
+  button, and the sensitive npf:// authentication callback URL is forwarded
+  to the local nxapi subprocess. The callback is not saved by this GUI.
+- **Packaging:** A build script is committed, but Windows/macOS binary
+  production and native smoke tests have **not** been completed.
+- **nxapi data processing:** nxapi uses remote authentication helper services
+  for certain Nintendo-issued tokens. The original local-only description
+  was too strong; see upstream documentation.
+- **Critical gate:** The exact output of \`nxapi splatnet3 user\` and the
+  viability of its login interaction through piped stdio are still unverified
+  against an authenticated account.
+- **Distribution:** nxapi uses AGPL-3.0-or-later; a public binary release
+  needs license/source compliance review. macOS app signing/notarization is
+  not yet done.
+
+Do **not** label this as a finished portable release until these checks pass.
+
 ## Decision
 
 Build a small cross-platform desktop helper named **NPLN CONNECT**. It is a separate companion to the existing static SPLAT SEED web app, not a rewrite of SPLAT SEED and not a browser extension.
@@ -39,7 +67,7 @@ The SPLAT SEED engine expects the exact NPLN ID format \`u-\` plus 20 lowercase 
 
 ## Packaging recommendation
 
-Use Tauri as the cross-platform UI shell, with a platform-specific bundled sidecar/runtime:
+Initial prototype uses Tkinter/PyInstaller (not Tauri), bundling Node.js and the published nxapi npm package as separate subprocess components:
 
 - Windows x64: portable folder/ZIP containing the app executable and bundled nxapi runtime/dependencies.
 - macOS: ZIP containing an app bundle and bundled nxapi runtime/dependencies. Initially build/test Apple Silicon and Intel separately; consider a universal build only after dependency compatibility is proven.
