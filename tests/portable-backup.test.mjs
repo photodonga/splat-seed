@@ -77,3 +77,15 @@ test('mobile and desktop have same visible import/export controls and safe resto
     assert.match(source, /cancelSearch\(true\);\s*app\.m = restored\.modes/);
   }
 });
+test('ID can be added from the tracking screen and every file button uses the shared importer', () => {
+  for (const [name, source] of [['modular', html], ['standalone', standalone]]) {
+    assert.match(source, /id="idInline"/, name);
+    assert.match(source, /id="idText2"/, name);
+    assert.match(source, /id="anyFile"/, name);
+    assert.match(source, /if \(!app\.id\) \{ app\.idOpen = !app\.idOpen;/, name);
+    assert.match(source, /data\.format === 'splat-seed-checkpoint'\) return restoreBackup\(file, report\)/, name);
+    assert.match(source, /\$\('backupInput'\)\.onchange = e => \{[^\n]*importAnyFile\(f, showBackupNotice\)/, name);
+    assert.match(source, /id="backupWithId" checked/, name);
+    assert.match(source, /if \(restored\.id\) \{ app\.id = restored\.id;/, name);
+  }
+});
