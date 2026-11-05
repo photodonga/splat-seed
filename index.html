@@ -261,6 +261,12 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("./assets/game/capsules/fest-blue
 .tgt-reset[hidden],.tgt-panel[hidden]{display:none}
 .tgt-panel{margin-top:2px}
 .id-inline{margin-top:10px}
+.reloc{margin-top:12px;border-top:1px dashed #5b4a70;padding-top:8px;text-align:center}
+.reloc-link{background:none;border:0;padding:4px 6px;color:#a997c0;font-size:11.5px;font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.reloc-panel{margin-top:8px;text-align:left;display:grid;gap:6px}
+.reloc-panel[hidden],.back-track[hidden]{display:none}
+.reloc-panel .btn:disabled{opacity:.45}
+.reloc-panel .small{margin:0 0 4px}
 .id-inline[hidden]{display:none}
 .id-inline .btn.wide .small{display:block;font-size:11px;font-weight:700;opacity:.8;margin-top:3px}
 #idErr2:empty{display:none}#idErr2{margin-top:8px}
@@ -365,6 +371,10 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("./assets/game/capsules/fest-blue
 
   <!-- ===== 2. locate ===== -->
   <section id="vLocate" hidden style="display:flex;flex-direction:column;gap:12px">
+    <div class="card back-track" id="locBack" hidden>
+      <button type="button" class="btn wide" id="btnBackTrack">← 추적으로 돌아가기</button>
+      <p class="small" style="margin-top:6px">다시 찾기를 그만두고, 들어오기 직전의 추적 위치로 돌아갑니다.</p>
+    </div>
     <div class="card" id="locStatus">
       <div class="h">남은 후보</div>
       <div class="big" id="locBig">–</div>
@@ -427,6 +437,15 @@ body[data-splat-mode="fest"] .cap.g5{--art:url("./assets/game/capsules/fest-blue
       <div class="pick" id="tPick"></div>
       <div class="items" id="tItems" hidden></div>
       <div class="row" style="margin-top:10px"><span class="small" id="streak"></span><span class="sp"></span><button class="btn" id="tUndo"><svg class="btn-ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 4.5 3.5 8.5l4 4" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 8.5h7a4.5 4.5 0 0 1 0 9H9" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>실행 취소</button></div>
+      <div class="reloc" id="reloc">
+        <button type="button" class="reloc-link" id="relocOpen" aria-expanded="false" aria-controls="relocPanel">위치가 이상하면? 위치 다시 찾기</button>
+        <div class="reloc-panel" id="relocPanel" hidden>
+          <button type="button" class="btn pri wide" id="relocKeep">기록 이어서 다시 찾기</button>
+          <p class="small" id="relocKeepNote"></p>
+          <button type="button" class="btn wide" id="relocFresh">처음부터 새로 찾기</button>
+          <p class="small" id="relocNote">지금 추적 위치는 보관됩니다. 찾다가 그만두면 '추적으로 돌아가기'로 그대로 돌아옵니다.</p>
+        </div>
+      </div>
     </div>
 
     <div class="card" id="planCard">
@@ -582,6 +601,7 @@ const app = {
   rt: { normal: blankRt(), fest: blankRt() },   // runtime per mode (search results, undo)
   tgtOpen: false, // target picker panel; not saved, always starts folded
   idOpen: false, // inline ID entry in the ID card; not saved
+  relocOpen: false, // relocate choices panel; not saved
   draft: null, picker: { grade: null, hints: null }, tPicker: { grade: null },
 };
 function blankRt() { return { result: null, searching: false, progress: 0, cancelled: false, undo: [], job: null, found: 0, error: null }; }
@@ -600,6 +620,8 @@ function load() {
         stream: src?.stream ? deserialize(src.stream) : null,
       };
       if (app.m[mode].phase === 'track' && !app.m[mode].stream) app.m[mode].phase = 'locate';
+      app.m[mode].ownEdited = !!src?.ownEdited;
+      try { if (src?.back) app.m[mode].back = { stream: deserialize(src.back.stream), cand: deserializeSession(src.back.cand), ownEdited: !!src.back.ownEdited }; } catch {}
       if (app.m[mode].cand.maxOffset === 131072) app.m[mode].cand = changeConditions(app.m[mode].cand, { maxOffset: rangeForDate() }); // old default -> date-based
     } catch { app.m[mode] = freshMode(mode); }
   }
@@ -618,6 +640,9 @@ function checkpoint(includeId = app.keepId && !!app.id) {
     const x = app.m[mode];
     o.modes[mode] = { phase: x.phase, cand: serializeSession(x.cand),
       stream: x.stream ? JSON.parse(serialize(x.stream)) : null };
+    // Saved tracking position to return to while re-locating; ownership-edit flag blocks stitched re-search.
+    if (x.back) o.modes[mode].back = { stream: JSON.parse(serialize(x.back.stream)), cand: serializeSession(x.back.cand), ownEdited: !!x.back.ownEdited };
+    if (x.ownEdited) o.modes[mode].ownEdited = true;
   }
   // Explicit opt-in is required when exporting; never export a seed token or raw geardata.
   if (includeId && app.id) o.id = app.id;
@@ -758,7 +783,7 @@ function startTracking() {
   if (!c || r.result.candidates.length !== 1) return;
   const s = M().cand;
   M().stream = newStream({ state: c.stateAfter, season: s.season, missingBanners: c.contextAfter.missingBanners, missingTitles: c.contextAfter.missingTitles });
-  M().phase = 'track';
+  M().phase = 'track'; M().back = null; M().ownEdited = false;
   save(); render(); window.scrollTo({ top: 0 });
 }
 
@@ -834,6 +859,7 @@ function renderLocateStatus() {
 
 function renderLocate() {
   const s = M().cand, r = R();
+  $('locBack').hidden = !M().back;
   renderLocateStatus();
   // funnel
   const tl = s.timeline;
@@ -943,7 +969,7 @@ function renderTrack() {
   if (s.stopped) {
     mm.innerHTML = `<b>예측: ${label(s.stopped.predicted)} · 입력: ${label(s.stopped.obs)}</b><br>잘못 누른 거면 <b>실행 취소</b>, 이번 시즌 황금·은 보유가 바뀌었으면 아래 <b>보유</b>를 고치세요(자동으로 다시 맞춰 봄). 둘 다 아니면 <b>위치 다시 찾기</b>로 몇 번 더 뽑아 위치를 찾습니다. 모두 맞게 입력했는데도 다르면 엔진이 틀린 것이니 알려 주세요.
       <div class="row" style="margin-top:10px"><button class="btn" data-a="undo">실행 취소</button><button class="btn" data-a="relocate">위치 다시 찾기</button></div>`;
-    mm.onclick = e => { const b = e.target.closest('button[data-a]'); if (!b) return; if (b.dataset.a === 'undo') trUndo(); else $('relocate').click(); };
+    mm.onclick = e => { const b = e.target.closest('button[data-a]'); if (!b) return; if (b.dataset.a === 'undo') trUndo(); else openReloc(); };
   }
   // now + strip
   const preds = s.stopped ? [] : predictions(s, 10);
@@ -981,6 +1007,13 @@ function renderTrack() {
     $('stripNote').textContent = '숫자가 있는 캡슐을 누르면 해당 순서의 예상 보상을 볼 수 있습니다. 아이템 그림은 종류별 대표 이미지입니다.';
   }
   renderPicker($('tPick'), $('tItems'), app.tPicker, s.season, o => trRecord(o), null);
+  const ri = relocInfo();
+  $('relocPanel').hidden = !app.relocOpen;
+  $('relocOpen').setAttribute('aria-expanded', String(app.relocOpen));
+  $('relocKeep').disabled = !ri.ok;
+  $('relocKeepNote').textContent = ri.ok
+    ? `찾을 때 넣은 ${fmt(ri.before)}개 + 추적하며 기록한 ${fmt(ri.extra.length)}개, 총 ${fmt(ri.total)}개로 다시 찾습니다.${app.id ? '' : ' (ID가 필요합니다 · 아래 ID 카드에서 넣어 주세요)'}`
+    : ri.why;
   $('tPick').querySelectorAll('button').forEach(b => b.disabled = !!s.stopped);
   $('streak').textContent = `기록 ${fmt(s.history.length)}개`;
   // plans: target picker, nearest occurrence plans, then the next ones
@@ -1115,12 +1148,44 @@ document.querySelectorAll('#vTrack .step button').forEach(b => b.onclick = () =>
   const s = M().stream, per = jackpotItemsPerKind(s.season), d = Number(b.dataset.d);
   const mb = b.dataset.t === 'mb' ? Math.max(0, Math.min(per, s.missingBanners + d)) : s.missingBanners;
   const mt = b.dataset.t === 'mt' ? Math.max(0, Math.min(per, s.missingTitles + d)) : s.missingTitles;
-  M().stream = setOwnership(s, mb, mt).stream; save(); render();
+  M().stream = setOwnership(s, mb, mt).stream; M().ownEdited = true; save(); render();
 });
-$('relocate').onclick = () => {
-  const s = M().stream;
-  const cand = newSession({ mode: app.mode, season: s.season, missingBanners: s.missingBanners, missingTitles: s.missingTitles, maxOffset: M().cand.maxOffset, maxCandidates: M().cand.maxCandidates });
-  app.m[app.mode] = { phase: 'locate', cand, stream: null }; app.rt[app.mode] = blankRt(); save(); render();
+/* Re-locate. "Keep": the pulls entered while locating + every pull recorded while tracking (+ a mismatching pull)
+   are one consecutive real sequence, so they are searched together. The tracking position is kept to return to. */
+function relocInfo() {
+  const x = M(), s = x.stream;
+  if (!s) return { ok: false, why: '' };
+  if (!x.cand?.observations?.length) return { ok: false, why: '찾을 때 넣은 기록이 없어 이어서 찾을 수 없습니다.' };
+  if (x.cand.season !== s.season) return { ok: false, why: '시즌이 바뀌어 이어서 찾을 수 없습니다. 처음부터 찾아 주세요.' };
+  if (x.ownEdited) return { ok: false, why: '추적 중 보유 수를 직접 고쳐서 기록을 이을 수 없습니다. 처음부터 찾아 주세요.' };
+  if (s.history.length >= 2000) return { ok: false, why: '추적 기록이 너무 길어 이어서 찾을 수 없습니다.' };
+  const extra = s.history.map(h => h.itemGiven ? { grade: h.grade, type: h.type, subType: h.subType } : { grade: h.grade });
+  if (s.stopped) extra.push(s.stopped.obs);
+  return { ok: true, extra, before: x.cand.observations.length, total: x.cand.observations.length + extra.length };
+}
+function relocate(keep) {
+  const x = M(), s = x.stream; if (!s) return;
+  const info = relocInfo();
+  cancelSearch(true);
+  const back = { stream: s, cand: x.cand, ownEdited: !!x.ownEdited };
+  let cand;
+  if (keep && info.ok) { cand = x.cand; for (const o of info.extra) cand = addPull(cand, null, o).session; }
+  else cand = newSession({ mode: app.mode, season: s.season, missingBanners: s.missingBanners, missingTitles: s.missingTitles, maxOffset: x.cand.maxOffset, maxCandidates: x.cand.maxCandidates });
+  app.m[app.mode] = { phase: 'locate', cand, stream: null, back, ownEdited: false };
+  app.rt[app.mode] = blankRt(); app.relocOpen = false; app.picker = { grade: null, hints: null };
+  save(); render(); window.scrollTo({ top: 0 });
+  if (app.id && cand.observations.length) startSearch('search');
+}
+const openReloc = () => { app.relocOpen = true; render(); $('reloc').scrollIntoView({ block: 'center', behavior: 'smooth' }); };
+$('relocate').onclick = openReloc;
+$('relocOpen').onclick = () => { app.relocOpen = !app.relocOpen; render(); };
+$('relocKeep').onclick = () => relocate(true);
+$('relocFresh').onclick = () => relocate(false);
+$('btnBackTrack').onclick = () => {
+  const x = M(); if (!x.back) return;
+  cancelSearch(true);
+  app.m[app.mode] = { phase: 'track', cand: x.back.cand, stream: x.back.stream, back: null, ownEdited: x.back.ownEdited };
+  app.rt[app.mode] = blankRt(); previewIndex = 0; save(); render(); window.scrollTo({ top: 0 });
 };
 $('tgtToggle').onclick = () => { app.tgtOpen = !app.tgtOpen; render(); };
 $('tgtReset').onclick = () => { app.target = { grade: 0 }; app.tgtOpen = false; save(); render(); };
