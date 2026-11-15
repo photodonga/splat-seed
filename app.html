@@ -528,9 +528,12 @@ function chooseHeroColor(change = false) {
 }
 
 const GN = ['황금', '은', '동', '빨강', '보라', '파랑'];
-const NM = { 'MiniGameCardPack|None': '카드 팩', 'FoodTicket|FoodParty': '파티 음식', 'Emote|None': '이모트', 'NamePlateBg|None': '배너', 'GearSkillChip|None': '기어 파워 조각', 'FoodTicket|Food100': '100% 업 식권', 'Byname|None': '칭호', 'LockerSticker|None': '로커 스티커', 'LockerFigure|None': '로커 피규어', 'FoodTicket|Food50': '50% 업 식권', 'DrinkTicket|None': '음료 티켓', 'AllGearSkillChip|None': '기어 파워 조각 ×10', 'NamePlateBg|Limited': '시즌 황금 배너', 'Byname|Limited': '시즌 은 칭호' };
+// Reward names as the game (and Leanny) show them in Korean; colour comes from the capsule icon.
+const NM = { 'MiniGameCardPack|None': '카드 팩', 'FoodTicket|FoodParty': '푸드 티켓 (파티)', 'Emote|None': '감정 표현', 'NamePlateBg|None': '플레이트', 'GearSkillChip|None': '파편 ×3', 'FoodTicket|Food100': '푸드 티켓 (100%)', 'Byname|None': '별명', 'LockerSticker|None': '스티커 ×2', 'LockerFigure|None': '장식품 ×2', 'FoodTicket|Food50': '푸드 티켓 (50%)', 'DrinkTicket|None': '드링크 티켓', 'AllGearSkillChip|None': '파편 ×10', 'NamePlateBg|Limited': '시즌 플레이트', 'Byname|Limited': '시즌 별명' };
 const itemName = o => o.type == null ? '' : (NM[`${o.type}|${o.subType ?? 'None'}`] ?? o.type);
-const label = o => `${GN[o.grade]}${o.type ? ' · ' + itemName(o) : ''}`;
+// Shown next to a capsule icon: item only (no colour words). labelFull keeps the colour for text-only places and screen readers.
+const label = o => o.type ? itemName(o) : '';
+const labelFull = o => `${GN[o.grade]} 캡슐${o.type ? ' · ' + itemName(o) : ''}`;
 // The Leanny assets below are category/representative art, NOT a prediction of exact sticker, emote, or food flavor.
 const EMBEDDED_GAME_ASSETS = null; // generated inline PNG map in standalone HTML
 const REWARD_ART_BASE = './assets/game/images/';
@@ -582,7 +585,7 @@ const STICKER_SOURCE_NAME = { Shop: '상점', Catalog: '카탈로그', Uroko: '�
 function renderStickerGallery() {
   const el = $('stickerGallery');
   if (el.dataset.ready === 'true') return;
-  el.innerHTML = '<div class="sticker-gallery-head"><strong>로커 스티커 예시 15종</strong><small>실제 당첨 스티커 특정 불가 · 종류 예시</small></div>' +
+  el.innerHTML = '<div class="sticker-gallery-head"><strong>스티커 예시 15종</strong><small>실제 당첨 스티커 특정 불가 · 종류 예시</small></div>' +
     LOCKER_STICKER_SAMPLES.map(st => `<div class="sticker-gallery-item" title="${st.id}"><img src="${artUrl(`zakka/${st.id}.png`)}" alt="" loading="lazy" decoding="async" onerror="this.hidden=true"><small>${STICKER_SOURCE_NAME[st.source]} · S${st.season}</small></div>`).join('');
   el.dataset.ready = 'true';
 }
@@ -839,6 +842,9 @@ function renderLocateStatus() {
   $('locCancel').hidden = st.kind !== 'searching';
   $('locRetry').hidden = !(st.kind === 'cancelled' && app.id && s.observations.length);
   $('locConfirm').hidden = st.kind !== 'unique';
+  { const weak = st.kind === 'unique' && s.observations.filter(o => o.type != null).length < 2;
+    $('btnStartTrack').className = weak ? 'btn wide' : 'btn pri wide';
+    $('btnStartTrack').textContent = weak ? '그래도 이 위치로 추적 시작' : '이 위치로 추적 시작'; }
   const chip = $('topChip');
   chip.className = 'chip warn'; chip.textContent = '위치 찾는 중';
   const rangeTxt = `난수 0~${fmt(s.maxOffset - 1)}`;
@@ -848,6 +854,10 @@ function renderLocateStatus() {
   else if (st.kind === 'cancelled') { big.innerHTML = '중단됨'; line.textContent = r.error ? `오류: ${r.error}` : '검색이 끝나지 않아 후보 수를 알 수 없습니다.'; }
   else if (st.kind === 'capped') { big.innerHTML = `${fmt(st.count)}<small> 개 이상</small>`; line.textContent = `후보가 상한(${fmt(s.maxCandidates)})을 넘었습니다. 결과를 더 입력하면 다시 검색합니다.`; }
   else if (st.kind === 'none') { big.innerHTML = '0<small> 개</small>'; line.textContent = '입력과 맞는 위치가 범위 안에 없습니다. 입력 실수(되돌리기), 뽑기 종류, 보유 개수, 검색 범위를 확인하세요. 모두 맞다면 엔진이 틀렸다는 신호입니다.'; chip.className = 'chip bad'; chip.textContent = '맞는 위치 없음'; }
+  else if (st.kind === 'unique' && s.observations.filter(o => o.type != null).length < 2) {
+    // Colour-only matches can be chance hits across a wide range; ask for item-level pulls before trusting it.
+    big.innerHTML = '1<small> 개 · 확인 필요</small>'; line.textContent = '색만으로 찾은 결과라 우연히 맞았을 수 있습니다. 다음 1~2번은 아이템까지 입력해 확인하세요.'; chip.className = 'chip warn'; chip.textContent = '확인 필요';
+  }
   else if (st.kind === 'unique') { big.innerHTML = '1<small> 개 · 범위 안</small>'; line.textContent = `${rangeTxt} 안에서 위치가 하나로 좁혀졌습니다.`; chip.className = 'chip ok'; chip.textContent = '위치 확정'; }
   else { big.innerHTML = `${fmt(st.count)}<small> 개</small>`; line.textContent = `${rangeTxt} 전체 검색 · 입력 ${s.observations.length}개`; }
   const cands = r.result && !r.searching && !r.result.truncated ? r.result.candidates : [];
@@ -891,7 +901,7 @@ function renderLocate() {
   renderPicker($('pick'), $('items'), app.picker, s.season, o => locRecord(o), fc?.steps[0]?.groups);
   // history
   $('locHist').hidden = !s.observations.length;
-  $('hist').innerHTML = s.observations.map((o, i) => `<span>${dot(o.grade)}${rewardIcon(o)}<span class="hist-label">${i + 1}. ${label(o)}</span></span>`).join('');
+  $('hist').innerHTML = s.observations.map((o, i) => `<span title="${labelFull(o)}">${dot(o.grade)}${rewardIcon(o)}<span class="hist-label">${i + 1}${label(o) ? '. ' + label(o) : ''}</span></span>`).join('');
   // conditions
   const d = app.draft ?? s;
   $('cSeason').textContent = d.season; $('cMB').textContent = d.missingBanners; $('cMT').textContent = d.missingTitles;
@@ -967,7 +977,7 @@ function renderTrack() {
   const mm = $('mismatch');
   mm.hidden = !s.stopped;
   if (s.stopped) {
-    mm.innerHTML = `<b>예측: ${label(s.stopped.predicted)} · 입력: ${label(s.stopped.obs)}</b><br>잘못 누른 거면 <b>실행 취소</b>, 이번 시즌 황금·은 보유가 바뀌었으면 아래 <b>보유</b>를 고치세요(자동으로 다시 맞춰 봄). 둘 다 아니면 <b>위치 다시 찾기</b>로 몇 번 더 뽑아 위치를 찾습니다. 모두 맞게 입력했는데도 다르면 엔진이 틀린 것이니 알려 주세요.
+    mm.innerHTML = `<b>예측: ${labelFull(s.stopped.predicted)} · 입력: ${labelFull(s.stopped.obs)}</b><br>잘못 누른 거면 <b>실행 취소</b>, 이번 시즌 황금·은 보유가 바뀌었으면 아래 <b>보유</b>를 고치세요(자동으로 다시 맞춰 봄). 둘 다 아니면 <b>위치 다시 찾기</b>로 몇 번 더 뽑아 위치를 찾습니다. 모두 맞게 입력했는데도 다르면 엔진이 틀린 것이니 알려 주세요.
       <div class="row" style="margin-top:10px"><button class="btn" data-a="undo">실행 취소</button><button class="btn" data-a="relocate">위치 다시 찾기</button></div>`;
     mm.onclick = e => { const b = e.target.closest('button[data-a]'); if (!b) return; if (b.dataset.a === 'undo') trUndo(); else openReloc(); };
   }
@@ -984,7 +994,7 @@ function renderTrack() {
     $('strip').innerHTML = preds.map((p, i) => {
       const outcome = { grade: p.grade, type: p.row.type, subType: p.row.subType };
       const hit = hits.includes(i + 1);
-      return `<button class="future-btn${hit ? ' is-target' : ''}" type="button" data-preview="${i}" aria-pressed="${i === previewIndex}" aria-label="${i + 1}번째 뽑기 예상: ${label(outcome)}${hit ? ' · 목표' : ''}">${dot(p.grade)}<span class="future-number">${i + 1}</span></button>`;
+      return `<button class="future-btn${hit ? ' is-target' : ''}" type="button" data-preview="${i}" aria-pressed="${i === previewIndex}" aria-label="${i + 1}번째 뽑기 예상: ${labelFull(outcome)}${hit ? ' · 목표' : ''}">${dot(p.grade)}<span class="future-number">${i + 1}</span></button>`;
     }).join('');
     $('strip').onclick = e => {
       const button = e.target.closest('button[data-preview]');
@@ -1044,7 +1054,7 @@ function renderTrack() {
   // settings
   $('tMB').textContent = s.missingBanners; $('tMT').textContent = s.missingTitles;
   $('tSeasonLine').textContent = `시즌 ${s.season} 기준 · 지금 시즌 ${seasonAt(new Date())}${seasonAt(new Date()) !== s.season ? ' → 시즌이 바뀌었습니다. 새 시즌 한정 아이템으로 바꾸려면 위치 다시 찾기 또는 아래 시즌 갱신' : ''}`;
-  $('tHist').innerHTML = s.history.slice(-30).map(h => `<span>${dot(h.grade)}${rewardIcon(h)}${label(h)}</span>`).join('');
+  $('tHist').innerHTML = s.history.slice(-30).map(h => `<span title="${labelFull(h)}">${dot(h.grade)}${rewardIcon(h)}${label(h)}</span>`).join('');
   $('stateHex').textContent = formatState(s.state);
 }
 
